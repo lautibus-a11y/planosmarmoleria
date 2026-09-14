@@ -485,12 +485,86 @@
             margin-top: 2px;
         }
 
+        /* Barra de ayuda flotante para cortar/terminar línea (iPad, touch y desktop) */
+        .drawing-helper-bar {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(30px);
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 40px;
+            padding: 8px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .drawing-helper-bar.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+        .helper-text {
+            color: #f8fafc;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .helper-btn-finish {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+            transition: transform 0.15s, filter 0.15s;
+            touch-action: manipulation;
+        }
+        .helper-btn-finish:hover, .helper-btn-finish:active {
+            filter: brightness(1.1);
+            transform: scale(1.04);
+        }
+        .helper-btn-cancel {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            touch-action: manipulation;
+        }
+        .helper-btn-cancel:hover, .helper-btn-cancel:active {
+            background: rgba(239, 68, 68, 0.35);
+            color: #ffffff;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             #main-container { flex-direction: column-reverse; }
             aside { width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid var(--c-border); }
             .tool-btn { width: auto; flex: 1; height: 100%; border-radius: 0; }
             #sub-toolbar { top: auto; bottom: 70px; left: 50%; transform: translateX(-50%); }
+            .drawing-helper-bar { bottom: 75px; width: 92%; max-width: 380px; justify-content: space-between; padding: 6px 12px; }
+            .helper-text { font-size: 12px; }
+            .helper-btn-finish { padding: 6px 12px; font-size: 12px; }
+            .helper-btn-cancel { padding: 6px 10px; font-size: 12px; }
         }
     </style>
 </head>
@@ -545,6 +619,13 @@
             <main id="workspace" class="grid-on">
                 <div id="sub-toolbar">
                     <!-- Dinámico según herramienta -->
+                </div>
+
+                <!-- Barra flotante de ayuda para finalizar/cortar línea (Ideal iPad y táctil) -->
+                <div id="drawing-helper-bar" class="drawing-helper-bar">
+                    <span id="drawing-helper-text" class="helper-text">✏️ Trazando línea...</span>
+                    <button id="btn-finish-drawing" class="helper-btn-finish" type="button">✓ Cortar / Finalizar Línea</button>
+                    <button id="btn-cancel-drawing" class="helper-btn-cancel" type="button">✕ Cancelar</button>
                 </div>
                 
                 <svg id="canvas" xmlns="http://www.w3.org/2000/svg">
@@ -1100,15 +1181,68 @@
             }
         };
 
+        // Función para comitear y guardar cualquier trazo o forma en curso al cambiar de herramienta o accionar corte
+        function commitPendingDrawing() {
+            if (!App.ui.tempElement) return;
+            const el = App.ui.tempElement;
+            let valid = false;
+
+            if (el.type === 'polyline') {
+                if (el.points && el.points.length > 2) {
+                    el.points.pop(); // Sacar el punto móvil preview del cursor
+                }
+                if (el.points && el.points.length >= 2) {
+                    valid = true;
+                }
+            } else if (el.type === 'line') {
+                if (el.start && el.end && Utils.distance(el.start, el.end) > 2) {
+                    valid = true;
+                }
+            } else if (el.type === 'rect' || el.type === 'square') {
+                if (el.start && el.end && Utils.distance(el.start, el.end) > 5) {
+                    valid = true;
+                }
+            } else if (el.type === 'circle') {
+                if (el.radius > 5) {
+                    valid = true;
+                }
+            } else if (el.type === 'triangle') {
+                if (el.points && Utils.distance(el.points[1], el.points[2]) > 5) {
+                    valid = true;
+                }
+            } else if (el.type === 'pencil') {
+                if (el.points && el.points.length > 1) {
+                    valid = true;
+                }
+            }
+
+            if (valid) {
+                delete el._startP;
+                delete el._pointerMoved;
+                App.data.elements.push(el);
+                HistoryManager.pushState();
+                UI.showToast("✓ Trazo guardado");
+            }
+
+            App.ui.tempElement = null;
+            Renderer.renderPreview();
+            Renderer.renderAll();
+            UI.updateDrawingHelper(false);
+        }
+
         // Herramientas
         const Tools = {
             _activeCtrl: null,
             _activeEl: null,
-            _lastPoint: null, // Para polilíneas
+            _lastPoint: null,
 
             select: {
+                _initialSnapshot: null,
+                _hasModified: false,
                 down(wp, e) {
                     const target = e.target;
+                    this._hasModified = false;
+                    this._initialSnapshot = JSON.stringify(App.data.elements);
                     
                     // Click en punto de control
                     if (target.classList.contains('control-point')) {
@@ -1142,8 +1276,7 @@
                     const snap = Snapper.findSnap(wp, this._activeEl.id);
                     const finalP = snap ? {x: snap.x, y: snap.y} : wp;
                     Renderer.drawSnap(snap);
-
-                    HistoryManager.pushState(); // Guardar estado para deshacer
+                    this._hasModified = true;
 
                     // 1. Mover toda la forma / elemento
                     if (this._activeCtrl === 'move') {
@@ -1179,7 +1312,7 @@
                         if (this._activeCtrl === 'tl') { this._activeEl.start.x = finalP.x; this._activeEl.start.y = finalP.y; }
                         else if (this._activeCtrl === 'tr') { this._activeEl.end.x = finalP.x; this._activeEl.start.y = finalP.y; }
                         else if (this._activeCtrl === 'br') { this._activeEl.end.x = finalP.x; this._activeEl.end.y = finalP.y; }
-                        else if (this._activeCtrl === 'bl') { this._activeEl.start.x = finalP.x; this._activeEl.end.y = finalP.y; }
+                        else if (this._activeCtrl === 'bl') { this._activeEl.start.x = finalP.x; this._activeEl.start.y = finalP.y; }
                         else if (this._activeCtrl === 'tm') { this._activeEl.start.y = finalP.y; }
                         else if (this._activeCtrl === 'bm') { this._activeEl.end.y = finalP.y; }
                         else if (this._activeCtrl === 'lm') { this._activeEl.start.x = finalP.x; }
@@ -1226,6 +1359,17 @@
                     Renderer.renderAll();
                 },
                 up() {
+                    if (this._hasModified && this._initialSnapshot) {
+                        const currentSnapshot = JSON.stringify(App.data.elements);
+                        if (currentSnapshot !== this._initialSnapshot) {
+                            App.history.past.push(this._initialSnapshot);
+                            App.history.future = [];
+                            HistoryManager.updateButtons();
+                            StorageManager.save();
+                        }
+                    }
+                    this._hasModified = false;
+                    this._initialSnapshot = null;
                     this._activeCtrl = null;
                     this._activeEl = null;
                     this._dragPrevPoint = null;
@@ -1350,25 +1494,48 @@
             },
             
             draw: {
-                down(wp) {
+                down(wp, e) {
                     const snap = Snapper.findSnap(wp);
                     const startP = snap ? {x: snap.x, y: snap.y} : wp;
 
                     if (App.ui.subTool === 'polyline') {
-                        if (!App.ui.tempElement) {
-                            App.ui.tempElement = { id: Utils.uuid(), type: 'polyline', points: [startP, {...startP}] };
+                        if (!App.ui.tempElement || App.ui.tempElement.type !== 'polyline') {
+                            App.ui.tempElement = { id: Utils.uuid(), type: 'polyline', points: [{...startP}, {...startP}] };
+                            UI.updateDrawingHelper(true, "📈 Trazando línea continua... Clic derecho o botón para cortar");
                         } else {
-                            // Agregar nuevo punto
-                            App.ui.tempElement.points.push({...startP});
+                            const pts = App.ui.tempElement.points;
+                            const prevP = pts[pts.length - 2];
+                            // Si el usuario toca el punto anterior (o muy cerca < 18px), se corta y finaliza
+                            if (prevP && Utils.distance(prevP, startP) < 18) {
+                                this.finishPolyline();
+                                return;
+                            }
+                            pts[pts.length - 1] = {...startP};
+                            pts.push({...startP});
                         }
                     } else {
-                        // Línea simple o rect
+                        // Línea simple
+                        if (App.ui.tempElement && App.ui.tempElement.type === 'line') {
+                            // Si ya había empezado por click previo, este segundo click completa la línea
+                            App.ui.tempElement.end = startP;
+                            if (Utils.distance(App.ui.tempElement.start, App.ui.tempElement.end) > 2) {
+                                HistoryManager.pushState();
+                                App.data.elements.push(App.ui.tempElement);
+                            }
+                            App.ui.tempElement = null;
+                            Renderer.renderPreview();
+                            Renderer.renderAll();
+                            UI.updateDrawingHelper(false);
+                            return;
+                        }
+
                         App.ui.tempElement = {
                             id: Utils.uuid(),
-                            type: App.ui.subTool,
+                            type: 'line',
                             start: startP,
                             end: {...startP}
                         };
+                        UI.updateDrawingHelper(true, "📏 Arrastrá o tocá el segundo punto para terminar la línea");
                     }
                 },
                 move(wp) {
@@ -1378,42 +1545,66 @@
                     let currP = snap ? {x: snap.x, y: snap.y} : wp;
                     Renderer.drawSnap(snap);
 
-                    if (App.ui.subTool === 'polyline') {
+                    if (App.ui.subTool === 'polyline' && App.ui.tempElement.type === 'polyline') {
                         const pts = App.ui.tempElement.points;
-                        const startP = pts[pts.length - 2];
+                        const startP = pts[pts.length - 2] || pts[0];
                         currP = Snapper.snapAngle(startP, currP);
                         pts[pts.length - 1] = currP;
-                    } else {
+                    } else if (App.ui.tempElement.type === 'line') {
                         currP = Snapper.snapAngle(App.ui.tempElement.start, currP);
                         App.ui.tempElement.end = currP;
                     }
                     Renderer.renderPreview();
                 },
                 up() {
-                    if (App.ui.subTool === 'polyline') return; // Polyline se cierra con doble click o botón
-                    if (App.ui.tempElement) {
-                        // Evitar lineas punto
-                        if(Utils.distance(App.ui.tempElement.start, App.ui.tempElement.end) > 2) {
+                    if (!App.ui.tempElement) return;
+                    if (App.ui.tempElement.type === 'polyline') return; // Se corta con clic derecho, botón o tap
+                    
+                    if (App.ui.tempElement.type === 'line') {
+                        // Si se arrastró más de 8px, completar la línea inmediatamente al soltar
+                        if (Utils.distance(App.ui.tempElement.start, App.ui.tempElement.end) > 8) {
                             HistoryManager.pushState();
                             App.data.elements.push(App.ui.tempElement);
+                            App.ui.tempElement = null;
+                            Renderer.renderPreview();
+                            Renderer.renderAll();
+                            UI.updateDrawingHelper(false);
+                        } else {
+                            // Fue un tap rápido en el punto inicial: esperar segundo tap o corte
+                            UI.updateDrawingHelper(true, "📏 Tocá el punto final para completar la línea (o clic derecho para cancelar)");
                         }
-                        App.ui.tempElement = null;
-                        Renderer.renderPreview();
-                        Renderer.renderAll();
                     }
                     Renderer.drawSnap(null);
                 },
-                dblclick() {
-                    // Finalizar Polyline
-                    if (App.ui.subTool === 'polyline' && App.ui.tempElement) {
-                        App.ui.tempElement.points.pop(); // quitar el último móvil
-                        if (App.ui.tempElement.points.length > 1) {
+                finishPolyline() {
+                    if (App.ui.tempElement && App.ui.tempElement.type === 'polyline') {
+                        const pts = App.ui.tempElement.points;
+                        if (pts.length > 2) {
+                            pts.pop(); // Quitar el cursor flotante
+                        }
+                        if (pts.length >= 2) {
                             HistoryManager.pushState();
                             App.data.elements.push(App.ui.tempElement);
+                            UI.showToast("✓ Línea finalizada");
                         }
                         App.ui.tempElement = null;
                         Renderer.renderPreview();
                         Renderer.renderAll();
+                        UI.updateDrawingHelper(false);
+                    }
+                },
+                cancelPolyline() {
+                    if (App.ui.tempElement) {
+                        App.ui.tempElement = null;
+                        Renderer.renderPreview();
+                        Renderer.renderAll();
+                        UI.updateDrawingHelper(false);
+                        UI.showToast("Línea cancelada");
+                    }
+                },
+                dblclick() {
+                    if (App.ui.tempElement && App.ui.tempElement.type === 'polyline') {
+                        this.finishPolyline();
                     }
                 }
             },
@@ -1442,6 +1633,77 @@
             },
 
             measure: {
+                getGeometryEdge(el, wp) {
+                    if (!el) return null;
+                    if (el.type === 'line') {
+                        return { start: {...el.start}, end: {...el.end} };
+                    }
+                    if (el.type === 'rect' || el.type === 'square') {
+                        const x1 = el.start.x, y1 = el.start.y;
+                        const x2 = el.end.x, y2 = el.end.y;
+                        const edges = [
+                            { start: {x: x1, y: y1}, end: {x: x2, y: y1} }, // Arriba
+                            { start: {x: x2, y: y1}, end: {x: x2, y: y2} }, // Derecha
+                            { start: {x: x1, y: y2}, end: {x: x2, y: y2} }, // Abajo
+                            { start: {x: x1, y: y1}, end: {x: x1, y: y2} }  // Izquierda
+                        ];
+                        let bestEdge = edges[0];
+                        let bestDist = Infinity;
+                        for (const ed of edges) {
+                            const d = Tools.measure.distToSegment(wp, ed.start, ed.end);
+                            if (d < bestDist) {
+                                bestDist = d;
+                                bestEdge = ed;
+                            }
+                        }
+                        return bestEdge;
+                    }
+                    if (el.type === 'polyline') {
+                        let bestEdge = null;
+                        let bestDist = Infinity;
+                        for (let i = 0; i < el.points.length - 1; i++) {
+                            const pA = el.points[i];
+                            const pB = el.points[i + 1];
+                            const d = Tools.measure.distToSegment(wp, pA, pB);
+                            if (d < bestDist) {
+                                bestDist = d;
+                                bestEdge = { start: {...pA}, end: {...pB} };
+                            }
+                        }
+                        return bestEdge;
+                    }
+                    if (el.type === 'triangle') {
+                        const edges = [
+                            { start: {...el.points[0]}, end: {...el.points[1]} },
+                            { start: {...el.points[1]}, end: {...el.points[2]} },
+                            { start: {...el.points[2]}, end: {...el.points[0]} }
+                        ];
+                        let bestEdge = edges[0];
+                        let bestDist = Infinity;
+                        for (const ed of edges) {
+                            const d = Tools.measure.distToSegment(wp, ed.start, ed.end);
+                            if (d < bestDist) {
+                                bestDist = d;
+                                bestEdge = ed;
+                            }
+                        }
+                        return bestEdge;
+                    }
+                    if (el.type === 'circle') {
+                        return {
+                            start: { x: el.center.x - el.radius, y: el.center.y },
+                            end: { x: el.center.x + el.radius, y: el.center.y }
+                        };
+                    }
+                    return null;
+                },
+                distToSegment(p, a, b) {
+                    const l2 = (b.x - a.x)**2 + (b.y - a.y)**2;
+                    if (l2 === 0) return Utils.distance(p, a);
+                    let t = ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / l2;
+                    t = Math.max(0, Math.min(1, t));
+                    return Utils.distance(p, { x: a.x + t * (b.x - a.x), y: a.y + t * (b.y - a.y) });
+                },
                 down(wp, e) {
                     const target = e.target;
                     const elNode = target.closest ? target.closest('[data-id]') : null;
@@ -1449,23 +1711,44 @@
 
                     if (id && id !== 'bg-rect' && id !== 'viewport-transform' && id !== 'scene' && id !== 'canvas') {
                         const el = App.data.elements.find(x => x.id === id);
-                        if (el && el.type === 'line') {
-                            UI.promptText("Ingresar medida (ej: 5,40 m)", "", (text) => {
-                                if (text.trim()) {
-                                    HistoryManager.pushState();
-                                    App.data.elements.push({
-                                        id: Utils.uuid(), type: 'measure',
-                                        start: {...el.start}, end: {...el.end},
-                                        value: text
-                                    });
-                                    Renderer.renderAll();
-                                }
-                            });
-                            return;
+                        if (el) {
+                            // Si tocó una cota existente, editarla
+                            if (el.type === 'measure') {
+                                UI.promptText("Editar medida", el.value, (newText) => {
+                                    if (newText && newText.trim()) {
+                                        HistoryManager.pushState();
+                                        el.value = newText.trim();
+                                        Renderer.renderAll();
+                                    }
+                                });
+                                return;
+                            }
+
+                            // Si tocó cualquier elemento o figura, medir ese lado directamente
+                            const edge = this.getGeometryEdge(el, wp);
+                            if (edge) {
+                                const dist = Utils.distance(edge.start, edge.end);
+                                const defaultVal = Utils.formatMeasure(dist);
+                                UI.promptText("Ingresar medida (ej: 5,40 m)", defaultVal, (text) => {
+                                    if (text && text.trim()) {
+                                        HistoryManager.pushState();
+                                        App.data.elements.push({
+                                            id: Utils.uuid(),
+                                            type: 'measure',
+                                            start: edge.start,
+                                            end: edge.end,
+                                            value: text.trim()
+                                        });
+                                        Renderer.renderAll();
+                                        UI.showToast("✓ Medida agregada");
+                                    }
+                                });
+                                return;
+                            }
                         }
                     }
 
-                    // Sino, dibujar línea de medida
+                    // Sino, dibujar línea de cota libre
                     const snap = Snapper.findSnap(wp);
                     const startP = snap ? {x: snap.x, y: snap.y} : wp;
                     App.ui.tempElement = {
@@ -1483,18 +1766,20 @@
                 },
                 up() {
                     if (App.ui.tempElement) {
-                        if(Utils.distance(App.ui.tempElement.start, App.ui.tempElement.end) > 5) {
+                        const dist = Utils.distance(App.ui.tempElement.start, App.ui.tempElement.end);
+                        if (dist > 5) {
                             const temp = App.ui.tempElement;
-                            App.ui.tempElement = null; // Limpiar para que no se vea doble
+                            App.ui.tempElement = null; // Limpiar preview
                             Renderer.renderPreview();
                             
-                            // Pedir el valor de la medida
-                            UI.promptText("Ingresar medida (ej: 5,40 m)", "", (text) => {
-                                if (text.trim()) {
-                                    temp.value = text;
+                            const defaultVal = Utils.formatMeasure(dist);
+                            UI.promptText("Ingresar medida (ej: 5,40 m)", defaultVal, (text) => {
+                                if (text && text.trim()) {
+                                    temp.value = text.trim();
                                     HistoryManager.pushState();
                                     App.data.elements.push(temp);
                                     Renderer.renderAll();
+                                    UI.showToast("✓ Medida agregada");
                                 }
                             });
                         } else {
@@ -1653,6 +1938,17 @@
 
         
         const UI = {
+            updateDrawingHelper(show, text = "") {
+                const helper = document.getElementById('drawing-helper-bar');
+                const helperText = document.getElementById('drawing-helper-text');
+                if (!helper) return;
+                if (show) {
+                    if (helperText && text) helperText.textContent = text;
+                    helper.classList.add('visible');
+                } else {
+                    helper.classList.remove('visible');
+                }
+            },
             showToast(msg) {
                 const t = document.getElementById('toast');
                 t.textContent = msg;
@@ -1692,6 +1988,9 @@
                 }
             },
             setTool(toolName) {
+                // Siempre guardar cualquier trazo o forma en curso al cambiar de herramienta
+                commitPendingDrawing();
+
                 App.ui.currentTool = toolName;
                 App.ui.selectedId = null; // Deseleccionar
                 Renderer.renderAll();
@@ -2308,8 +2607,76 @@
                 ExportManager.closeModal();
             });
 
-            // Teclado: Suprimir / Backspace para borrar elemento seleccionado
+            // Clic derecho para cortar y finalizar trazado de líneas o figuras (Desktop y Trackpad)
+            window.addEventListener('contextmenu', (e) => {
+                if (e.target.closest('#workspace') || e.target.closest('#canvas') || App.ui.tempElement) {
+                    e.preventDefault();
+                    if (App.ui.tempElement) {
+                        if (App.ui.tempElement.type === 'polyline') {
+                            Tools.draw.finishPolyline();
+                        } else {
+                            commitPendingDrawing();
+                        }
+                    }
+                }
+            });
+
+            // Botones de la barra flotante de trazado (Touch / iPad / Desktop)
+            const helperBar = document.getElementById('drawing-helper-bar');
+            const helperFinish = document.getElementById('btn-finish-drawing');
+            const helperCancel = document.getElementById('btn-cancel-drawing');
+
+            if (helperBar) {
+                helperBar.addEventListener('pointerdown', (e) => e.stopPropagation());
+                helperBar.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+            }
+            if (helperFinish) {
+                helperFinish.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (App.ui.tempElement) {
+                        if (App.ui.tempElement.type === 'polyline') {
+                            Tools.draw.finishPolyline();
+                        } else {
+                            commitPendingDrawing();
+                        }
+                    }
+                });
+            }
+            if (helperCancel) {
+                helperCancel.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (App.ui.tempElement) {
+                        if (App.ui.tempElement.type === 'polyline') {
+                            Tools.draw.cancelPolyline();
+                        } else {
+                            App.ui.tempElement = null;
+                            Renderer.renderPreview();
+                            Renderer.renderAll();
+                            UI.updateDrawingHelper(false);
+                            UI.showToast("Trazado cancelado");
+                        }
+                    }
+                });
+            }
+
+            // Teclado: Escape para finalizar/cortar trazo, Enter para confirmar, Suprimir / Backspace para borrar
             window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (App.ui.tempElement) {
+                        if (App.ui.tempElement.type === 'polyline') {
+                            Tools.draw.finishPolyline();
+                        } else {
+                            commitPendingDrawing();
+                        }
+                        return;
+                    }
+                } else if (e.key === 'Enter') {
+                    if (App.ui.tempElement && App.ui.tempElement.type === 'polyline') {
+                        Tools.draw.finishPolyline();
+                        return;
+                    }
+                }
+
                 if ((e.key === 'Delete' || e.key === 'Backspace') && App.ui.selectedId) {
                     const tag = (document.activeElement ? document.activeElement.tagName.toLowerCase() : '');
                     if (tag === 'input' || tag === 'textarea') return;
