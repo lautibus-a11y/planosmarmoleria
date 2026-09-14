@@ -555,6 +555,60 @@
             color: #ffffff;
         }
 
+        /* Editor inline titilando directo en el lienzo (para medidas y anotaciones sin modales) */
+        .canvas-inline-editor {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: auto;
+        }
+        .inline-input {
+            background: #ffffff;
+            color: #0f172a;
+            border: 2px solid #2563eb;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+            font-size: 15px;
+            font-weight: 700;
+            text-align: center;
+            min-width: 120px;
+            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(37, 99, 235, 0.25);
+            outline: none;
+            caret-color: #2563eb;
+            animation: inlineCaretPulse 1.2s ease-in-out infinite;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .inline-input:focus {
+            border-color: #1d4ed8;
+            background: #ffffff;
+        }
+        .inline-tip {
+            font-size: 11px;
+            font-weight: 500;
+            color: #f8fafc;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 3px 10px;
+            border-radius: 12px;
+            margin-top: 6px;
+            white-space: nowrap;
+            pointer-events: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        @keyframes inlineCaretPulse {
+            0%, 100% {
+                border-color: #2563eb;
+                box-shadow: 0 8px 20px -3px rgba(0, 0, 0, 0.25), 0 0 0 3px rgba(37, 99, 235, 0.25);
+            }
+            50% {
+                border-color: #3b82f6;
+                box-shadow: 0 8px 20px -3px rgba(0, 0, 0, 0.25), 0 0 0 6px rgba(59, 130, 246, 0.45);
+            }
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             #main-container { flex-direction: column-reverse; }
@@ -626,6 +680,12 @@
                     <span id="drawing-helper-text" class="helper-text">✏️ Trazando línea...</span>
                     <button id="btn-finish-drawing" class="helper-btn-finish" type="button">✓ Cortar / Finalizar Línea</button>
                     <button id="btn-cancel-drawing" class="helper-btn-cancel" type="button">✕ Cancelar</button>
+                </div>
+
+                <!-- Editor inline en el lienzo para medidas y anotaciones titilando -->
+                <div id="canvas-inline-editor" class="canvas-inline-editor" style="display: none;">
+                    <input type="text" id="inline-text-input" class="inline-input" placeholder="0.00 m" autocomplete="off" spellcheck="false">
+                    <span id="inline-editor-tip" class="inline-tip">Presioná Enter ↵ o tocá afuera para confirmar</span>
                 </div>
                 
                 <svg id="canvas" xmlns="http://www.w3.org/2000/svg">
@@ -875,6 +935,11 @@
                 const bgSize = 20 * scale;
                 App.DOM.workspace.style.backgroundSize = `${bgSize}px ${bgSize}px`;
                 App.DOM.workspace.style.backgroundPosition = `${x}px ${y}px`;
+
+                // Mantener posición del editor inline si está activo
+                if (typeof CanvasInlineEditor !== 'undefined' && CanvasInlineEditor.updatePosition) {
+                    CanvasInlineEditor.updatePosition();
+                }
             },
             screenToWorld(clientX, clientY) {
                 const rect = App.DOM.svg.getBoundingClientRect();
@@ -882,6 +947,13 @@
                 return {
                     x: (clientX - rect.left - x) / scale,
                     y: (clientY - rect.top - y) / scale
+                };
+            },
+            worldToWorkspace(worldPoint) {
+                const { x, y, scale } = App.viewport;
+                return {
+                    x: x + worldPoint.x * scale,
+                    y: y + worldPoint.y * scale
                 };
             },
             zoom(delta, clientX, clientY) {
@@ -980,35 +1052,79 @@
                         }));
                         break;
                     case 'text':
-                        const el = this.createSVG('text', {
-                            x: elData.position.x, y: elData.position.y,
-                            class: `svg-text ${isSelected?'selected-text':''}`,
-                            'dominant-baseline': 'middle', style: 'cursor:pointer;'
+                        const textStr = elData.text || "Anotación";
+                        const tagW = Math.max(68, textStr.length * 8 + 22);
+                        const tagH = 26;
+
+                        // Fondo tipo etiqueta con sombra y cursor grab para arrastrar fácilmente
+                        const tBg = this.createSVG('rect', {
+                            x: elData.position.x - 10,
+                            y: elData.position.y - 13,
+                            width: tagW,
+                            height: tagH,
+                            rx: 6,
+                            fill: isSelected ? 'rgba(37, 99, 235, 0.15)' : 'var(--c-surface)',
+                            stroke: isSelected ? 'var(--c-select)' : 'var(--c-border)',
+                            'stroke-width': isSelected ? '2' : '1',
+                            style: 'cursor: grab; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));'
                         });
-                        el.textContent = elData.text;
+
+                        const el = this.createSVG('text', {
+                            x: elData.position.x + (tagW - 20) / 2,
+                            y: elData.position.y,
+                            class: `svg-text ${isSelected?'selected-text':''}`,
+                            'text-anchor': 'middle',
+                            'dominant-baseline': 'middle',
+                            style: 'cursor: grab; pointer-events: none; font-weight: 500;'
+                        });
+                        el.textContent = textStr;
+                        group.appendChild(tBg);
                         group.appendChild(el);
                         break;
                     case 'measure':
                         const midX = (elData.start.x + elData.end.x) / 2;
                         const midY = (elData.start.y + elData.end.y) / 2;
+                        const mVal = elData.value || "0.00 m";
+                        const mWidth = Math.max(68, mVal.length * 8 + 22);
                         
                         // Hitbox gruesa para medidas
                         group.appendChild(this.createSVG('line', {
                             x1: elData.start.x, y1: elData.start.y, x2: elData.end.x, y2: elData.end.y,
-                            stroke: 'transparent', 'stroke-width': '25', fill: 'none', style: 'cursor:pointer;'
+                            stroke: 'transparent', 'stroke-width': '25', fill: 'none', style: 'cursor: grab;'
                         }));
                         
                         const mLine = this.createSVG('line', {
                             x1: elData.start.x, y1: elData.start.y,
                             x2: elData.end.x, y2: elData.end.y,
                             stroke: isSelected ? 'var(--c-select)' : 'var(--c-text-muted)',
-                            'stroke-width': '1',
+                            'stroke-width': '1.5',
                             'stroke-dasharray': '5 5'
+                        });
+
+                        // Remates en los extremos de la cota (ticks perpendiculares estilo CAD)
+                        const mAngle = Utils.angle(elData.start, elData.end);
+                        const perp = mAngle + 90;
+                        const p1A = Utils.polarToCartesian(elData.start.x, elData.start.y, 6, perp);
+                        const p1B = Utils.polarToCartesian(elData.start.x, elData.start.y, 6, perp + 180);
+                        const p2A = Utils.polarToCartesian(elData.end.x, elData.end.y, 6, perp);
+                        const p2B = Utils.polarToCartesian(elData.end.x, elData.end.y, 6, perp + 180);
+
+                        const tick1 = this.createSVG('line', {
+                            x1: p1A.x, y1: p1A.y, x2: p1B.x, y2: p1B.y,
+                            stroke: isSelected ? 'var(--c-select)' : 'var(--c-text-muted)', 'stroke-width': '1.5'
+                        });
+                        const tick2 = this.createSVG('line', {
+                            x1: p2A.x, y1: p2A.y, x2: p2B.x, y2: p2B.y,
+                            stroke: isSelected ? 'var(--c-select)' : 'var(--c-text-muted)', 'stroke-width': '1.5'
                         });
                         
                         const mBg = this.createSVG('rect', {
-                            x: midX - 30, y: midY - 10, width: 60, height: 20,
-                            fill: 'var(--c-surface)', rx: 4
+                            x: midX - mWidth / 2, y: midY - 12, width: mWidth, height: 24,
+                            fill: isSelected ? 'rgba(37, 99, 235, 0.12)' : 'var(--c-surface)',
+                            stroke: isSelected ? 'var(--c-select)' : 'var(--c-border)',
+                            'stroke-width': isSelected ? '2' : '1',
+                            rx: 6,
+                            style: 'cursor: grab; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.08));'
                         });
                         
                         const mText = this.createSVG('text', {
@@ -1016,12 +1132,16 @@
                             fill: isSelected ? 'var(--c-select)' : 'var(--c-active)',
                             'font-family': 'monospace',
                             'font-size': '12px',
+                            'font-weight': '600',
                             'text-anchor': 'middle',
-                            'dominant-baseline': 'middle'
+                            'dominant-baseline': 'middle',
+                            style: 'cursor: grab; pointer-events: none;'
                         });
-                        mText.textContent = elData.value || "medida...";
+                        mText.textContent = mVal;
                         
                         group.appendChild(mLine);
+                        group.appendChild(tick1);
+                        group.appendChild(tick2);
                         group.appendChild(mBg);
                         group.appendChild(mText);
                         break;
@@ -1230,6 +1350,88 @@
             UI.updateDrawingHelper(false);
         }
 
+        // Editor inline en el lienzo: titila en el lugar exacto sin ventanas modales
+        const CanvasInlineEditor = {
+            _activeWorldPos: null,
+            _onCommit: null,
+            _onCancel: null,
+            _isOpen: false,
+
+            open(worldPos, initialValue, placeholder, onCommit, onCancel, options = {}) {
+                this.close(false);
+
+                const container = document.getElementById('canvas-inline-editor');
+                const input = document.getElementById('inline-text-input');
+                const tip = document.getElementById('inline-editor-tip');
+                if (!container || !input) return;
+
+                this._activeWorldPos = { ...worldPos };
+                this._onCommit = onCommit;
+                this._onCancel = onCancel;
+                this._isOpen = true;
+
+                this.updatePosition();
+
+                input.placeholder = placeholder || "0.00 m";
+                input.value = initialValue || "";
+                if (tip && options.tip) tip.textContent = options.tip;
+                else if (tip) tip.textContent = "Presioná Enter ↵ o tocá afuera para confirmar";
+
+                container.style.display = 'flex';
+
+                setTimeout(() => {
+                    input.focus();
+                    if (initialValue && options.select) {
+                        input.select();
+                    }
+                }, 40);
+            },
+
+            updatePosition() {
+                if (!this._isOpen || !this._activeWorldPos) return;
+                const container = document.getElementById('canvas-inline-editor');
+                if (!container) return;
+
+                const wsPos = ViewportManager.worldToWorkspace(this._activeWorldPos);
+                container.style.left = `${wsPos.x}px`;
+                container.style.top = `${wsPos.y}px`;
+            },
+
+            commit() {
+                if (!this._isOpen) return;
+                const input = document.getElementById('inline-text-input');
+                const val = input ? input.value.trim() : "";
+                const cb = this._onCommit;
+                this.close(false);
+                if (cb) cb(val);
+            },
+
+            cancel() {
+                if (!this._isOpen) return;
+                const cb = this._onCancel;
+                this.close(false);
+                if (cb) cb();
+            },
+
+            close(triggerCancel = false) {
+                if (!this._isOpen) return;
+                const container = document.getElementById('canvas-inline-editor');
+                const input = document.getElementById('inline-text-input');
+                if (container) container.style.display = 'none';
+                if (input) input.value = '';
+
+                const cancelCb = this._onCancel;
+                this._isOpen = false;
+                this._activeWorldPos = null;
+                this._onCommit = null;
+                this._onCancel = null;
+
+                if (triggerCancel && cancelCb) {
+                    cancelCb();
+                }
+            }
+        };
+
         // Herramientas
         const Tools = {
             _activeCtrl: null,
@@ -1383,15 +1585,26 @@
                     if (id && id !== 'bg-rect' && id !== 'viewport-transform' && id !== 'scene' && id !== 'canvas') {
                         const el = App.data.elements.find(x => x.id === id);
                         if (el && (el.type === 'text' || el.type === 'measure')) {
+                            const pos = el.type === 'text' 
+                                ? el.position 
+                                : { x: (el.start.x + el.end.x) / 2, y: (el.start.y + el.end.y) / 2 };
                             const currentText = el.type === 'text' ? el.text : el.value;
-                            UI.promptText("Editar medida/texto", currentText, (newText) => {
-                                if (newText.trim()) {
-                                    HistoryManager.pushState();
-                                    if (el.type === 'text') el.text = newText;
-                                    else el.value = newText;
-                                    Renderer.renderAll();
-                                }
-                            });
+                            
+                            CanvasInlineEditor.open(
+                                pos,
+                                currentText,
+                                el.type === 'text' ? "Editar anotación..." : "0.00 m",
+                                (newText) => {
+                                    if (newText && newText.trim()) {
+                                        HistoryManager.pushState();
+                                        if (el.type === 'text') el.text = newText.trim();
+                                        else el.value = newText.trim();
+                                        Renderer.renderAll();
+                                    }
+                                },
+                                null,
+                                { select: true }
+                            );
                         }
                     }
                 }
@@ -1704,6 +1917,9 @@
                     t = Math.max(0, Math.min(1, t));
                     return Utils.distance(p, { x: a.x + t * (b.x - a.x), y: a.y + t * (b.y - a.y) });
                 },
+                _activeMeasure: null,
+                _dragPrevPoint: null,
+                _hasMoved: false,
                 down(wp, e) {
                     const target = e.target;
                     const elNode = target.closest ? target.closest('[data-id]') : null;
@@ -1712,37 +1928,55 @@
                     if (id && id !== 'bg-rect' && id !== 'viewport-transform' && id !== 'scene' && id !== 'canvas') {
                         const el = App.data.elements.find(x => x.id === id);
                         if (el) {
-                            // Si tocó una cota existente, editarla
+                            // Si tocó una cota existente: permitir arrastrarla o editarla inline
                             if (el.type === 'measure') {
-                                UI.promptText("Editar medida", el.value, (newText) => {
-                                    if (newText && newText.trim()) {
-                                        HistoryManager.pushState();
-                                        el.value = newText.trim();
-                                        Renderer.renderAll();
-                                    }
-                                });
+                                this._activeMeasure = el;
+                                this._dragPrevPoint = wp;
+                                this._hasMoved = false;
+                                App.ui.selectedId = el.id;
+                                Renderer.renderAll();
                                 return;
                             }
 
-                            // Si tocó cualquier elemento o figura, medir ese lado directamente
+                            // Si tocó cualquier elemento o figura: medir ese lado directamente
                             const edge = this.getGeometryEdge(el, wp);
                             if (edge) {
                                 const dist = Utils.distance(edge.start, edge.end);
                                 const defaultVal = Utils.formatMeasure(dist);
-                                UI.promptText("Ingresar medida (ej: 5,40 m)", defaultVal, (text) => {
-                                    if (text && text.trim()) {
+                                const mid = {
+                                    x: (edge.start.x + edge.end.x) / 2,
+                                    y: (edge.start.y + edge.end.y) / 2
+                                };
+
+                                const newM = {
+                                    id: Utils.uuid(),
+                                    type: 'measure',
+                                    start: edge.start,
+                                    end: edge.end,
+                                    value: defaultVal
+                                };
+                                App.data.elements.push(newM);
+                                App.ui.selectedId = newM.id;
+                                Renderer.renderAll();
+
+                                // Editor inline titilando sobre el número
+                                CanvasInlineEditor.open(
+                                    mid,
+                                    defaultVal,
+                                    defaultVal,
+                                    (text) => {
+                                        newM.value = text && text.trim() ? text.trim() : defaultVal;
                                         HistoryManager.pushState();
-                                        App.data.elements.push({
-                                            id: Utils.uuid(),
-                                            type: 'measure',
-                                            start: edge.start,
-                                            end: edge.end,
-                                            value: text.trim()
-                                        });
                                         Renderer.renderAll();
-                                        UI.showToast("✓ Medida agregada");
-                                    }
-                                });
+                                        UI.showToast("✓ Medida guardada");
+                                    },
+                                    () => {
+                                        newM.value = defaultVal;
+                                        HistoryManager.pushState();
+                                        Renderer.renderAll();
+                                    },
+                                    { select: true, tip: "Enter ↵ para confirmar (o escribí otra medida)" }
+                                );
                                 return;
                             }
                         }
@@ -1756,6 +1990,21 @@
                     };
                 },
                 move(wp) {
+                    if (this._activeMeasure) {
+                        this._hasMoved = true;
+                        if (!this._dragPrevPoint) this._dragPrevPoint = wp;
+                        const dx = wp.x - this._dragPrevPoint.x;
+                        const dy = wp.y - this._dragPrevPoint.y;
+                        this._dragPrevPoint = wp;
+
+                        this._activeMeasure.start.x += dx;
+                        this._activeMeasure.start.y += dy;
+                        this._activeMeasure.end.x += dx;
+                        this._activeMeasure.end.y += dy;
+                        Renderer.renderAll();
+                        return;
+                    }
+
                     if (!App.ui.tempElement) return;
                     const snap = Snapper.findSnap(wp);
                     let currP = snap ? {x: snap.x, y: snap.y} : wp;
@@ -1765,23 +2014,80 @@
                     Renderer.drawSnap(snap);
                 },
                 up() {
+                    if (this._activeMeasure) {
+                        const mEl = this._activeMeasure;
+                        const wasMoved = this._hasMoved;
+                        this._activeMeasure = null;
+                        this._dragPrevPoint = null;
+                        this._hasMoved = false;
+
+                        if (wasMoved) {
+                            HistoryManager.pushState();
+                            StorageManager.save();
+                        } else {
+                            // Fue click simple sobre la cota: editarla inline
+                            const mid = {
+                                x: (mEl.start.x + mEl.end.x) / 2,
+                                y: (mEl.start.y + mEl.end.y) / 2
+                            };
+                            CanvasInlineEditor.open(
+                                mid,
+                                mEl.value,
+                                "0.00 m",
+                                (text) => {
+                                    if (text && text.trim()) {
+                                        mEl.value = text.trim();
+                                        HistoryManager.pushState();
+                                        Renderer.renderAll();
+                                    }
+                                },
+                                null,
+                                { select: true }
+                            );
+                        }
+                        return;
+                    }
+
                     if (App.ui.tempElement) {
                         const dist = Utils.distance(App.ui.tempElement.start, App.ui.tempElement.end);
                         if (dist > 5) {
-                            const temp = App.ui.tempElement;
-                            App.ui.tempElement = null; // Limpiar preview
-                            Renderer.renderPreview();
-                            
                             const defaultVal = Utils.formatMeasure(dist);
-                            UI.promptText("Ingresar medida (ej: 5,40 m)", defaultVal, (text) => {
-                                if (text && text.trim()) {
-                                    temp.value = text.trim();
+                            const mid = {
+                                x: (App.ui.tempElement.start.x + App.ui.tempElement.end.x) / 2,
+                                y: (App.ui.tempElement.start.y + App.ui.tempElement.end.y) / 2
+                            };
+
+                            const newM = {
+                                id: Utils.uuid(),
+                                type: 'measure',
+                                start: App.ui.tempElement.start,
+                                end: App.ui.tempElement.end,
+                                value: defaultVal
+                            };
+                            App.data.elements.push(newM);
+                            App.ui.selectedId = newM.id;
+                            App.ui.tempElement = null;
+                            Renderer.renderPreview();
+                            Renderer.renderAll();
+
+                            // Abrir editor inline titilando sobre el número
+                            CanvasInlineEditor.open(
+                                mid,
+                                defaultVal,
+                                defaultVal,
+                                (text) => {
+                                    newM.value = text && text.trim() ? text.trim() : defaultVal;
                                     HistoryManager.pushState();
-                                    App.data.elements.push(temp);
                                     Renderer.renderAll();
-                                    UI.showToast("✓ Medida agregada");
-                                }
-                            });
+                                    UI.showToast("✓ Medida guardada");
+                                },
+                                () => {
+                                    newM.value = defaultVal;
+                                    HistoryManager.pushState();
+                                    Renderer.renderAll();
+                                },
+                                { select: true, tip: "Enter ↵ para confirmar (o escribí otra medida)" }
+                            );
                         } else {
                             App.ui.tempElement = null;
                             Renderer.renderPreview();
@@ -1792,19 +2098,93 @@
             },
 
             annotate: {
-                down(wp) {
-                    UI.promptText("Nueva Anotación", "", (text) => {
-                        if (text.trim()) {
-                            HistoryManager.pushState();
-                            App.data.elements.push({
-                                id: Utils.uuid(), type: 'text',
-                                text: text, position: wp
-                            });
+                _activeNote: null,
+                _dragPrevPoint: null,
+                _hasMoved: false,
+                down(wp, e) {
+                    const target = e.target;
+                    const elNode = target.closest ? target.closest('[data-id]') : null;
+                    const id = elNode ? elNode.getAttribute('data-id') : null;
+
+                    if (id && id !== 'bg-rect' && id !== 'viewport-transform' && id !== 'scene' && id !== 'canvas') {
+                        const el = App.data.elements.find(x => x.id === id);
+                        if (el && el.type === 'text') {
+                            this._activeNote = el;
+                            this._dragPrevPoint = wp;
+                            this._hasMoved = false;
+                            App.ui.selectedId = el.id;
                             Renderer.renderAll();
+                            return;
                         }
-                    });
+                    }
+
+                    // Click en punto vacío: abrir editor inline titilando en ese punto exacto
+                    CanvasInlineEditor.open(
+                        wp,
+                        "",
+                        "Escribí tu anotación aquí...",
+                        (text) => {
+                            if (text && text.trim()) {
+                                HistoryManager.pushState();
+                                const newNote = {
+                                    id: Utils.uuid(),
+                                    type: 'text',
+                                    text: text.trim(),
+                                    position: { ...wp }
+                                };
+                                App.data.elements.push(newNote);
+                                App.ui.selectedId = newNote.id;
+                                Renderer.renderAll();
+                                UI.showToast("✓ Nota agregada");
+                            }
+                        },
+                        null,
+                        { select: false, tip: "Presioná Enter ↵ para guardar o tocá afuera" }
+                    );
                 },
-                move() {}, up() {}
+                move(wp) {
+                    if (this._activeNote) {
+                        this._hasMoved = true;
+                        if (!this._dragPrevPoint) this._dragPrevPoint = wp;
+                        const dx = wp.x - this._dragPrevPoint.x;
+                        const dy = wp.y - this._dragPrevPoint.y;
+                        this._dragPrevPoint = wp;
+
+                        this._activeNote.position.x += dx;
+                        this._activeNote.position.y += dy;
+                        Renderer.renderAll();
+                    }
+                },
+                up() {
+                    if (this._activeNote) {
+                        const note = this._activeNote;
+                        const wasMoved = this._hasMoved;
+                        this._activeNote = null;
+                        this._dragPrevPoint = null;
+                        this._hasMoved = false;
+
+                        if (wasMoved) {
+                            HistoryManager.pushState();
+                            StorageManager.save();
+                        } else {
+                            // Fue un tap/click simple en la nota: abrir editor inline para editarla
+                            CanvasInlineEditor.open(
+                                note.position,
+                                note.text,
+                                "Editar anotación...",
+                                (text) => {
+                                    if (text && text.trim()) {
+                                        note.text = text.trim();
+                                        HistoryManager.pushState();
+                                        Renderer.renderAll();
+                                    }
+                                },
+                                null,
+                                { select: true }
+                            );
+                        }
+                    }
+                }
             },
 
             erase: {
@@ -1845,6 +2225,11 @@
 
         
         function handlePointerDown(e) {
+            // Si el editor inline estaba abierto y se hace click afuera, confirmar su valor
+            if (typeof CanvasInlineEditor !== 'undefined' && CanvasInlineEditor._isOpen) {
+                CanvasInlineEditor.commit();
+            }
+
             // Evitar default para touch (scroll)
             if(e.pointerType === 'touch') e.preventDefault();
             
@@ -2656,6 +3041,35 @@
                             UI.showToast("Trazado cancelado");
                         }
                     }
+                });
+            }
+
+            // Eventos del Editor Inline en el lienzo (para cotas y anotaciones sin modales)
+            const inlineEditorEl = document.getElementById('canvas-inline-editor');
+            const inlineInputEl = document.getElementById('inline-text-input');
+            if (inlineEditorEl && inlineInputEl) {
+                inlineEditorEl.addEventListener('pointerdown', (e) => e.stopPropagation());
+                inlineEditorEl.addEventListener('mousedown', (e) => e.stopPropagation());
+                inlineEditorEl.addEventListener('click', (e) => e.stopPropagation());
+                inlineEditorEl.addEventListener('dblclick', (e) => e.stopPropagation());
+
+                inlineInputEl.addEventListener('keydown', (e) => {
+                    e.stopPropagation();
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        CanvasInlineEditor.commit();
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        CanvasInlineEditor.cancel();
+                    }
+                });
+
+                inlineInputEl.addEventListener('blur', () => {
+                    setTimeout(() => {
+                        if (CanvasInlineEditor._isOpen) {
+                            CanvasInlineEditor.commit();
+                        }
+                    }, 120);
                 });
             }
 
