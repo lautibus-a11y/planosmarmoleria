@@ -237,13 +237,16 @@
         }
 
         .control-point {
-            fill: white;
-            stroke: var(--c-select);
-            stroke-width: 2px;
             cursor: grab;
-            pointer-events: auto; /* Catch clicks on points */
         }
         .control-point:active { cursor: grabbing; }
+
+        .control-point-visual {
+            fill: #ffffff;
+            stroke: var(--c-select);
+            stroke-width: 2px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+        }
 
         .snap-indicator {
             fill: none;
@@ -555,7 +558,7 @@
             color: #ffffff;
         }
 
-        /* Editor inline titilando directo en el lienzo (para medidas y anotaciones sin modales) */
+        /* Editor inline táctil en el lienzo (para cotas y anotaciones) */
         .canvas-inline-editor {
             position: absolute;
             transform: translate(-50%, -50%);
@@ -565,27 +568,54 @@
             align-items: center;
             pointer-events: auto;
         }
-        .inline-input {
+        .inline-input-wrapper {
+            display: flex;
+            align-items: center;
             background: #ffffff;
-            color: #0f172a;
             border: 2px solid #2563eb;
-            border-radius: 8px;
-            padding: 6px 14px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
-            font-size: 15px;
-            font-weight: 700;
-            text-align: center;
-            min-width: 120px;
-            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(37, 99, 235, 0.25);
-            outline: none;
-            caret-color: #2563eb;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(37, 99, 235, 0.2);
+            padding: 2px 4px 2px 8px;
             animation: inlineCaretPulse 1.2s ease-in-out infinite;
-            transition: border-color 0.15s, box-shadow 0.15s;
         }
-        .inline-input:focus {
-            border-color: #1d4ed8;
-            background: #ffffff;
+        .inline-input {
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            outline: none;
+            padding: 8px 6px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            min-width: 100px;
+            text-align: center;
         }
+        .inline-btn {
+            border: none;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.15s;
+            touch-action: manipulation;
+        }
+        .inline-btn.confirm {
+            background: #10b981;
+            color: white;
+            margin-right: 3px;
+        }
+        .inline-btn.cancel {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        .inline-btn:active { transform: scale(0.92); }
+
         .inline-tip {
             font-size: 11px;
             font-weight: 500;
@@ -609,16 +639,226 @@
             }
         }
 
-        /* Responsive */
+        /* HUD Flotante de Navegación del Lienzo (Zoom y Pan) */
+        .canvas-nav-hud {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--c-border);
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            z-index: 15;
+            padding: 3px;
+            gap: 2px;
+            user-select: none;
+        }
+        .hud-btn {
+            width: 38px;
+            height: 38px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--c-text);
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            touch-action: manipulation;
+        }
+        .hud-btn:hover { background: var(--c-active-bg); }
+        .hud-btn:active { background: #d0d0d0; transform: scale(0.94); }
+        .hud-btn.active { background: var(--c-active); color: #ffffff; }
+        .hud-zoom-level {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--c-text-muted);
+            padding: 2px 4px;
+            min-width: 36px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Barra Contextual de Selección Rápida */
+        .selection-context-bar {
+            position: absolute;
+            bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.94);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 30px;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+            z-index: 25;
+            animation: slideUpFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translate(-50%, 15px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+        .sel-info {
+            font-size: 11px;
+            font-weight: 600;
+            color: #94a3b8;
+            padding: 0 8px;
+            border-right: 1px solid rgba(255, 255, 255, 0.15);
+            white-space: nowrap;
+        }
+        .sel-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #f8fafc;
+            padding: 6px 12px;
+            border-radius: 18px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            transition: all 0.15s;
+            touch-action: manipulation;
+        }
+        .sel-btn:active { transform: scale(0.95); }
+        .sel-btn.primary {
+            background: #2563eb;
+            border-color: #3b82f6;
+            color: white;
+        }
+        .sel-btn.danger {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+        }
+        .sel-btn.danger:hover, .sel-btn.danger:active {
+            background: #ef4444;
+            color: white;
+        }
+        .sel-btn.close {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            padding: 6px 8px;
+            font-size: 14px;
+        }
+
+        .btn-divider {
+            width: 1px;
+            background: var(--c-border);
+            margin: 0 4px;
+        }
+
+        /* Responsive Mobile & Tablet */
         @media (max-width: 768px) {
+            header {
+                padding: 0 8px;
+                padding-top: env(safe-area-inset-top, 0px);
+            }
+            .brand {
+                font-size: 13.5px;
+                max-width: 110px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .top-actions {
+                gap: 4px;
+            }
+            .btn {
+                padding: 6px 8px;
+                font-size: 13px;
+                gap: 3px;
+            }
+            .btn .btn-text {
+                display: none;
+            }
+            .btn-symbol {
+                font-size: 15px;
+            }
+            .btn-divider {
+                margin: 0 1px;
+            }
             #main-container { flex-direction: column-reverse; }
-            aside { width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid var(--c-border); }
-            .tool-btn { width: auto; flex: 1; height: 100%; border-radius: 0; }
-            #sub-toolbar { top: auto; bottom: 70px; left: 50%; transform: translateX(-50%); }
-            .drawing-helper-bar { bottom: 75px; width: 92%; max-width: 380px; justify-content: space-between; padding: 6px 12px; }
-            .helper-text { font-size: 12px; }
-            .helper-btn-finish { padding: 6px 12px; font-size: 12px; }
-            .helper-btn-cancel { padding: 6px 10px; font-size: 12px; }
+            aside {
+                width: 100%;
+                height: auto;
+                min-height: 58px;
+                padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+                flex-direction: row;
+                justify-content: space-around;
+                padding-left: 2px;
+                padding-right: 2px;
+                border-right: none;
+                border-top: 1px solid var(--c-border);
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .tool-btn {
+                width: auto;
+                flex: 1;
+                min-width: 44px;
+                height: 52px;
+                border-radius: 8px;
+                padding: 3px 2px;
+            }
+            .tool-icon {
+                font-size: 18px;
+                margin-bottom: 2px;
+            }
+            .tool-label {
+                font-size: 9.5px;
+                letter-spacing: -0.3px;
+                white-space: nowrap;
+            }
+            #sub-toolbar {
+                top: 10px;
+                bottom: auto;
+                left: 50%;
+                transform: translateX(-50%);
+                max-width: 95%;
+                overflow-x: auto;
+                border-radius: 20px;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(8px);
+            }
+            .drawing-helper-bar {
+                bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+                width: 94%;
+                max-width: 390px;
+                justify-content: space-between;
+                padding: 7px 12px;
+            }
+            .helper-text { font-size: 11.5px; }
+            .helper-btn-finish { padding: 6px 12px; font-size: 11.5px; }
+            .helper-btn-cancel { padding: 6px 10px; font-size: 11.5px; }
+
+            .canvas-nav-hud {
+                top: auto;
+                bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+                right: 10px;
+                box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+            }
+            .hud-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -629,42 +869,42 @@
             <div class="brand">Marmolería Benjamín</div>
             <div class="top-actions">
                 <button class="btn" id="btn-grid" title="Cuadrícula">#</button>
-                <div style="width: 1px; background: var(--c-border); margin: 0 4px;"></div>
-                <button class="btn" id="btn-undo" disabled>↺ Deshacer</button>
-                <button class="btn" id="btn-redo" disabled>↻ Rehacer</button>
-                <div style="width: 1px; background: var(--c-border); margin: 0 4px;"></div>
-                <button class="btn" id="btn-clear">Nuevo</button>
-                <button class="btn primary" id="btn-export">Exportar ▼</button>
+                <div class="btn-divider"></div>
+                <button class="btn" id="btn-undo" title="Deshacer" disabled><span class="btn-symbol">↺</span><span class="btn-text"> Deshacer</span></button>
+                <button class="btn" id="btn-redo" title="Rehacer" disabled><span class="btn-symbol">↻</span><span class="btn-text"> Rehacer</span></button>
+                <div class="btn-divider"></div>
+                <button class="btn" id="btn-clear" title="Nuevo plano"><span class="btn-symbol">＋</span><span class="btn-text"> Nuevo</span></button>
+                <button class="btn primary" id="btn-export" title="Exportar plano"><span class="btn-symbol">📤</span><span class="btn-text"> Exportar ▼</span></button>
             </div>
         </header>
 
         <div id="main-container">
             <aside id="toolbar">
-                <button class="tool-btn active" data-tool="select">
+                <button class="tool-btn active" data-tool="select" title="Seleccionar y mover">
                     <span class="tool-icon">✋</span>
                     <span class="tool-label">Seleccionar</span>
                 </button>
-                <button class="tool-btn" data-tool="draw">
+                <button class="tool-btn" data-tool="draw" title="Trazar líneas">
                     <span class="tool-icon">✏️</span>
                     <span class="tool-label">Líneas</span>
                 </button>
-                <button class="tool-btn" data-tool="shapes">
+                <button class="tool-btn" data-tool="shapes" title="Formas geométricas">
                     <span class="tool-icon">📐</span>
                     <span class="tool-label">Formas</span>
                 </button>
-                <button class="tool-btn" data-tool="pencil">
+                <button class="tool-btn" data-tool="pencil" title="Lápiz a mano alzada">
                     <span class="tool-icon">〰️</span>
                     <span class="tool-label">Lápiz</span>
                 </button>
-                <button class="tool-btn" data-tool="measure">
+                <button class="tool-btn" data-tool="measure" title="Cotas y medidas">
                     <span class="tool-icon">↔️</span>
                     <span class="tool-label">Medir</span>
                 </button>
-                <button class="tool-btn" data-tool="annotate">
+                <button class="tool-btn" data-tool="annotate" title="Anotaciones de texto">
                     <span class="tool-icon">T</span>
                     <span class="tool-label">Anotar</span>
                 </button>
-                <button class="tool-btn" data-tool="erase">
+                <button class="tool-btn" data-tool="erase" title="Borrar trazos">
                     <span class="tool-icon">⌫</span>
                     <span class="tool-label">Borrar</span>
                 </button>
@@ -675,6 +915,24 @@
                     <!-- Dinámico según herramienta -->
                 </div>
 
+                <!-- Controles Flotantes de Navegación del Lienzo (HUD) -->
+                <div id="canvas-nav-hud" class="canvas-nav-hud">
+                    <button id="hud-zoom-in" class="hud-btn" type="button" title="Acercar (＋)">＋</button>
+                    <span id="hud-zoom-level" class="hud-zoom-level">100%</span>
+                    <button id="hud-zoom-out" class="hud-btn" type="button" title="Alejar (－)">－</button>
+                    <button id="hud-zoom-fit" class="hud-btn" type="button" title="Centrar y Enfocar (⊡)">⊡</button>
+                    <button id="hud-pan-toggle" class="hud-btn" type="button" title="Modo Mover con 1 dedo">✋</button>
+                </div>
+
+                <!-- Barra Contextual de Selección Rápida (Móvil y Desktop) -->
+                <div id="selection-context-bar" class="selection-context-bar" style="display: none;">
+                    <span id="sel-info" class="sel-info">Elemento</span>
+                    <button type="button" id="btn-sel-edit" class="sel-btn primary" title="Editar cota o texto">✏️ Editar</button>
+                    <button type="button" id="btn-sel-duplicate" class="sel-btn" title="Duplicar">⧉ Duplicar</button>
+                    <button type="button" id="btn-sel-delete" class="sel-btn danger" title="Eliminar">🗑️ Borrar</button>
+                    <button type="button" id="btn-sel-close" class="sel-btn close" title="Deseleccionar">✕</button>
+                </div>
+
                 <!-- Barra flotante de ayuda para finalizar/cortar línea (Ideal iPad y táctil) -->
                 <div id="drawing-helper-bar" class="drawing-helper-bar">
                     <span id="drawing-helper-text" class="helper-text">✏️ Trazando línea...</span>
@@ -682,10 +940,14 @@
                     <button id="btn-cancel-drawing" class="helper-btn-cancel" type="button">✕ Cancelar</button>
                 </div>
 
-                <!-- Editor inline en el lienzo para medidas y anotaciones titilando -->
+                <!-- Editor inline en el lienzo para medidas y anotaciones -->
                 <div id="canvas-inline-editor" class="canvas-inline-editor" style="display: none;">
-                    <input type="text" id="inline-text-input" class="inline-input" placeholder="0.00 m" autocomplete="off" spellcheck="false">
-                    <span id="inline-editor-tip" class="inline-tip">Presioná Enter ↵ o tocá afuera para confirmar</span>
+                    <div class="inline-input-wrapper">
+                        <input type="text" id="inline-text-input" class="inline-input" placeholder="0.00 m" autocomplete="off" spellcheck="false">
+                        <button type="button" id="inline-btn-confirm" class="inline-btn confirm" title="Confirmar">✓</button>
+                        <button type="button" id="inline-btn-cancel" class="inline-btn cancel" title="Cancelar">✕</button>
+                    </div>
+                    <span id="inline-editor-tip" class="inline-tip">Enter ↵ o ✓ para confirmar</span>
                 </div>
                 
                 <svg id="canvas" xmlns="http://www.w3.org/2000/svg">
@@ -801,6 +1063,13 @@
         const Utils = {
             uuid: () => Math.random().toString(36).substr(2, 9),
             distance: (p1, p2) => Math.sqrt((p2.x - p1.x)**2 + (p2.y - p1.y)**2),
+            pointToSegmentDist: (p, v, w) => {
+                const l2 = (w.x - v.x)**2 + (w.y - v.y)**2;
+                if (l2 === 0) return Utils.distance(p, v);
+                let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+                t = Math.max(0, Math.min(1, t));
+                return Utils.distance(p, { x: v.x + t * (w.x - v.x), y: v.y + t * (w.y - v.y) });
+            },
             angle: (p1, p2) => Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI,
             polarToCartesian: (cx, cy, r, angle) => ({
                 x: cx + r * Math.cos(angle * Math.PI / 180),
@@ -844,7 +1113,13 @@
                 isPanning: false,
                 dragStart: null,
                 dragStartViewport: null,
-                tempElement: null // Geometría en proceso de dibujo
+                tempElement: null, // Geometría en proceso de dibujo
+                isPanMode: false,
+                gestureStarted: false,
+                pinchStartDist: 0,
+                pinchStartScale: 1,
+                pinchStartCenter: null,
+                pinchStartViewport: null
             },
             DOM: {
                 svg: document.getElementById('canvas'),
@@ -936,6 +1211,12 @@
                 App.DOM.workspace.style.backgroundSize = `${bgSize}px ${bgSize}px`;
                 App.DOM.workspace.style.backgroundPosition = `${x}px ${y}px`;
 
+                // Actualizar indicador en HUD
+                const hudLevel = document.getElementById('hud-zoom-level');
+                if (hudLevel) {
+                    hudLevel.textContent = `${Math.round(scale * 100)}%`;
+                }
+
                 // Mantener posición del editor inline si está activo
                 if (typeof CanvasInlineEditor !== 'undefined' && CanvasInlineEditor.updatePosition) {
                     CanvasInlineEditor.updatePosition();
@@ -958,8 +1239,8 @@
             },
             zoom(delta, clientX, clientY) {
                 const rect = App.DOM.svg.getBoundingClientRect();
-                const mouseX = clientX - rect.left;
-                const mouseY = clientY - rect.top;
+                const mouseX = (clientX !== undefined ? clientX : rect.left + rect.width / 2) - rect.left;
+                const mouseY = (clientY !== undefined ? clientY : rect.top + rect.height / 2) - rect.top;
 
                 // Encontrar coordenadas del mundo antes del zoom
                 const worldX = (mouseX - App.viewport.x) / App.viewport.scale;
@@ -967,7 +1248,7 @@
 
                 // Aplicar zoom
                 let newScale = App.viewport.scale - delta * 0.01;
-                newScale = Math.max(0.2, Math.min(newScale, 10)); // Limites
+                newScale = Math.max(0.15, Math.min(newScale, 15)); // Límites
                 App.viewport.scale = newScale;
 
                 // Ajustar pan para que el zoom siga al mouse
@@ -975,6 +1256,84 @@
                 App.viewport.y = mouseY - worldY * App.viewport.scale;
 
                 this.updateTransform();
+            },
+            zoomBy(factor) {
+                const rect = App.DOM.svg.getBoundingClientRect();
+                const mouseX = rect.width / 2;
+                const mouseY = rect.height / 2;
+
+                const worldX = (mouseX - App.viewport.x) / App.viewport.scale;
+                const worldY = (mouseY - App.viewport.y) / App.viewport.scale;
+
+                let newScale = App.viewport.scale * factor;
+                newScale = Math.max(0.15, Math.min(newScale, 15));
+                App.viewport.scale = newScale;
+
+                App.viewport.x = mouseX - worldX * App.viewport.scale;
+                App.viewport.y = mouseY - worldY * App.viewport.scale;
+
+                this.updateTransform();
+            },
+            fitToScreen() {
+                const rect = App.DOM.svg.getBoundingClientRect();
+                if (!App.data.elements || App.data.elements.length === 0) {
+                    App.viewport = { x: 0, y: 0, scale: 1 };
+                    this.updateTransform();
+                    UI.showToast("Vista restablecida");
+                    return;
+                }
+
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                App.data.elements.forEach(el => {
+                    if (el.start) {
+                        minX = Math.min(minX, el.start.x); maxX = Math.max(maxX, el.start.x);
+                        minY = Math.min(minY, el.start.y); maxY = Math.max(maxY, el.start.y);
+                    }
+                    if (el.end) {
+                        minX = Math.min(minX, el.end.x); maxX = Math.max(maxX, el.end.x);
+                        minY = Math.min(minY, el.end.y); maxY = Math.max(maxY, el.end.y);
+                    }
+                    if (el.center) {
+                        const r = el.radius || 20;
+                        minX = Math.min(minX, el.center.x - r); maxX = Math.max(maxX, el.center.x + r);
+                        minY = Math.min(minY, el.center.y - r); maxY = Math.max(maxY, el.center.y + r);
+                    }
+                    if (el.position) {
+                        minX = Math.min(minX, el.position.x - 20); maxX = Math.max(maxX, el.position.x + 80);
+                        minY = Math.min(minY, el.position.y - 20); maxY = Math.max(maxY, el.position.y + 20);
+                    }
+                    if (el.points) {
+                        el.points.forEach(p => {
+                            minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+                            minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+                        });
+                    }
+                });
+
+                if (!isFinite(minX) || !isFinite(maxX)) {
+                    App.viewport = { x: 0, y: 0, scale: 1 };
+                    this.updateTransform();
+                    return;
+                }
+
+                const worldW = Math.max(60, maxX - minX);
+                const worldH = Math.max(60, maxY - minY);
+                const padding = window.innerWidth <= 768 ? 50 : 80;
+                const availW = Math.max(100, rect.width - padding * 2);
+                const availH = Math.max(100, rect.height - padding * 2);
+
+                let fitScale = Math.min(availW / worldW, availH / worldH);
+                fitScale = Math.max(0.2, Math.min(fitScale, 3));
+
+                const worldCenterX = (minX + maxX) / 2;
+                const worldCenterY = (minY + maxY) / 2;
+
+                App.viewport.scale = fitScale;
+                App.viewport.x = (rect.width / 2) - worldCenterX * fitScale;
+                App.viewport.y = (rect.height / 2) - worldCenterY * fitScale;
+
+                this.updateTransform();
+                UI.showToast("Plano centrado");
             }
         };
 
@@ -994,7 +1353,7 @@
                     case 'line':
                         group.appendChild(this.createSVG('line', {
                             x1: elData.start.x, y1: elData.start.y, x2: elData.end.x, y2: elData.end.y,
-                            stroke: 'transparent', 'stroke-width': '25', fill: 'none', style: 'cursor:pointer;'
+                            stroke: 'transparent', 'stroke-width': '32', fill: 'none', style: 'cursor:pointer;'
                         }));
                         group.appendChild(this.createSVG('line', {
                             x1: elData.start.x, y1: elData.start.y, x2: elData.end.x, y2: elData.end.y,
@@ -1004,7 +1363,7 @@
                     case 'polyline':
                         const pointsStr = elData.points.map(p => `${p.x},${p.y}`).join(' ');
                         group.appendChild(this.createSVG('polyline', {
-                            points: pointsStr, stroke: 'transparent', 'stroke-width': '25', fill: 'none', style: 'cursor:pointer;'
+                            points: pointsStr, stroke: 'transparent', 'stroke-width': '32', fill: 'none', style: 'cursor:pointer;'
                         }));
                         group.appendChild(this.createSVG('polyline', {
                             points: pointsStr, class: `svg-poly ${classes}`
@@ -1017,7 +1376,7 @@
                         const rw = Math.abs(elData.start.x - elData.end.x);
                         const rh = Math.abs(elData.start.y - elData.end.y);
                         group.appendChild(this.createSVG('rect', {
-                            x: rx, y: ry, width: rw, height: rh, stroke: 'transparent', 'stroke-width': '25', fill: 'none', style: 'cursor:pointer;'
+                            x: rx, y: ry, width: rw, height: rh, stroke: 'transparent', 'stroke-width': '25', fill: 'rgba(0,0,0,0.001)', style: 'cursor:pointer; pointer-events: all;'
                         }));
                         group.appendChild(this.createSVG('rect', {
                             x: rx, y: ry, width: rw, height: rh, class: `svg-rect ${classes}`
@@ -1026,7 +1385,7 @@
                     case 'circle':
                         group.appendChild(this.createSVG('circle', {
                             cx: elData.center.x, cy: elData.center.y, r: elData.radius,
-                            stroke: 'transparent', 'stroke-width': '25', fill: 'none', style: 'cursor:pointer;'
+                            stroke: 'transparent', 'stroke-width': '25', fill: 'rgba(0,0,0,0.001)', style: 'cursor:pointer; pointer-events: all;'
                         }));
                         group.appendChild(this.createSVG('circle', {
                             cx: elData.center.x, cy: elData.center.y, r: elData.radius,
@@ -1036,7 +1395,7 @@
                     case 'triangle':
                         const triPointsStr = elData.points.map(p => `${p.x},${p.y}`).join(' ');
                         group.appendChild(this.createSVG('polygon', {
-                            points: triPointsStr, stroke: 'transparent', 'stroke-width': '25', fill: 'none', style: 'cursor:pointer;'
+                            points: triPointsStr, stroke: 'transparent', 'stroke-width': '25', fill: 'rgba(0,0,0,0.001)', style: 'cursor:pointer; pointer-events: all;'
                         }));
                         group.appendChild(this.createSVG('polygon', {
                             points: triPointsStr, class: `svg-poly ${classes}`
@@ -1045,7 +1404,7 @@
                     case 'pencil':
                         const d = 'M ' + elData.points.map(p => `${p.x} ${p.y}`).join(' L ');
                         group.appendChild(this.createSVG('path', {
-                            d: d, stroke: 'transparent', 'stroke-width': '25', fill: 'none', style: 'cursor:pointer;'
+                            d: d, stroke: 'transparent', 'stroke-width': '32', fill: 'none', style: 'cursor:pointer;'
                         }));
                         group.appendChild(this.createSVG('path', {
                             d: d, class: `svg-pencil ${classes}`
@@ -1209,14 +1568,32 @@
                     pts.push({ id: 'tri_center', x: cx, y: cy });
                 }
 
+                const scale = App.viewport.scale || 1;
+                const visualR = Math.max(4.5, 6 / scale);
+                const hitR = Math.max(20, 24 / scale);
+
                 pts.forEach(p => {
-                    const c = this.createSVG('circle', {
-                        cx: p.x, cy: p.y, r: 6,
+                    // Área táctil transparente amplia para dedos (40-48px)
+                    const hitArea = this.createSVG('circle', {
+                        cx: p.x, cy: p.y, r: hitR,
                         class: 'control-point',
                         'data-ctrl-id': p.id,
-                        'data-el-id': elData.id
+                        'data-el-id': elData.id,
+                        fill: 'transparent',
+                        stroke: 'transparent',
+                        'stroke-width': '0',
+                        style: 'cursor: grab; pointer-events: all;'
                     });
-                    App.DOM.uiLayer.appendChild(c);
+                    // Punto visual nítido y calibrado
+                    const visualPoint = this.createSVG('circle', {
+                        cx: p.x, cy: p.y, r: visualR,
+                        class: 'control-point-visual',
+                        'data-ctrl-id': p.id,
+                        'data-el-id': elData.id,
+                        style: 'pointer-events: none;'
+                    });
+                    App.DOM.uiLayer.appendChild(hitArea);
+                    App.DOM.uiLayer.appendChild(visualPoint);
                 });
             },
             drawSnap(p) {
@@ -1375,7 +1752,7 @@
                 input.placeholder = placeholder || "0.00 m";
                 input.value = initialValue || "";
                 if (tip && options.tip) tip.textContent = options.tip;
-                else if (tip) tip.textContent = "Presioná Enter ↵ o tocá afuera para confirmar";
+                else if (tip) tip.textContent = window.innerWidth <= 768 ? "Tocá ✓ o Enter para guardar" : "Presioná Enter ↵ o tocá afuera para confirmar";
 
                 container.style.display = 'flex';
 
@@ -1393,8 +1770,20 @@
                 if (!container) return;
 
                 const wsPos = ViewportManager.worldToWorkspace(this._activeWorldPos);
-                container.style.left = `${wsPos.x}px`;
-                container.style.top = `${wsPos.y}px`;
+                
+                // Clamping a pantalla para que no quede cortado en móviles o tapado por el teclado
+                const wsRect = App.DOM.workspace.getBoundingClientRect();
+                const margin = 16;
+                const minX = margin + 70;
+                const maxX = Math.max(minX, wsRect.width - margin - 70);
+                const minY = margin + 30;
+                const maxY = Math.max(minY, wsRect.height - (window.innerWidth <= 768 ? 140 : 60));
+
+                const clampedX = Math.max(minX, Math.min(wsPos.x, maxX));
+                const clampedY = Math.max(minY, Math.min(wsPos.y, maxY));
+
+                container.style.left = `${clampedX}px`;
+                container.style.top = `${clampedY}px`;
             },
 
             commit() {
@@ -1471,6 +1860,7 @@
                         this._dragPrevPoint = null;
                     }
                     Renderer.renderAll();
+                    UI.updateSelectionBar();
                 },
                 move(wp, e) {
                     if (!this._activeEl) return;
@@ -2191,32 +2581,77 @@
                 isErasing: false,
                 down(wp, e) {
                     this.isErasing = true;
-                    this.tryErase(e.clientX, e.clientY);
+                    this.tryErase(e.clientX, e.clientY, wp);
                 },
                 move(wp, e) {
                     if (this.isErasing) {
-                        this.tryErase(e.clientX, e.clientY);
+                        this.tryErase(e.clientX, e.clientY, wp);
                     }
                 },
                 up() {
                     this.isErasing = false;
                 },
-                tryErase(clientX, clientY) {
-                    // Pincel de borrar: comprueba qué elemento estamos tocando al arrastrar
-                    const targetEl = document.elementFromPoint(clientX, clientY);
-                    if (!targetEl) return;
-                    
-                    const elNode = targetEl.closest ? targetEl.closest('[data-id]') : null;
-                    if (elNode) {
-                        const id = elNode.getAttribute('data-id');
-                        if (id && id !== 'bg-rect' && id !== 'viewport-transform' && id !== 'scene' && id !== 'canvas') {
-                            const exists = App.data.elements.some(x => x.id === id);
-                            if(exists) {
-                                HistoryManager.pushState();
-                                App.data.elements = App.data.elements.filter(el => el.id !== id);
-                                if(App.ui.selectedId === id) App.ui.selectedId = null;
-                                Renderer.renderAll();
+                tryErase(clientX, clientY, wp) {
+                    // 1. Probar por elementFromPoint
+                    let targetEl = document.elementFromPoint(clientX, clientY);
+                    let elNode = targetEl && targetEl.closest ? targetEl.closest('[data-id]') : null;
+                    let id = elNode ? elNode.getAttribute('data-id') : null;
+
+                    // 2. Proximidad táctil: si el dedo no tocó exactamente el píxel de la línea, buscar dentro de radio de 26px
+                    if (!id || id === 'bg-rect' || id === 'viewport-transform' || id === 'scene' || id === 'canvas') {
+                        const touchRadiusWorld = 26 / App.viewport.scale;
+                        let closest = null;
+                        let minDist = touchRadiusWorld;
+
+                        for (const el of App.data.elements) {
+                            let d = Infinity;
+                            if (el.type === 'line' || el.type === 'measure') {
+                                d = Utils.pointToSegmentDist(wp, el.start, el.end);
+                            } else if (el.type === 'rect' || el.type === 'square') {
+                                const rx = Math.min(el.start.x, el.end.x);
+                                const ry = Math.min(el.start.y, el.end.y);
+                                const rw = Math.abs(el.start.x - el.end.x);
+                                const rh = Math.abs(el.start.y - el.end.y);
+                                if (wp.x >= rx && wp.x <= rx + rw && wp.y >= ry && wp.y <= ry + rh) {
+                                    d = 0;
+                                } else {
+                                    const d1 = Utils.pointToSegmentDist(wp, {x: rx, y: ry}, {x: rx + rw, y: ry});
+                                    const d2 = Utils.pointToSegmentDist(wp, {x: rx + rw, y: ry}, {x: rx + rw, y: ry + rh});
+                                    const d3 = Utils.pointToSegmentDist(wp, {x: rx + rw, y: ry + rh}, {x: rx, y: ry + rh});
+                                    const d4 = Utils.pointToSegmentDist(wp, {x: rx, y: ry + rh}, {x: rx, y: ry});
+                                    d = Math.min(d1, d2, d3, d4);
+                                }
+                            } else if (el.type === 'circle') {
+                                const distToCenter = Utils.distance(wp, el.center);
+                                d = Math.abs(distToCenter - el.radius);
+                                if (distToCenter <= el.radius) d = 0;
+                            } else if (el.type === 'pencil' || el.type === 'polyline') {
+                                for (let i = 0; i < el.points.length - 1; i++) {
+                                    const segDist = Utils.pointToSegmentDist(wp, el.points[i], el.points[i+1]);
+                                    if (segDist < d) d = segDist;
+                                }
+                            } else if (el.type === 'text') {
+                                d = Utils.distance(wp, el.position);
                             }
+
+                            if (d < minDist) {
+                                minDist = d;
+                                closest = el.id;
+                            }
+                        }
+                        if (closest) id = closest;
+                    }
+
+                    if (id && id !== 'bg-rect' && id !== 'viewport-transform' && id !== 'scene' && id !== 'canvas') {
+                        const exists = App.data.elements.some(x => x.id === id);
+                        if (exists) {
+                            HistoryManager.pushState();
+                            App.data.elements = App.data.elements.filter(el => el.id !== id);
+                            if (App.ui.selectedId === id) {
+                                App.ui.selectedId = null;
+                                UI.updateSelectionBar();
+                            }
+                            Renderer.renderAll();
                         }
                     }
                 }
@@ -2230,16 +2665,42 @@
                 CanvasInlineEditor.commit();
             }
 
-            // Evitar default para touch (scroll)
-            if(e.pointerType === 'touch') e.preventDefault();
+            // Evitar default para touch (scroll nativo en canvas)
+            if (e.pointerType === 'touch') e.preventDefault();
             
             App.ui.activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+            // Si hay 2 o más dedos en pantalla: Gesto de Zoom y Paneo táctil simultáneo (Pinch-to-zoom)
+            if (App.ui.activePointers.size >= 2) {
+                // Cancelar de inmediato cualquier trazo o pieza provisional que el 1er dedo haya iniciado por error
+                if (App.ui.isDragging) {
+                    App.ui.isDragging = false;
+                    if (App.ui.tempElement) {
+                        App.ui.tempElement.remove();
+                        App.ui.tempElement = null;
+                        Renderer.renderPreview();
+                    }
+                }
+                App.ui.gestureStarted = true;
+                App.ui.isPanning = true;
+
+                const pts = Array.from(App.ui.activePointers.values());
+                App.ui.pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+                App.ui.pinchStartScale = App.viewport.scale;
+                App.ui.pinchStartCenter = {
+                    x: (pts[0].x + pts[1].x) / 2,
+                    y: (pts[0].y + pts[1].y) / 2
+                };
+                App.ui.pinchStartViewport = { x: App.viewport.x, y: App.viewport.y };
+                App.DOM.workspace.style.cursor = 'grabbing';
+                return;
+            }
 
             // Identificar si tocamos el fondo vacío
             const isBg = (e.target.id === 'bg-rect' || e.target.id === 'canvas' || e.target.tagName.toLowerCase() === 'svg');
 
-            // Detectar Pan con 2 dedos, botón medio (PC) o arrastre de un dedo en el fondo estando en "Seleccionar"
-            if (App.ui.activePointers.size === 2 || e.button === 1 || (App.ui.currentTool === 'select' && isBg)) {
+            // Pan con botón medio, modo Mover activado, o arrastre en fondo vacío en "Seleccionar"
+            if (e.button === 1 || App.ui.isPanMode || (App.ui.currentTool === 'select' && isBg)) {
                 App.ui.isPanning = true;
                 App.ui.dragStart = { x: e.clientX, y: e.clientY };
                 App.ui.dragStartViewport = { x: App.viewport.x, y: App.viewport.y };
@@ -2248,7 +2709,7 @@
             }
 
             // Flujo de herramienta normal (1 dedo / Pen / Mouse Izq)
-            if (App.ui.activePointers.size === 1 && e.button === 0) {
+            if (App.ui.activePointers.size === 1 && e.button === 0 && !App.ui.gestureStarted) {
                 App.ui.isDragging = true;
                 const wp = ViewportManager.screenToWorld(e.clientX, e.clientY);
                 const tool = Tools[App.ui.currentTool];
@@ -2261,42 +2722,57 @@
                 App.ui.activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
             }
 
-            // Paneo
-            if (App.ui.isPanning) {
-                if (App.ui.activePointers.size === 2) {
-                    // Calcular centro de los dos dedos para paneo
-                    const pts = Array.from(App.ui.activePointers.values());
-                    const centerX = (pts[0].x + pts[1].x) / 2;
-                    const centerY = (pts[0].y + pts[1].y) / 2;
-                    
-                    if (!App.ui.dragStart) {
-                        App.ui.dragStart = { x: centerX, y: centerY };
-                        App.ui.dragStartViewport = { x: App.viewport.x, y: App.viewport.y };
-                    } else {
-                        const dx = centerX - App.ui.dragStart.x;
-                        const dy = centerY - App.ui.dragStart.y;
-                        App.viewport.x = App.ui.dragStartViewport.x + dx;
-                        App.viewport.y = App.ui.dragStartViewport.y + dy;
-                        ViewportManager.updateTransform();
-                    }
-                    // Zoom pinch se podría implementar aquí midiendo la distancia entre pts
-                } else if (e.button === 1 || App.ui.activePointers.size === 1) {
-                    // Pan con mouse
-                     const dx = e.clientX - App.ui.dragStart.x;
-                     const dy = e.clientY - App.ui.dragStart.y;
-                     App.viewport.x = App.ui.dragStartViewport.x + dx;
-                     App.viewport.y = App.ui.dragStartViewport.y + dy;
-                     ViewportManager.updateTransform();
+            // 1. Paneo y Pinch-to-Zoom con 2 dedos
+            if (App.ui.isPanning && App.ui.activePointers.size >= 2) {
+                const pts = Array.from(App.ui.activePointers.values());
+                const currentDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+                const currentCenter = {
+                    x: (pts[0].x + pts[1].x) / 2,
+                    y: (pts[0].y + pts[1].y) / 2
+                };
+
+                if (App.ui.pinchStartDist > 8 && currentDist > 8 && App.ui.pinchStartCenter && App.ui.pinchStartViewport) {
+                    const scaleFactor = currentDist / App.ui.pinchStartDist;
+                    let newScale = App.ui.pinchStartScale * scaleFactor;
+                    newScale = Math.max(0.15, Math.min(newScale, 15));
+
+                    const rect = App.DOM.svg.getBoundingClientRect();
+                    const scX = App.ui.pinchStartCenter.x - rect.left;
+                    const scY = App.ui.pinchStartCenter.y - rect.top;
+
+                    const worldX = (scX - App.ui.pinchStartViewport.x) / App.ui.pinchStartScale;
+                    const worldY = (scY - App.ui.pinchStartViewport.y) / App.ui.pinchStartScale;
+
+                    const dx = currentCenter.x - App.ui.pinchStartCenter.x;
+                    const dy = currentCenter.y - App.ui.pinchStartCenter.y;
+
+                    App.viewport.scale = newScale;
+                    App.viewport.x = (scX + dx) - worldX * newScale;
+                    App.viewport.y = (scY + dy) - worldY * newScale;
+
+                    ViewportManager.updateTransform();
                 }
                 return;
             }
 
-            // Herramienta
-            if (App.ui.isDragging) {
+            // 2. Paneo con 1 dedo (modo Mover, botón medio o fondo en select)
+            if (App.ui.isPanning && (e.button === 1 || App.ui.activePointers.size === 1)) {
+                if (App.ui.dragStart && App.ui.dragStartViewport) {
+                    const dx = e.clientX - App.ui.dragStart.x;
+                    const dy = e.clientY - App.ui.dragStart.y;
+                    App.viewport.x = App.ui.dragStartViewport.x + dx;
+                    App.viewport.y = App.ui.dragStartViewport.y + dy;
+                    ViewportManager.updateTransform();
+                }
+                return;
+            }
+
+            // 3. Herramienta activa
+            if (App.ui.isDragging && !App.ui.gestureStarted) {
                 const wp = ViewportManager.screenToWorld(e.clientX, e.clientY);
                 const tool = Tools[App.ui.currentTool];
                 if (tool && tool.move) tool.move(wp, e);
-            } else if (App.ui.currentTool === 'draw' && App.ui.subTool === 'polyline' && App.ui.tempElement) {
+            } else if (App.ui.currentTool === 'draw' && App.ui.subTool === 'polyline' && App.ui.tempElement && !App.ui.gestureStarted) {
                 // Previsualizar polilínea sin arrastrar
                 const wp = ViewportManager.screenToWorld(e.clientX, e.clientY);
                 const tool = Tools['draw'];
@@ -2307,14 +2783,16 @@
         function handlePointerUp(e) {
             App.ui.activePointers.delete(e.pointerId);
 
-            if (App.ui.isPanning && App.ui.activePointers.size === 0) {
+            if (App.ui.activePointers.size === 0) {
                 App.ui.isPanning = false;
                 App.ui.dragStart = null;
-                App.DOM.workspace.style.cursor = ''; // Restaurar el cursor de la clase activa
-                return;
+                App.ui.pinchStartCenter = null;
+                App.ui.pinchStartViewport = null;
+                App.ui.gestureStarted = false;
+                App.DOM.workspace.style.cursor = App.ui.isPanMode ? 'grab' : '';
             }
 
-            if (App.ui.isDragging) {
+            if (App.ui.isDragging && !App.ui.gestureStarted) {
                 App.ui.isDragging = false;
                 const tool = Tools[App.ui.currentTool];
                 if (tool && tool.up) tool.up();
@@ -2333,6 +2811,44 @@
                 } else {
                     helper.classList.remove('visible');
                 }
+            },
+            updateSelectionBar() {
+                const bar = document.getElementById('selection-context-bar');
+                if (!bar) return;
+                if (!App.ui.selectedId) {
+                    bar.style.display = 'none';
+                    return;
+                }
+                const el = App.data.elements.find(x => x.id === App.ui.selectedId);
+                if (!el) {
+                    bar.style.display = 'none';
+                    return;
+                }
+
+                const info = document.getElementById('sel-info');
+                const editBtn = document.getElementById('btn-sel-edit');
+
+                const typeLabels = {
+                    'rect': '▭ Rectángulo',
+                    'square': '🟩 Cuadrado',
+                    'circle': '⭕ Círculo',
+                    'triangle': '🔺 Triángulo',
+                    'line': '📏 Línea',
+                    'polyline': '📈 Polilínea',
+                    'pencil': '〰️ Trazo',
+                    'text': 'T Anotación',
+                    'measure': '↔️ Cota'
+                };
+
+                if (info) info.textContent = typeLabels[el.type] || 'Elemento';
+                if (editBtn) {
+                    if (el.type === 'text' || el.type === 'measure') {
+                        editBtn.style.display = 'flex';
+                    } else {
+                        editBtn.style.display = 'none';
+                    }
+                }
+                bar.style.display = 'flex';
             },
             showToast(msg) {
                 const t = document.getElementById('toast');
@@ -2379,10 +2895,12 @@
                 App.ui.currentTool = toolName;
                 App.ui.selectedId = null; // Deseleccionar
                 Renderer.renderAll();
+                this.updateSelectionBar();
                 
                 // Actualizar botones
                 document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                document.querySelector(`.tool-btn[data-tool="${toolName}"]`).classList.add('active');
+                const curBtn = document.querySelector(`.tool-btn[data-tool="${toolName}"]`);
+                if (curBtn) curBtn.classList.add('active');
 
                 // Actualizar cursor visual
                 App.DOM.workspace.classList.remove('tool-select', 'tool-draw', 'tool-shapes', 'tool-pencil', 'tool-measure', 'tool-annotate', 'tool-erase');
@@ -3044,14 +3562,31 @@
                 });
             }
 
-            // Eventos del Editor Inline en el lienzo (para cotas y anotaciones sin modales)
+            // Eventos del Editor Inline en el lienzo (para cotas y anotaciones táctiles)
             const inlineEditorEl = document.getElementById('canvas-inline-editor');
             const inlineInputEl = document.getElementById('inline-text-input');
+            const inlineConfirmBtn = document.getElementById('inline-btn-confirm');
+            const inlineCancelBtn = document.getElementById('inline-btn-cancel');
+
             if (inlineEditorEl && inlineInputEl) {
                 inlineEditorEl.addEventListener('pointerdown', (e) => e.stopPropagation());
                 inlineEditorEl.addEventListener('mousedown', (e) => e.stopPropagation());
+                inlineEditorEl.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
                 inlineEditorEl.addEventListener('click', (e) => e.stopPropagation());
                 inlineEditorEl.addEventListener('dblclick', (e) => e.stopPropagation());
+
+                if (inlineConfirmBtn) {
+                    inlineConfirmBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        CanvasInlineEditor.commit();
+                    });
+                }
+                if (inlineCancelBtn) {
+                    inlineCancelBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        CanvasInlineEditor.cancel();
+                    });
+                }
 
                 inlineInputEl.addEventListener('keydown', (e) => {
                     e.stopPropagation();
@@ -3070,6 +3605,116 @@
                             CanvasInlineEditor.commit();
                         }
                     }, 120);
+                });
+            }
+
+            // Controles Flotantes HUD de Navegación del Lienzo
+            const hudZoomIn = document.getElementById('hud-zoom-in');
+            const hudZoomOut = document.getElementById('hud-zoom-out');
+            const hudZoomFit = document.getElementById('hud-zoom-fit');
+            const hudPanToggle = document.getElementById('hud-pan-toggle');
+
+            if (hudZoomIn) hudZoomIn.addEventListener('click', (e) => { e.stopPropagation(); ViewportManager.zoomBy(1.25); });
+            if (hudZoomOut) hudZoomOut.addEventListener('click', (e) => { e.stopPropagation(); ViewportManager.zoomBy(0.8); });
+            if (hudZoomFit) hudZoomFit.addEventListener('click', (e) => { e.stopPropagation(); ViewportManager.fitToScreen(); });
+            if (hudPanToggle) {
+                hudPanToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    App.ui.isPanMode = !App.ui.isPanMode;
+                    hudPanToggle.classList.toggle('active', App.ui.isPanMode);
+                    if (App.ui.isPanMode) {
+                        App.DOM.workspace.style.cursor = 'grab';
+                        UI.showToast("Modo Mover: arrastrá con 1 dedo");
+                    } else {
+                        App.DOM.workspace.style.cursor = '';
+                        UI.showToast("Modo Mover desactivado");
+                    }
+                });
+            }
+
+            // Barra Contextual de Selección Rápida (Mobile y Desktop)
+            const btnSelEdit = document.getElementById('btn-sel-edit');
+            const btnSelDuplicate = document.getElementById('btn-sel-duplicate');
+            const btnSelDelete = document.getElementById('btn-sel-delete');
+            const btnSelClose = document.getElementById('btn-sel-close');
+
+            if (btnSelDelete) {
+                btnSelDelete.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (App.ui.selectedId) {
+                        HistoryManager.pushState();
+                        App.data.elements = App.data.elements.filter(el => el.id !== App.ui.selectedId);
+                        App.ui.selectedId = null;
+                        Renderer.renderAll();
+                        UI.updateSelectionBar();
+                        UI.showToast("Elemento eliminado");
+                    }
+                });
+            }
+
+            if (btnSelDuplicate) {
+                btnSelDuplicate.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (App.ui.selectedId) {
+                        const el = App.data.elements.find(x => x.id === App.ui.selectedId);
+                        if (el) {
+                            HistoryManager.pushState();
+                            const copy = JSON.parse(JSON.stringify(el));
+                            copy.id = Utils.uuid();
+                            const offset = 25;
+                            if (copy.start) { copy.start.x += offset; copy.start.y += offset; }
+                            if (copy.end) { copy.end.x += offset; copy.end.y += offset; }
+                            if (copy.center) { copy.center.x += offset; copy.center.y += offset; }
+                            if (copy.position) { copy.position.x += offset; copy.position.y += offset; }
+                            if (copy.points) { copy.points.forEach(p => { p.x += offset; p.y += offset; }); }
+                            App.data.elements.push(copy);
+                            App.ui.selectedId = copy.id;
+                            Renderer.renderAll();
+                            UI.updateSelectionBar();
+                            UI.showToast("Pieza duplicada");
+                        }
+                    }
+                });
+            }
+
+            if (btnSelEdit) {
+                btnSelEdit.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (!App.ui.selectedId) return;
+                    const el = App.data.elements.find(x => x.id === App.ui.selectedId);
+                    if (!el) return;
+                    if (el.type === 'text' || el.type === 'measure') {
+                        const pos = el.type === 'text' 
+                            ? el.position 
+                            : { x: (el.start.x + el.end.x) / 2, y: (el.start.y + el.end.y) / 2 };
+                        const currentText = el.type === 'text' ? el.text : el.value;
+                        
+                        CanvasInlineEditor.open(
+                            pos,
+                            currentText,
+                            el.type === 'text' ? "Editar anotación..." : "0.00 m",
+                            (newText) => {
+                                if (newText && newText.trim()) {
+                                    HistoryManager.pushState();
+                                    if (el.type === 'text') el.text = newText.trim();
+                                    else el.value = newText.trim();
+                                    Renderer.renderAll();
+                                    UI.updateSelectionBar();
+                                }
+                            },
+                            null,
+                            { select: true }
+                        );
+                    }
+                });
+            }
+
+            if (btnSelClose) {
+                btnSelClose.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    App.ui.selectedId = null;
+                    Renderer.renderAll();
+                    UI.updateSelectionBar();
                 });
             }
 
@@ -3098,7 +3743,16 @@
                     App.data.elements = App.data.elements.filter(el => el.id !== App.ui.selectedId);
                     App.ui.selectedId = null;
                     Renderer.renderAll();
+                    UI.updateSelectionBar();
                     UI.showToast("Elemento eliminado");
+                }
+            });
+
+            // Reajuste en cambio de orientación o tamaño de pantalla
+            window.addEventListener('resize', () => {
+                ViewportManager.updateTransform();
+                if (typeof CanvasInlineEditor !== 'undefined' && CanvasInlineEditor._isOpen) {
+                    CanvasInlineEditor.updatePosition();
                 }
             });
 
