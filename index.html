@@ -394,7 +394,7 @@
             justify-content: space-between;
             align-items: center;
         }
-        .form-group input {
+        .form-group input, .form-group select {
             padding: 10px 12px;
             font-size: 14px;
             border: 1.5px solid var(--c-border);
@@ -402,8 +402,10 @@
             outline: none;
             transition: all 0.15s ease;
             font-family: inherit;
+            background: #ffffff;
+            color: var(--c-text);
         }
-        .form-group input:focus {
+        .form-group input:focus, .form-group select:focus {
             border-color: #000;
             box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
         }
@@ -411,6 +413,64 @@
             border-color: #d32f2f;
             background-color: #fff8f8;
         }
+        .form-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        /* Modal Personalizar Medidas de Bacha */
+        #sink-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            padding: 16px;
+        }
+        #sink-modal.active { display: flex; }
+        .sink-model-btn {
+            padding: 9px 6px;
+            border: 1px solid var(--c-border);
+            border-radius: 8px;
+            background: var(--c-bg);
+            color: var(--c-text);
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            text-align: center;
+        }
+        .sink-model-btn:hover {
+            border-color: #0284c7;
+            background: #f0f9ff;
+        }
+        .sink-model-btn.active {
+            background: #0284c7;
+            color: white;
+            border-color: #0284c7;
+            font-weight: 600;
+        }
+        .sink-preset-pill {
+            padding: 6px 12px;
+            border-radius: 16px;
+            border: 1.5px solid #bae6fd;
+            background: #f0f9ff;
+            color: #0369a1;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .sink-preset-pill:hover, .sink-preset-pill.active {
+            background: #0284c7;
+            color: white;
+            border-color: #0284c7;
+        }
+
         .export-section-title {
             font-size: 11px;
             font-weight: 700;
@@ -904,6 +964,14 @@
                     <span class="tool-icon">T</span>
                     <span class="tool-label">Anotar</span>
                 </button>
+                <button class="tool-btn" data-tool="cooktop" title="Hornallas y Anafes">
+                    <span class="tool-icon">🔥</span>
+                    <span class="tool-label">Hornallas</span>
+                </button>
+                <button class="tool-btn" data-tool="sink" title="Bachas y Piletas">
+                    <span class="tool-icon">🚰</span>
+                    <span class="tool-label">Bachas</span>
+                </button>
                 <button class="tool-btn" data-tool="erase" title="Borrar trazos">
                     <span class="tool-icon">⌫</span>
                     <span class="tool-label">Borrar</span>
@@ -982,6 +1050,64 @@
         </div>
     </div>
 
+    <!-- Modal Personalizar Medidas de Bacha -->
+    <div id="sink-modal">
+        <div class="export-card">
+            <div class="export-header">
+                <h2><span>🚰</span> Medidas de la Bacha</h2>
+                <button class="export-close-btn" id="sink-modal-close" title="Cerrar">&times;</button>
+            </div>
+            <div class="export-body" style="padding: 18px 20px;">
+                <p style="margin: 0 0 14px 0; font-size: 13px; color: var(--c-text-muted); line-height: 1.4;">
+                    Personalizá los centímetros exactos para que el cliente entienda con total claridad el tamaño y profundidad de la bacha en el plano.
+                </p>
+
+                <!-- Selección de Modelo -->
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 12px; font-weight: 600; color: var(--c-text); display: block; margin-bottom: 6px;">Modelo de Bacha:</label>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;" id="sink-model-picker">
+                        <button type="button" class="sink-model-btn active" data-model="single">🥣 Simple</button>
+                        <button type="button" class="sink-model-btn" data-model="double">🥣 Doble</button>
+                        <button type="button" class="sink-model-btn" data-model="round">⭕ Redonda</button>
+                        <button type="button" class="sink-model-btn" data-model="drainer">🍽️ Escurridor</button>
+                    </div>
+                </div>
+
+                <!-- Presets Rápidos según modelo -->
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="font-size: 12px; font-weight: 600; color: var(--c-text); display: block; margin-bottom: 6px;">Medidas habituales estándar (un toque):</label>
+                    <div id="sink-presets-container" style="display: flex; flex-wrap: wrap; gap: 6px;">
+                        <!-- Se puebla dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Inputs manuales en cm -->
+                <div id="sink-inputs-rect" class="form-row-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                    <div class="form-group" style="margin: 0;">
+                        <label for="sink-input-w" style="font-size: 12px; font-weight: 600; color: var(--c-text); display: block; margin-bottom: 4px;">Ancho / Frente (cm)</label>
+                        <input type="number" id="sink-input-w" value="56" min="15" max="300" step="0.5" style="width: 100%; font-size: 15px; font-weight: bold; text-align: center;">
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label for="sink-input-h" style="font-size: 12px; font-weight: 600; color: var(--c-text); display: block; margin-bottom: 4px;">Profundidad / Fondo (cm)</label>
+                        <input type="number" id="sink-input-h" value="37" min="15" max="300" step="0.5" style="width: 100%; font-size: 15px; font-weight: bold; text-align: center;">
+                    </div>
+                </div>
+
+                <div id="sink-inputs-round" style="display: none; margin-bottom: 16px;">
+                    <div class="form-group" style="margin: 0;">
+                        <label for="sink-input-diam" style="font-size: 12px; font-weight: 600; color: var(--c-text); display: block; margin-bottom: 4px;">Diámetro Ø (cm)</label>
+                        <input type="number" id="sink-input-diam" value="40" min="15" max="300" step="0.5" style="width: 100%; font-size: 15px; font-weight: bold; text-align: center;">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px;">
+                    <button type="button" class="btn" id="sink-modal-cancel" style="padding: 10px 16px;">Cancelar</button>
+                    <button type="button" class="btn primary" id="sink-modal-apply" style="padding: 10px 20px; font-weight: 600; background: #0284c7; border-color: #0284c7;">✓ Aplicar Medidas</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de Exportación Avanzado -->
     <div id="export-modal">
         <div class="export-card">
@@ -999,20 +1125,70 @@
                     <input type="text" id="export-author" placeholder="Nombre del técnico o marmolero (ej: Juan Pérez)" autocomplete="name">
                 </div>
 
-                <!-- Campo: Nombre del Proyecto / Cliente -->
+                <!-- Campo: Nombre del Cliente -->
+                <div class="form-group">
+                    <label for="export-client">
+                        <span>👥 Nombre del Cliente</span>
+                    </label>
+                    <input type="text" id="export-client" placeholder="Ej: Familia Rossi / Arq. Roberto Gómez">
+                </div>
+
+                <!-- Campo: Sector de la casa -->
+                <div class="form-group">
+                    <label for="export-sector">
+                        <span>🏠 Sector de la Casa</span>
+                    </label>
+                    <div style="display: flex; gap: 8px;">
+                        <select id="export-sector-preset" style="max-width: 150px; flex-shrink: 0;">
+                            <option value="Cocina">Cocina</option>
+                            <option value="Baño Principal">Baño Principal</option>
+                            <option value="Toilette">Toilette</option>
+                            <option value="Lavadero">Lavadero</option>
+                            <option value="Quincho / Parrilla">Quincho</option>
+                            <option value="Isla / Barra">Isla / Barra</option>
+                            <option value="Otro">Otro...</option>
+                        </select>
+                        <input type="text" id="export-sector" placeholder="Sector (ej: Cocina)" value="Cocina" style="flex: 1;">
+                    </div>
+                </div>
+
+                <!-- Campo: Nombre del Proyecto / Pieza -->
                 <div class="form-group">
                     <label for="export-project-name">
-                        <span>📋 Proyecto / Cliente</span>
+                        <span>📋 Proyecto / Detalle de Pieza</span>
                     </label>
-                    <input type="text" id="export-project-name" placeholder="Ej: Mesada Cocina - Familia Rossi">
+                    <input type="text" id="export-project-name" placeholder="Ej: Mesada principal y regrueso">
                 </div>
 
                 <!-- Campo: Teléfono WhatsApp (opcional) -->
                 <div class="form-group">
                     <label for="export-phone">
-                        <span>📱 WhatsApp destino <small style="color: var(--c-text-muted); font-weight: normal;">(opcional, con cód. de área)</small></span>
+                        <span>📱 WhatsApp destino <small style="color: var(--c-text-muted); font-weight: normal;">(opcional)</small></span>
                     </label>
-                    <input type="tel" id="export-phone" placeholder="Ej: +54 9 11 2345 6789 (o en blanco para elegir contacto)">
+                    <input type="tel" id="export-phone" placeholder="Ej: +54 9 11 2345 6789">
+                </div>
+
+                <!-- Configuración PDF: Orientación y Márgenes -->
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="export-pdf-orientation">
+                            <span>📄 Orientación PDF</span>
+                        </label>
+                        <select id="export-pdf-orientation">
+                            <option value="landscape" selected>Horizontal (Apaisado)</option>
+                            <option value="portrait">Vertical (Retrato)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="export-pdf-margins">
+                            <span>📐 Márgenes PDF</span>
+                        </label>
+                        <select id="export-pdf-margins">
+                            <option value="15" selected>Normal (15 mm)</option>
+                            <option value="8">Estrecho (8 mm)</option>
+                            <option value="25">Amplio (25 mm)</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="export-section-title">Elegí cómo querés exportarlo</div>
@@ -1384,12 +1560,17 @@
                         break;
                     case 'circle':
                         group.appendChild(this.createSVG('circle', {
-                            cx: elData.center.x, cy: elData.center.y, r: elData.radius,
+                            cx: elData.center.x, cy: elData.center.y, r: Math.max(0.5, elData.radius),
                             stroke: 'transparent', 'stroke-width': '25', fill: 'rgba(0,0,0,0.001)', style: 'cursor:pointer; pointer-events: all;'
                         }));
                         group.appendChild(this.createSVG('circle', {
-                            cx: elData.center.x, cy: elData.center.y, r: elData.radius,
+                            cx: elData.center.x, cy: elData.center.y, r: Math.max(0.5, elData.radius),
                             class: `svg-circle ${classes}`
+                        }));
+                        // Marcador de centro para perforaciones y círculos pequeños
+                        group.appendChild(this.createSVG('circle', {
+                            cx: elData.center.x, cy: elData.center.y, r: 1.5,
+                            fill: isSelected ? 'var(--c-select)' : '#666', stroke: 'none', style: 'pointer-events: none;'
                         }));
                         break;
                     case 'triangle':
@@ -1410,6 +1591,302 @@
                             d: d, class: `svg-pencil ${classes}`
                         }));
                         break;
+                    case 'cooktop': {
+                        const rx = Math.min(elData.start.x, elData.end.x);
+                        const ry = Math.min(elData.start.y, elData.end.y);
+                        const rw = Math.max(10, Math.abs(elData.start.x - elData.end.x));
+                        const rh = Math.max(10, Math.abs(elData.start.y - elData.end.y));
+
+                        // Hitbox
+                        group.appendChild(this.createSVG('rect', {
+                            x: rx, y: ry, width: rw, height: rh, stroke: 'transparent', 'stroke-width': '20', fill: 'rgba(0,0,0,0.001)', style: 'cursor:pointer; pointer-events: all;'
+                        }));
+                        // Placa exterior del anafe
+                        group.appendChild(this.createSVG('rect', {
+                            x: rx, y: ry, width: rw, height: rh, rx: 6,
+                            fill: isSelected ? 'rgba(37, 99, 235, 0.08)' : '#f8fafc',
+                            stroke: isSelected ? 'var(--c-select)' : '#334155',
+                            'stroke-width': isSelected ? '2' : '1.5'
+                        }));
+                        // Bisel interior
+                        if (rw > 20 && rh > 20) {
+                            group.appendChild(this.createSVG('rect', {
+                                x: rx + 4, y: ry + 4, width: rw - 8, height: rh - 8, rx: 3,
+                                fill: 'none', stroke: isSelected ? 'rgba(37, 99, 235, 0.4)' : '#94a3b8', 'stroke-width': '0.8', 'stroke-dasharray': '3 2'
+                            }));
+                        }
+                        // Hornallas según subtipo (2, 4, 5 fuegos)
+                        const sub = elData.subtype || '4_burners';
+                        let burnerCenters = [];
+                        if (sub === '2_burners') {
+                            burnerCenters = [
+                                { x: rx + rw * 0.5, y: ry + rh * 0.3, r: Math.min(rw, rh) * 0.18 },
+                                { x: rx + rw * 0.5, y: ry + rh * 0.7, r: Math.min(rw, rh) * 0.22 }
+                            ];
+                        } else if (sub === '5_burners') {
+                            const br = Math.min(rw, rh) * 0.13;
+                            burnerCenters = [
+                                { x: rx + rw * 0.22, y: ry + rh * 0.3, r: br * 0.9 },
+                                { x: rx + rw * 0.22, y: ry + rh * 0.7, r: br * 1.1 },
+                                { x: rx + rw * 0.5,  y: ry + rh * 0.5, r: br * 1.35, isWok: true },
+                                { x: rx + rw * 0.78, y: ry + rh * 0.3, r: br * 1.1 },
+                                { x: rx + rw * 0.78, y: ry + rh * 0.7, r: br * 0.85 }
+                            ];
+                        } else { // 4_burners
+                            const br = Math.min(rw, rh) * 0.15;
+                            burnerCenters = [
+                                { x: rx + rw * 0.28, y: ry + rh * 0.32, r: br * 0.9 },
+                                { x: rx + rw * 0.28, y: ry + rh * 0.68, r: br * 1.15 },
+                                { x: rx + rw * 0.72, y: ry + rh * 0.32, r: br * 1.1 },
+                                { x: rx + rw * 0.72, y: ry + rh * 0.68, r: br * 0.85 }
+                            ];
+                        }
+                        burnerCenters.forEach(b => {
+                            // Aro exterior
+                            group.appendChild(this.createSVG('circle', {
+                                cx: b.x, cy: b.y, r: b.r,
+                                fill: 'none', stroke: isSelected ? 'var(--c-select)' : '#1e293b', 'stroke-width': '1.5'
+                            }));
+                            // Corona intermedia
+                            group.appendChild(this.createSVG('circle', {
+                                cx: b.x, cy: b.y, r: b.r * 0.5,
+                                fill: isSelected ? 'rgba(37, 99, 235, 0.2)' : '#cbd5e1', stroke: isSelected ? 'var(--c-select)' : '#475569', 'stroke-width': '1'
+                            }));
+                            // Centro
+                            group.appendChild(this.createSVG('circle', {
+                                cx: b.x, cy: b.y, r: Math.max(1.5, b.r * 0.2),
+                                fill: '#0f172a', stroke: 'none'
+                            }));
+                            // Cruz de rejilla
+                            group.appendChild(this.createSVG('line', {
+                                x1: b.x - b.r * 1.15, y1: b.y, x2: b.x + b.r * 1.15, y2: b.y,
+                                stroke: '#64748b', 'stroke-width': '1'
+                            }));
+                            group.appendChild(this.createSVG('line', {
+                                x1: b.x, y1: b.y - b.r * 1.15, x2: b.x, y2: b.y + b.r * 1.15,
+                                stroke: '#64748b', 'stroke-width': '1'
+                            }));
+                            if (b.isWok) {
+                                group.appendChild(this.createSVG('circle', {
+                                    cx: b.x, cy: b.y, r: b.r * 0.85,
+                                    fill: 'none', stroke: '#ef4444', 'stroke-width': '0.8', 'stroke-dasharray': '2 2'
+                                }));
+                            }
+                        });
+                        // Etiqueta de medida
+                        const tag = this.createSVG('text', {
+                            x: rx + rw / 2, y: ry + rh - 4,
+                            'text-anchor': 'middle', 'font-size': '9.5px', 'font-family': 'monospace', 'font-weight': '600', fill: '#475569', 'pointer-events': 'none'
+                        });
+                        tag.textContent = `🔥 ${Math.round(rw)}×${Math.round(rh)} cm`;
+                        group.appendChild(tag);
+                        break;
+                    }
+                    case 'sink': {
+                        const rx = Math.min(elData.start.x, elData.end.x);
+                        const ry = Math.min(elData.start.y, elData.end.y);
+                        const rw = Math.max(10, Math.abs(elData.start.x - elData.end.x));
+                        const rh = Math.max(10, Math.abs(elData.start.y - elData.end.y));
+
+                        // Hitbox
+                        group.appendChild(this.createSVG('rect', {
+                            x: rx, y: ry, width: rw, height: rh, stroke: 'transparent', 'stroke-width': '20', fill: 'rgba(0,0,0,0.001)', style: 'cursor:pointer; pointer-events: all;'
+                        }));
+                        // Borde exterior
+                        group.appendChild(this.createSVG('rect', {
+                            x: rx, y: ry, width: rw, height: rh, rx: 8,
+                            fill: isSelected ? 'rgba(37, 99, 235, 0.08)' : '#f0f9ff',
+                            stroke: isSelected ? 'var(--c-select)' : '#0284c7',
+                            'stroke-width': isSelected ? '2' : '1.5'
+                        }));
+                        const sub = elData.subtype || 'single';
+                        if (sub === 'round') {
+                            const cx = rx + rw / 2, cy = ry + rh / 2;
+                            const rOuter = Math.min(rw, rh) / 2 - 4;
+                            group.appendChild(this.createSVG('circle', {
+                                cx: cx, cy: cy, r: Math.max(5, rOuter),
+                                fill: '#e0f2fe', stroke: '#0369a1', 'stroke-width': '1.2'
+                            }));
+                            // Sopapa desagüe
+                            group.appendChild(this.createSVG('circle', {
+                                cx: cx, cy: cy, r: Math.max(3, rOuter * 0.2),
+                                fill: '#94a3b8', stroke: '#334155', 'stroke-width': '1'
+                            }));
+                            group.appendChild(this.createSVG('circle', {
+                                cx: cx, cy: cy, r: Math.max(1.5, rOuter * 0.08),
+                                fill: '#0f172a', stroke: 'none'
+                            }));
+                        } else if (sub === 'double') {
+                            const pad = 6;
+                            const bw = (rw - pad * 3) / 2;
+                            const bh = rh - pad * 2;
+                            // Bacha 1
+                            group.appendChild(this.createSVG('rect', {
+                                x: rx + pad, y: ry + pad, width: bw, height: bh, rx: 6,
+                                fill: '#e0f2fe', stroke: '#0369a1', 'stroke-width': '1.2'
+                            }));
+                            group.appendChild(this.createSVG('circle', {
+                                cx: rx + pad + bw / 2, cy: ry + pad + bh / 2, r: Math.min(bw, bh) * 0.16,
+                                fill: '#94a3b8', stroke: '#334155', 'stroke-width': '1'
+                            }));
+                            // Bacha 2
+                            group.appendChild(this.createSVG('rect', {
+                                x: rx + pad * 2 + bw, y: ry + pad, width: bw, height: bh, rx: 6,
+                                fill: '#e0f2fe', stroke: '#0369a1', 'stroke-width': '1.2'
+                            }));
+                            group.appendChild(this.createSVG('circle', {
+                                cx: rx + pad * 2 + bw + bw / 2, cy: ry + pad + bh / 2, r: Math.min(bw, bh) * 0.16,
+                                fill: '#94a3b8', stroke: '#334155', 'stroke-width': '1'
+                            }));
+                        } else if (sub === 'drainer') {
+                            const pad = 6;
+                            const bowlW = rw * 0.55 - pad;
+                            const drainerW = rw * 0.45 - pad * 2;
+                            const bh = rh - pad * 2;
+                            // Bacha
+                            group.appendChild(this.createSVG('rect', {
+                                x: rx + pad, y: ry + pad, width: bowlW, height: bh, rx: 6,
+                                fill: '#e0f2fe', stroke: '#0369a1', 'stroke-width': '1.2'
+                            }));
+                            group.appendChild(this.createSVG('circle', {
+                                cx: rx + pad + bowlW / 2, cy: ry + pad + bh / 2, r: Math.min(bowlW, bh) * 0.18,
+                                fill: '#94a3b8', stroke: '#334155', 'stroke-width': '1'
+                            }));
+                            // Escurridor
+                            const drX = rx + pad + bowlW + pad;
+                            group.appendChild(this.createSVG('rect', {
+                                x: drX, y: ry + pad, width: drainerW, height: bh, rx: 4,
+                                fill: '#f0f9ff', stroke: '#7dd3fc', 'stroke-width': '1'
+                            }));
+                            const numGrooves = 5;
+                            for (let gi = 1; gi <= numGrooves; gi++) {
+                                const gy = ry + pad + (bh / (numGrooves + 1)) * gi;
+                                group.appendChild(this.createSVG('line', {
+                                    x1: drX + 6, y1: gy, x2: drX + drainerW - 6, y2: gy,
+                                    stroke: '#38bdf8', 'stroke-width': '1.5', 'stroke-linecap': 'round'
+                                }));
+                            }
+                        } else { // single
+                            const pad = 6;
+                            const bw = rw - pad * 2;
+                            const bh = rh - pad * 2;
+                            group.appendChild(this.createSVG('rect', {
+                                x: rx + pad, y: ry + pad, width: bw, height: bh, rx: 8,
+                                fill: '#e0f2fe', stroke: '#0369a1', 'stroke-width': '1.2'
+                            }));
+                            // Sopapa
+                            group.appendChild(this.createSVG('circle', {
+                                cx: rx + rw / 2, cy: ry + rh / 2, r: Math.min(bw, bh) * 0.16,
+                                fill: '#94a3b8', stroke: '#334155', 'stroke-width': '1'
+                            }));
+                            group.appendChild(this.createSVG('circle', {
+                                cx: rx + rw / 2, cy: ry + rh / 2, r: Math.min(bw, bh) * 0.07,
+                                fill: '#0f172a', stroke: 'none'
+                            }));
+                        }
+
+                        // Cotas Técnicas Exteriores y Cartel de Medidas para el Cliente
+                        const cotaColor = isSelected ? '#2563eb' : '#0284c7';
+                        const numW = Math.round(rw);
+                        const numH = Math.round(rh);
+
+                        if (sub === 'round') {
+                            const diam = Math.round(Math.min(rw, rh));
+                            // Cota de diámetro superior
+                            const cotaY = ry - 8;
+                            group.appendChild(this.createSVG('line', {
+                                x1: rx, y1: cotaY, x2: rx + rw, y2: cotaY,
+                                stroke: cotaColor, 'stroke-width': '1', 'stroke-dasharray': '2,2'
+                            }));
+                            group.appendChild(this.createSVG('line', {
+                                x1: rx, y1: cotaY - 3.5, x2: rx, y2: cotaY + 3.5,
+                                stroke: cotaColor, 'stroke-width': '1.2'
+                            }));
+                            group.appendChild(this.createSVG('line', {
+                                x1: rx + rw, y1: cotaY - 3.5, x2: rx + rw, y2: cotaY + 3.5,
+                                stroke: cotaColor, 'stroke-width': '1.2'
+                            }));
+                            const cotaText = this.createSVG('text', {
+                                x: rx + rw / 2, y: cotaY - 3,
+                                'text-anchor': 'middle', 'font-size': '10px', 'font-weight': '700',
+                                fill: cotaColor, 'font-family': 'system-ui, sans-serif'
+                            });
+                            cotaText.textContent = `Ø ${diam} cm`;
+                            group.appendChild(cotaText);
+                        } else {
+                            // Cota Superior (Ancho)
+                            const cotaY = ry - 8;
+                            group.appendChild(this.createSVG('line', {
+                                x1: rx, y1: cotaY, x2: rx + rw, y2: cotaY,
+                                stroke: cotaColor, 'stroke-width': '1', 'stroke-dasharray': '2,2'
+                            }));
+                            group.appendChild(this.createSVG('line', {
+                                x1: rx, y1: cotaY - 3.5, x2: rx, y2: cotaY + 3.5,
+                                stroke: cotaColor, 'stroke-width': '1.2'
+                            }));
+                            group.appendChild(this.createSVG('line', {
+                                x1: rx + rw, y1: cotaY - 3.5, x2: rx + rw, y2: cotaY + 3.5,
+                                stroke: cotaColor, 'stroke-width': '1.2'
+                            }));
+                            const cotaWText = this.createSVG('text', {
+                                x: rx + rw / 2, y: cotaY - 3,
+                                'text-anchor': 'middle', 'font-size': '10px', 'font-weight': '700',
+                                fill: cotaColor, 'font-family': 'system-ui, sans-serif'
+                            });
+                            cotaWText.textContent = `↔ ${numW} cm`;
+                            group.appendChild(cotaWText);
+
+                            // Cota Izquierda (Profundidad / Largo)
+                            const cotaX = rx - 8;
+                            group.appendChild(this.createSVG('line', {
+                                x1: cotaX, y1: ry, x2: cotaX, y2: ry + rh,
+                                stroke: cotaColor, 'stroke-width': '1', 'stroke-dasharray': '2,2'
+                            }));
+                            group.appendChild(this.createSVG('line', {
+                                x1: cotaX - 3.5, y1: ry, x2: cotaX + 3.5, y2: ry,
+                                stroke: cotaColor, 'stroke-width': '1.2'
+                            }));
+                            group.appendChild(this.createSVG('line', {
+                                x1: cotaX - 3.5, y1: ry + rh, x2: cotaX + 3.5, y2: ry + rh,
+                                stroke: cotaColor, 'stroke-width': '1.2'
+                            }));
+                            const cotaHText = this.createSVG('text', {
+                                x: cotaX - 3, y: ry + rh / 2,
+                                'text-anchor': 'middle', 'font-size': '10px', 'font-weight': '700',
+                                fill: cotaColor, 'font-family': 'system-ui, sans-serif',
+                                transform: `rotate(-90, ${cotaX - 3}, ${ry + rh / 2})`
+                            });
+                            cotaHText.textContent = `↕ ${numH} cm`;
+                            group.appendChild(cotaHText);
+                        }
+
+                        // Cartel de Medida Central de Alta Legibilidad
+                        let bachaTitle = 'Bacha';
+                        if (sub === 'round') bachaTitle = `Bacha Ø ${Math.round(Math.min(rw, rh))} cm`;
+                        else if (sub === 'double') bachaTitle = `Bacha Doble: ${numW}×${numH} cm`;
+                        else if (sub === 'drainer') bachaTitle = `Bacha c/ Esc.: ${numW}×${numH} cm`;
+                        else bachaTitle = `Bacha: ${numW}×${numH} cm`;
+
+                        const badgeW = Math.max(86, Math.min(rw - 4, bachaTitle.length * 6.6 + 18));
+                        const badgeH = 18;
+                        const badgeX = rx + rw / 2 - badgeW / 2;
+                        const badgeY = ry + rh - badgeH - 3;
+
+                        group.appendChild(this.createSVG('rect', {
+                            x: badgeX, y: badgeY, width: badgeW, height: badgeH, rx: 9,
+                            fill: 'rgba(255, 255, 255, 0.95)', stroke: '#0284c7', 'stroke-width': '1',
+                            style: 'filter: drop-shadow(0 1px 3px rgba(0,0,0,0.15)); cursor: pointer;'
+                        }));
+
+                        const tag = this.createSVG('text', {
+                            x: rx + rw / 2, y: badgeY + 12.5,
+                            'text-anchor': 'middle', 'font-size': '9.5px', 'font-family': 'system-ui, -apple-system, sans-serif',
+                            'font-weight': '700', fill: '#0369a1', style: 'cursor: pointer;'
+                        });
+                        tag.textContent = `🚰 ${bachaTitle}`;
+                        group.appendChild(tag);
+                        break;
+                    }
                     case 'text':
                         const textStr = elData.text || "Anotación";
                         const tagW = Math.max(68, textStr.length * 8 + 22);
@@ -1444,7 +1921,7 @@
                         const midX = (elData.start.x + elData.end.x) / 2;
                         const midY = (elData.start.y + elData.end.y) / 2;
                         const mVal = elData.value || "0.00 m";
-                        const mWidth = Math.max(68, mVal.length * 8 + 22);
+                        const mWidth = Math.max(54, mVal.length * 7.5 + 18);
                         
                         // Hitbox gruesa para medidas
                         group.appendChild(this.createSVG('line', {
@@ -1463,10 +1940,10 @@
                         // Remates en los extremos de la cota (ticks perpendiculares estilo CAD)
                         const mAngle = Utils.angle(elData.start, elData.end);
                         const perp = mAngle + 90;
-                        const p1A = Utils.polarToCartesian(elData.start.x, elData.start.y, 6, perp);
-                        const p1B = Utils.polarToCartesian(elData.start.x, elData.start.y, 6, perp + 180);
-                        const p2A = Utils.polarToCartesian(elData.end.x, elData.end.y, 6, perp);
-                        const p2B = Utils.polarToCartesian(elData.end.x, elData.end.y, 6, perp + 180);
+                        const p1A = Utils.polarToCartesian(elData.start.x, elData.start.y, 7, perp);
+                        const p1B = Utils.polarToCartesian(elData.start.x, elData.start.y, 7, perp + 180);
+                        const p2A = Utils.polarToCartesian(elData.end.x, elData.end.y, 7, perp);
+                        const p2B = Utils.polarToCartesian(elData.end.x, elData.end.y, 7, perp + 180);
 
                         const tick1 = this.createSVG('line', {
                             x1: p1A.x, y1: p1A.y, x2: p1B.x, y2: p1B.y,
@@ -1477,8 +1954,23 @@
                             stroke: isSelected ? 'var(--c-select)' : 'var(--c-text-muted)', 'stroke-width': '1.5'
                         });
                         
+                        // Posición de la etiqueta: DESPLAZADA POR ENCIMA DE LA LÍNEA DE MEDICIÓN
+                        const offsetDist = 15; // 15px de separación perpendicular hacia arriba
+                        const perpAngleRad = (mAngle - 90) * Math.PI / 180;
+                        const labelX = midX + Math.cos(perpAngleRad) * offsetDist;
+                        const labelY = midY + Math.sin(perpAngleRad) * offsetDist;
+
+                        // Rotación orientada a la línea (vertical en líneas verticales)
+                        let rotAngle = mAngle;
+                        if (rotAngle > 90) rotAngle -= 180;
+                        if (rotAngle < -90) rotAngle += 180;
+
+                        const labelGroup = this.createSVG('g', {
+                            transform: `translate(${labelX}, ${labelY}) rotate(${rotAngle})`
+                        });
+
                         const mBg = this.createSVG('rect', {
-                            x: midX - mWidth / 2, y: midY - 12, width: mWidth, height: 24,
+                            x: -mWidth / 2, y: -12, width: mWidth, height: 24,
                             fill: isSelected ? 'rgba(37, 99, 235, 0.12)' : 'var(--c-surface)',
                             stroke: isSelected ? 'var(--c-select)' : 'var(--c-border)',
                             'stroke-width': isSelected ? '2' : '1',
@@ -1487,22 +1979,24 @@
                         });
                         
                         const mText = this.createSVG('text', {
-                            x: midX, y: midY,
+                            x: 0, y: 0,
                             fill: isSelected ? 'var(--c-select)' : 'var(--c-active)',
                             'font-family': 'monospace',
                             'font-size': '12px',
-                            'font-weight': '600',
+                            'font-weight': '700',
                             'text-anchor': 'middle',
-                            'dominant-baseline': 'middle',
+                            'dominant-baseline': 'central',
                             style: 'cursor: grab; pointer-events: none;'
                         });
                         mText.textContent = mVal;
                         
+                        labelGroup.appendChild(mBg);
+                        labelGroup.appendChild(mText);
+
                         group.appendChild(mLine);
                         group.appendChild(tick1);
                         group.appendChild(tick2);
-                        group.appendChild(mBg);
-                        group.appendChild(mText);
+                        group.appendChild(labelGroup);
                         break;
                 }
                 return group;
@@ -1538,7 +2032,7 @@
                     elData.points.forEach((p, i) => pts.push({ id: `p${i}`, x: p.x, y: p.y }));
                 } else if (elData.type === 'text') {
                     pts.push({ id: 'pos', x: elData.position.x, y: elData.position.y });
-                } else if (elData.type === 'rect' || elData.type === 'square') {
+                } else if (elData.type === 'rect' || elData.type === 'square' || elData.type === 'cooktop' || elData.type === 'sink') {
                     const x1 = elData.start.x, y1 = elData.start.y;
                     const x2 = elData.end.x, y2 = elData.end.y;
                     // 4 esquinas de redimensión (achicar / agrandar)
@@ -1554,11 +2048,13 @@
                 } else if (elData.type === 'circle') {
                     // Centro
                     pts.push({ id: 'center', x: elData.center.x, y: elData.center.y });
-                    // 4 puntos perimetrales para agrandar y achicar el radio
+                    // Puntos perimetrales para agrandar y achicar el radio libremente
                     pts.push({ id: 'radius_r', x: elData.center.x + elData.radius, y: elData.center.y });
-                    pts.push({ id: 'radius_l', x: elData.center.x - elData.radius, y: elData.center.y });
-                    pts.push({ id: 'radius_t', x: elData.center.x, y: elData.center.y - elData.radius });
-                    pts.push({ id: 'radius_b', x: elData.center.x, y: elData.center.y + elData.radius });
+                    if (elData.radius >= 6) {
+                        pts.push({ id: 'radius_l', x: elData.center.x - elData.radius, y: elData.center.y });
+                        pts.push({ id: 'radius_t', x: elData.center.x, y: elData.center.y - elData.radius });
+                        pts.push({ id: 'radius_b', x: elData.center.x, y: elData.center.y + elData.radius });
+                    }
                 } else if (elData.type === 'triangle') {
                     // 3 vértices de forma
                     elData.points.forEach((p, i) => pts.push({ id: `p${i}`, x: p.x, y: p.y }));
@@ -1628,7 +2124,7 @@
                     const pts = [];
                     if (el.type === 'line') { pts.push(el.start, el.end); }
                     if (el.type === 'polyline') { pts.push(...el.points); }
-                    if (el.type === 'rect' || el.type === 'square') {
+                    if (el.type === 'rect' || el.type === 'square' || el.type === 'cooktop' || el.type === 'sink') {
                         pts.push(
                             el.start, el.end,
                             { x: el.start.x, y: el.end.y },
@@ -1695,12 +2191,12 @@
                 if (el.start && el.end && Utils.distance(el.start, el.end) > 2) {
                     valid = true;
                 }
-            } else if (el.type === 'rect' || el.type === 'square') {
+            } else if (el.type === 'rect' || el.type === 'square' || el.type === 'cooktop' || el.type === 'sink') {
                 if (el.start && el.end && Utils.distance(el.start, el.end) > 5) {
                     valid = true;
                 }
             } else if (el.type === 'circle') {
-                if (el.radius > 5) {
+                if (el.radius >= 0.5) {
                     valid = true;
                 }
             } else if (el.type === 'triangle') {
@@ -1899,8 +2395,8 @@
                         }
                     } else if (this._activeEl.type === 'text' && this._activeCtrl === 'pos') {
                         this._activeEl.position = finalP;
-                    } else if (this._activeEl.type === 'rect') {
-                        // Achicar y agrandar Rectángulo
+                    } else if (this._activeEl.type === 'rect' || this._activeEl.type === 'cooktop' || this._activeEl.type === 'sink') {
+                        // Achicar y agrandar Rectángulo, Hornallas o Bachas
                         if (this._activeCtrl === 'tl') { this._activeEl.start.x = finalP.x; this._activeEl.start.y = finalP.y; }
                         else if (this._activeCtrl === 'tr') { this._activeEl.end.x = finalP.x; this._activeEl.start.y = finalP.y; }
                         else if (this._activeCtrl === 'br') { this._activeEl.end.x = finalP.x; this._activeEl.end.y = finalP.y; }
@@ -1913,7 +2409,7 @@
                         // Achicar y agrandar Cuadrado manteniendo aspecto proporcional 1:1
                         let anchorX = this._activeEl.start.x, anchorY = this._activeEl.start.y;
                         if (this._activeCtrl === 'tl') { anchorX = this._activeEl.end.x; anchorY = this._activeEl.end.y; }
-                        else if (this._activeCtrl === 'tr') { anchorX = this._activeEl.start.x; anchorY = this._activeEl.end.y; }
+                        else if (this._activeCtrl === 'tr') { anchorX = this._activeEl.end.x; anchorY = this._activeEl.start.y; }
                         else if (this._activeCtrl === 'bl') { anchorX = this._activeEl.end.x; anchorY = this._activeEl.start.y; }
                         else if (this._activeCtrl === 'br') { anchorX = this._activeEl.start.x; anchorY = this._activeEl.start.y; }
                         else { anchorX = this._activeEl.start.x; anchorY = this._activeEl.start.y; }
@@ -1927,9 +2423,9 @@
                         this._activeEl.start = { x: anchorX, y: anchorY };
                         this._activeEl.end = { x: anchorX + sx * size, y: anchorY + sy * size };
                     } else if (this._activeEl.type === 'circle') {
-                        // Achicar y agrandar Círculo modificando el radio
+                        // Achicar y agrandar Círculo modificando el radio libremente
                         if (this._activeCtrl.startsWith('radius_')) {
-                            const newR = Math.max(5, Math.round(Utils.distance(this._activeEl.center, finalP)));
+                            const newR = Math.max(0.5, Math.round(Utils.distance(this._activeEl.center, finalP) * 10) / 10);
                             this._activeEl.radius = newR;
                         } else if (this._activeCtrl === 'center') {
                             this._activeEl.center = finalP;
@@ -1974,7 +2470,9 @@
                     
                     if (id && id !== 'bg-rect' && id !== 'viewport-transform' && id !== 'scene' && id !== 'canvas') {
                         const el = App.data.elements.find(x => x.id === id);
-                        if (el && (el.type === 'text' || el.type === 'measure')) {
+                        if (!el) return;
+                        
+                        if (el.type === 'text' || el.type === 'measure') {
                             const pos = el.type === 'text' 
                                 ? el.position 
                                 : { x: (el.start.x + el.end.x) / 2, y: (el.start.y + el.end.y) / 2 };
@@ -1990,6 +2488,59 @@
                                         if (el.type === 'text') el.text = newText.trim();
                                         else el.value = newText.trim();
                                         Renderer.renderAll();
+                                    }
+                                },
+                                null,
+                                { select: true }
+                            );
+                        } else if (el.type === 'circle') {
+                            const dCm = (el.radius * 2).toFixed(1).replace('.0', '');
+                            CanvasInlineEditor.open(
+                                el.center,
+                                `${dCm} cm`,
+                                "Diámetro en cm (ej: 3.5 o 35)",
+                                (newVal) => {
+                                    if (newVal) {
+                                        const num = parseFloat(newVal.replace(',', '.').replace(/[^0-9.]/g, ''));
+                                        if (!isNaN(num) && num > 0) {
+                                            HistoryManager.pushState();
+                                            el.radius = Math.max(0.5, num / 2);
+                                            Renderer.renderAll();
+                                            UI.updateSelectionBar();
+                                            UI.showToast(`Diámetro: ${num} cm`);
+                                        }
+                                    }
+                                },
+                                null,
+                                { select: true }
+                            );
+                        } else if (el.type === 'sink') {
+                            SinkDimensionModal.open(el);
+                        } else if (el.type === 'cooktop' || el.type === 'rect' || el.type === 'square') {
+                            const w = Math.round(Math.abs(el.end.x - el.start.x));
+                            const h = Math.round(Math.abs(el.end.y - el.start.y));
+                            const center = { x: (el.start.x + el.end.x) / 2, y: (el.start.y + el.end.y) / 2 };
+                            CanvasInlineEditor.open(
+                                center,
+                                `${w} x ${h} cm`,
+                                "Ancho x Largo en cm (ej: 60 x 50)",
+                                (newVal) => {
+                                    if (newVal) {
+                                        const parts = newVal.toLowerCase().split(/[xX*,\s]+/).filter(Boolean);
+                                        if (parts.length >= 2) {
+                                            const nw = parseFloat(parts[0]);
+                                            const nh = parseFloat(parts[1]);
+                                            if (!isNaN(nw) && !isNaN(nh) && nw > 0 && nh > 0) {
+                                                HistoryManager.pushState();
+                                                const cx = (el.start.x + el.end.x) / 2;
+                                                const cy = (el.start.y + el.end.y) / 2;
+                                                el.start = { x: cx - nw / 2, y: cy - nh / 2 };
+                                                el.end = { x: cx + nw / 2, y: cy + nh / 2 };
+                                                Renderer.renderAll();
+                                                UI.updateSelectionBar();
+                                                UI.showToast(`Dimensiones: ${nw}×${nh} cm`);
+                                            }
+                                        }
                                     }
                                 },
                                 null,
@@ -2044,7 +2595,7 @@
 
                     const sub = App.ui.tempElement.type;
                     if (sub === 'circle') {
-                        const r = Math.round(Utils.distance(App.ui.tempElement.center, currP));
+                        const r = Math.max(0.5, Math.round(Utils.distance(App.ui.tempElement.center, currP) * 10) / 10);
                         App.ui.tempElement.radius = r;
                     } else if (sub === 'square') {
                         const dx = currP.x - App.ui.tempElement.start.x;
@@ -2078,7 +2629,7 @@
                         const el = App.ui.tempElement;
                         delete el._startP;
 
-                        if (el.type === 'circle' && el.radius > 5) valid = true;
+                        if (el.type === 'circle' && el.radius >= 0.5) valid = true;
                         else if ((el.type === 'rect' || el.type === 'square') && Utils.distance(el.start, el.end) > 5) valid = true;
                         else if (el.type === 'triangle' && (Utils.distance(el.points[1], el.points[2]) > 5)) valid = true;
 
@@ -2091,6 +2642,125 @@
                         App.ui.tempElement = null;
                         Renderer.renderPreview();
                         Renderer.renderAll();
+                    }
+                    Renderer.drawSnap(null);
+                }
+            },
+
+            cooktop: {
+                down(wp) {
+                    const snap = Snapper.findSnap(wp);
+                    const startP = snap ? { x: snap.x, y: snap.y } : wp;
+                    const sub = App.ui.subTool || '4_burners';
+                    let w = 60, h = 50;
+                    if (sub === '2_burners') { w = 30; h = 50; }
+                    else if (sub === '5_burners') { w = 75; h = 50; }
+
+                    App.ui.tempElement = {
+                        id: Utils.uuid(),
+                        type: 'cooktop',
+                        subtype: sub,
+                        start: { x: startP.x - w / 2, y: startP.y - h / 2 },
+                        end: { x: startP.x + w / 2, y: startP.y + h / 2 },
+                        _anchor: startP
+                    };
+                    Renderer.renderPreview();
+                },
+                move(wp) {
+                    if (!App.ui.tempElement) return;
+                    const snap = Snapper.findSnap(wp);
+                    const currP = snap ? { x: snap.x, y: snap.y } : wp;
+                    Renderer.drawSnap(snap);
+                    const anchor = App.ui.tempElement._anchor;
+                    if (anchor && Utils.distance(anchor, currP) > 8) {
+                        App.ui.tempElement.start = { x: Math.min(anchor.x, currP.x), y: Math.min(anchor.y, currP.y) };
+                        App.ui.tempElement.end = { x: Math.max(anchor.x, currP.x), y: Math.max(anchor.y, currP.y) };
+                    }
+                    Renderer.renderPreview();
+                },
+                up() {
+                    if (App.ui.tempElement) {
+                        const el = App.ui.tempElement;
+                        delete el._anchor;
+                        const w = Math.abs(el.end.x - el.start.x);
+                        const h = Math.abs(el.end.y - el.start.y);
+                        if (w >= 10 && h >= 10) {
+                            HistoryManager.pushState();
+                            App.data.elements.push(el);
+                            App.ui.selectedId = el.id;
+                            UI.showToast("🔥 Hornalla colocada. Arrastrá los puntos para redimensionar.");
+                        }
+                        App.ui.tempElement = null;
+                        Renderer.renderPreview();
+                        Renderer.renderAll();
+                        UI.updateSelectionBar();
+                    }
+                    Renderer.drawSnap(null);
+                }
+            },
+
+            sink: {
+                down(wp) {
+                    const snap = Snapper.findSnap(wp);
+                    const startP = snap ? { x: snap.x, y: snap.y } : wp;
+                    const sub = App.ui.subTool || 'single';
+                    let w, h;
+                    if (sub === 'round') {
+                        const d = App.ui.sinkDiam || 40;
+                        w = d; h = d;
+                    } else if (sub === 'double') {
+                        w = App.ui.sinkDoubleW || 80;
+                        h = App.ui.sinkDoubleH || 45;
+                    } else if (sub === 'drainer') {
+                        w = App.ui.sinkDrainerW || 85;
+                        h = App.ui.sinkDrainerH || 45;
+                    } else {
+                        w = App.ui.sinkSingleW || 56;
+                        h = App.ui.sinkSingleH || 37;
+                    }
+
+                    App.ui.tempElement = {
+                        id: Utils.uuid(),
+                        type: 'sink',
+                        subtype: sub,
+                        start: { x: startP.x - w / 2, y: startP.y - h / 2 },
+                        end: { x: startP.x + w / 2, y: startP.y + h / 2 },
+                        _anchor: startP
+                    };
+                    Renderer.renderPreview();
+                },
+                move(wp) {
+                    if (!App.ui.tempElement) return;
+                    const snap = Snapper.findSnap(wp);
+                    const currP = snap ? { x: snap.x, y: snap.y } : wp;
+                    Renderer.drawSnap(snap);
+                    const anchor = App.ui.tempElement._anchor;
+                    if (anchor && Utils.distance(anchor, currP) > 8) {
+                        App.ui.tempElement.start = { x: Math.min(anchor.x, currP.x), y: Math.min(anchor.y, currP.y) };
+                        App.ui.tempElement.end = { x: Math.max(anchor.x, currP.x), y: Math.max(anchor.y, currP.y) };
+                    }
+                    Renderer.renderPreview();
+                },
+                up() {
+                    if (App.ui.tempElement) {
+                        const el = App.ui.tempElement;
+                        delete el._anchor;
+                        const w = Math.abs(el.end.x - el.start.x);
+                        const h = Math.abs(el.end.y - el.start.y);
+                        if (w >= 10 && h >= 10) {
+                            HistoryManager.pushState();
+                            App.data.elements.push(el);
+                            App.ui.selectedId = el.id;
+                            const sub = el.subtype || 'single';
+                            const toastMsg = sub === 'round' 
+                                ? `🚰 Bacha redonda colocada (Ø ${Math.round(Math.min(w, h))} cm)`
+                                : `🚰 Bacha colocada (${Math.round(w)}×${Math.round(h)} cm)`;
+                            UI.showToast(toastMsg);
+                        }
+                        App.ui.tempElement = null;
+                        Renderer.renderPreview();
+                        Renderer.renderAll();
+                        UI.updateSelectionBar();
                     }
                     Renderer.drawSnap(null);
                 }
@@ -2607,7 +3277,7 @@
                             let d = Infinity;
                             if (el.type === 'line' || el.type === 'measure') {
                                 d = Utils.pointToSegmentDist(wp, el.start, el.end);
-                            } else if (el.type === 'rect' || el.type === 'square') {
+                            } else if (el.type === 'rect' || el.type === 'square' || el.type === 'cooktop' || el.type === 'sink') {
                                 const rx = Math.min(el.start.x, el.end.x);
                                 const ry = Math.min(el.start.y, el.end.y);
                                 const rw = Math.abs(el.start.x - el.end.x);
@@ -2676,7 +3346,6 @@
                 if (App.ui.isDragging) {
                     App.ui.isDragging = false;
                     if (App.ui.tempElement) {
-                        App.ui.tempElement.remove();
                         App.ui.tempElement = null;
                         Renderer.renderPreview();
                     }
@@ -2837,13 +3506,50 @@
                     'polyline': '📈 Polilínea',
                     'pencil': '〰️ Trazo',
                     'text': 'T Anotación',
-                    'measure': '↔️ Cota'
+                    'measure': '↔️ Cota',
+                    'cooktop': '🔥 Hornallas',
+                    'sink': '🚰 Bacha'
                 };
 
-                if (info) info.textContent = typeLabels[el.type] || 'Elemento';
+                let label = typeLabels[el.type] || 'Elemento';
+                if (el.type === 'circle') {
+                    const d = (el.radius * 2).toFixed(1).replace('.0', '');
+                    label = `⭕ Círculo (Ø ${d} cm)`;
+                    if (editBtn) editBtn.innerHTML = '✏️ Editar';
+                } else if (el.type === 'sink') {
+                    const w = Math.round(Math.abs(el.end.x - el.start.x));
+                    const h = Math.round(Math.abs(el.end.y - el.start.y));
+                    const sub = el.subtype || 'single';
+                    if (sub === 'round') {
+                        const diam = Math.round(Math.min(w, h));
+                        label = `🚰 Bacha Redonda (Ø ${diam} cm)`;
+                        if (editBtn) editBtn.innerHTML = `✏️ Medidas (Ø ${diam} cm)`;
+                    } else {
+                        const subName = sub === 'double' ? 'Doble' : (sub === 'drainer' ? 'c/ Escurridor' : 'Simple');
+                        label = `🚰 Bacha ${subName} (${w}×${h} cm)`;
+                        if (editBtn) editBtn.innerHTML = `✏️ Medidas (${w}×${h} cm)`;
+                    }
+                } else if (el.type === 'cooktop' || el.type === 'rect' || el.type === 'square') {
+                    const w = Math.round(Math.abs(el.end.x - el.start.x));
+                    const h = Math.round(Math.abs(el.end.y - el.start.y));
+                    const prefix = el.type === 'cooktop' ? '🔥 Hornallas' : (el.type === 'square' ? '🟩 Cuadrado' : '▭ Rectángulo');
+                    label = `${prefix} (${w}×${h} cm)`;
+                    if (editBtn) editBtn.innerHTML = '✏️ Editar';
+                } else if (el.type === 'measure') {
+                    label = `↔️ Cota (${el.value || ''})`;
+                    if (editBtn) editBtn.innerHTML = '✏️ Editar';
+                } else {
+                    if (editBtn) editBtn.innerHTML = '✏️ Editar';
+                }
+
+                if (info) info.textContent = label;
                 if (editBtn) {
-                    if (el.type === 'text' || el.type === 'measure') {
+                    if (['text', 'measure', 'circle', 'cooktop', 'sink', 'rect', 'square'].includes(el.type)) {
                         editBtn.style.display = 'flex';
+                        if (el.type === 'circle') editBtn.title = "Editar diámetro en cm";
+                        else if (el.type === 'sink') editBtn.title = "Personalizar medidas de la bacha en cm";
+                        else if (['cooktop', 'rect', 'square'].includes(el.type)) editBtn.title = "Editar dimensiones (Ancho × Largo)";
+                        else editBtn.title = "Editar cota o texto";
                     } else {
                         editBtn.style.display = 'none';
                     }
@@ -2872,6 +3578,7 @@
                 const onCancel = () => {
                     modal.classList.remove('active');
                     cleanup();
+                    callback();
                 };
                 
                 const btnConfirm = document.getElementById('modal-confirm');
@@ -2889,31 +3596,32 @@
                 }
             },
             setTool(toolName) {
-                // Siempre guardar cualquier trazo o forma en curso al cambiar de herramienta
-                commitPendingDrawing();
-
                 App.ui.currentTool = toolName;
-                App.ui.selectedId = null; // Deseleccionar
-                Renderer.renderAll();
-                this.updateSelectionBar();
                 
-                // Actualizar botones
-                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                const curBtn = document.querySelector(`.tool-btn[data-tool="${toolName}"]`);
-                if (curBtn) curBtn.classList.add('active');
+                // Actualizar botones barra
+                document.querySelectorAll('.tool-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-tool') === toolName);
+                });
 
-                // Actualizar cursor visual
-                App.DOM.workspace.classList.remove('tool-select', 'tool-draw', 'tool-shapes', 'tool-pencil', 'tool-measure', 'tool-annotate', 'tool-erase');
-                App.DOM.workspace.classList.add('tool-' + toolName);
+                // Cambiar cursor en workspace según herramienta
+                const ws = App.DOM.workspace;
+                ws.className = ws.className.replace(/\btool-\S+/g, '').trim();
+                ws.classList.add(`tool-${toolName}`);
 
-                // Sub-toolbar dinámico
+                // Si cambiamos de herramienta y había una selección, deseleccionamos para evitar interferencias
+                if (toolName !== 'select' && App.ui.selectedId) {
+                    App.ui.selectedId = null;
+                    Renderer.renderAll();
+                }
+                this.updateSelectionBar();
+
+                // Manejar Sub-toolbars flotantes
                 const sub = document.getElementById('sub-toolbar');
-                sub.innerHTML = '';
                 if (toolName === 'draw') {
-                    if (App.ui.subTool !== 'line' && App.ui.subTool !== 'polyline') App.ui.subTool = 'line';
+                    if (!['line', 'polyline'].includes(App.ui.subTool)) App.ui.subTool = 'line';
                     sub.innerHTML = `
-                        <button class="subtool-btn ${App.ui.subTool==='line'?'active':''}" data-sub="line">📏 Línea</button>
-                        <button class="subtool-btn ${App.ui.subTool==='polyline'?'active':''}" data-sub="polyline">📈 Línea Continua</button>
+                        <button class="subtool-btn ${App.ui.subTool==='line'?'active':''}" data-sub="line">📏 Segmento</button>
+                        <button class="subtool-btn ${App.ui.subTool==='polyline'?'active':''}" data-sub="polyline">📈 Continua</button>
                     `;
                     sub.classList.add('visible');
                     
@@ -2939,24 +3647,254 @@
                             this.setTool('shapes'); // Refresh
                         });
                     });
+                } else if (toolName === 'cooktop') {
+                    if (!['2_burners', '4_burners', '5_burners'].includes(App.ui.subTool)) App.ui.subTool = '4_burners';
+                    sub.innerHTML = `
+                        <button class="subtool-btn ${App.ui.subTool==='2_burners'?'active':''}" data-sub="2_burners">🔥 2 Fuegos (30×50)</button>
+                        <button class="subtool-btn ${App.ui.subTool==='4_burners'?'active':''}" data-sub="4_burners">🔥 4 Fuegos (60×50)</button>
+                        <button class="subtool-btn ${App.ui.subTool==='5_burners'?'active':''}" data-sub="5_burners">🔥 5 Fuegos (75×50)</button>
+                    `;
+                    sub.classList.add('visible');
+                    
+                    sub.querySelectorAll('.subtool-btn').forEach(b => {
+                        b.addEventListener('click', (e) => {
+                            App.ui.subTool = e.currentTarget.getAttribute('data-sub');
+                            this.setTool('cooktop');
+                        });
+                    });
+                } else if (toolName === 'sink') {
+                    if (!['single', 'double', 'round', 'drainer'].includes(App.ui.subTool)) App.ui.subTool = 'single';
+                    const subM = App.ui.subTool;
+                    let dimText = '';
+                    if (subM === 'round') {
+                        dimText = `Ø ${App.ui.sinkDiam || 40} cm`;
+                    } else if (subM === 'double') {
+                        dimText = `${App.ui.sinkDoubleW || 80}×${App.ui.sinkDoubleH || 45} cm`;
+                    } else if (subM === 'drainer') {
+                        dimText = `${App.ui.sinkDrainerW || 85}×${App.ui.sinkDrainerH || 45} cm`;
+                    } else {
+                        dimText = `${App.ui.sinkSingleW || 56}×${App.ui.sinkSingleH || 37} cm`;
+                    }
+
+                    sub.innerHTML = `
+                        <button class="subtool-btn ${subM==='single'?'active':''}" data-sub="single">🥣 Simple</button>
+                        <button class="subtool-btn ${subM==='double'?'active':''}" data-sub="double">🥣 Doble</button>
+                        <button class="subtool-btn ${subM==='round'?'active':''}" data-sub="round">⭕ Redonda</button>
+                        <button class="subtool-btn ${subM==='drainer'?'active':''}" data-sub="drainer">🍽️ c/ Escurridor</button>
+                        <button type="button" class="subtool-btn" id="btn-sub-sink-dim" style="border: 1.5px solid #0284c7; background: #f0f9ff; color: #0284c7; font-weight: 700; border-radius: 6px; margin-left: 6px;" title="Personalizar medidas exactas de la bacha">
+                            📏 ${dimText} ▾
+                        </button>
+                    `;
+                    sub.classList.add('visible');
+                    
+                    sub.querySelectorAll('.subtool-btn[data-sub]').forEach(b => {
+                        b.addEventListener('click', (e) => {
+                            App.ui.subTool = e.currentTarget.getAttribute('data-sub');
+                            this.setTool('sink');
+                        });
+                    });
+
+                    const dimBtn = document.getElementById('btn-sub-sink-dim');
+                    if (dimBtn) {
+                        dimBtn.addEventListener('click', () => {
+                            SinkDimensionModal.open();
+                        });
+                    }
                 } else {
                     sub.classList.remove('visible');
                 }
             }
         };
 
-        
+        // Gestor de Personalización de Medidas de Bachas
+        const SinkDimensionModal = {
+            _targetElementId: null,
+            _activeModel: 'single',
+
+            presets: {
+                single: [
+                    { label: '40 × 34', w: 40, h: 34 },
+                    { label: '52 × 32', w: 52, h: 32 },
+                    { label: '56 × 37', w: 56, h: 37 },
+                    { label: '60 × 40', w: 60, h: 40 },
+                    { label: '68 × 45', w: 68, h: 45 }
+                ],
+                double: [
+                    { label: '70 × 40', w: 70, h: 40 },
+                    { label: '78 × 44', w: 78, h: 44 },
+                    { label: '80 × 45', w: 80, h: 45 },
+                    { label: '85 × 48', w: 85, h: 48 }
+                ],
+                round: [
+                    { label: 'Ø 35 cm', diam: 35 },
+                    { label: 'Ø 38 cm', diam: 38 },
+                    { label: 'Ø 40 cm', diam: 40 },
+                    { label: 'Ø 45 cm', diam: 45 }
+                ],
+                drainer: [
+                    { label: '78 × 44', w: 78, h: 44 },
+                    { label: '85 × 45', w: 85, h: 45 },
+                    { label: '100 × 50', w: 100, h: 50 }
+                ]
+            },
+
+            open(targetEl = null) {
+                this._targetElementId = targetEl ? targetEl.id : (App.ui.selectedId ? App.ui.selectedId : null);
+                const modal = document.getElementById('sink-modal');
+                if (!modal) return;
+
+                let el = null;
+                if (this._targetElementId) {
+                    el = App.data.elements.find(x => x.id === this._targetElementId && x.type === 'sink');
+                    if (!el) this._targetElementId = null;
+                }
+
+                const currentModel = el ? (el.subtype || 'single') : (App.ui.subTool && ['single','double','round','drainer'].includes(App.ui.subTool) ? App.ui.subTool : 'single');
+                this.setModel(currentModel);
+
+                if (el) {
+                    const w = Math.round(Math.abs(el.end.x - el.start.x));
+                    const h = Math.round(Math.abs(el.end.y - el.start.y));
+                    if (currentModel === 'round') {
+                        const diam = Math.round(Math.min(w, h));
+                        document.getElementById('sink-input-diam').value = diam;
+                    } else {
+                        document.getElementById('sink-input-w').value = w;
+                        document.getElementById('sink-input-h').value = h;
+                    }
+                } else {
+                    if (currentModel === 'round') {
+                        document.getElementById('sink-input-diam').value = App.ui.sinkDiam || 40;
+                    } else if (currentModel === 'double') {
+                        document.getElementById('sink-input-w').value = App.ui.sinkDoubleW || 80;
+                        document.getElementById('sink-input-h').value = App.ui.sinkDoubleH || 45;
+                    } else if (currentModel === 'drainer') {
+                        document.getElementById('sink-input-w').value = App.ui.sinkDrainerW || 85;
+                        document.getElementById('sink-input-h').value = App.ui.sinkDrainerH || 45;
+                    } else {
+                        document.getElementById('sink-input-w').value = App.ui.sinkSingleW || 56;
+                        document.getElementById('sink-input-h').value = App.ui.sinkSingleH || 37;
+                    }
+                }
+
+                modal.classList.add('active');
+            },
+
+            close() {
+                const modal = document.getElementById('sink-modal');
+                if (modal) modal.classList.remove('active');
+                this._targetElementId = null;
+            },
+
+            setModel(model) {
+                this._activeModel = model;
+                document.querySelectorAll('.sink-model-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-model') === model);
+                });
+
+                const isRound = model === 'round';
+                const rectDiv = document.getElementById('sink-inputs-rect');
+                const roundDiv = document.getElementById('sink-inputs-round');
+                if (rectDiv) rectDiv.style.display = isRound ? 'none' : 'grid';
+                if (roundDiv) roundDiv.style.display = isRound ? 'block' : 'none';
+
+                this.renderPresets(model);
+            },
+
+            renderPresets(model) {
+                const container = document.getElementById('sink-presets-container');
+                if (!container) return;
+                container.innerHTML = '';
+                const list = this.presets[model] || [];
+                list.forEach(p => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'sink-preset-pill';
+                    btn.textContent = p.label + ' cm';
+                    btn.addEventListener('click', () => {
+                        if (model === 'round') {
+                            document.getElementById('sink-input-diam').value = p.diam;
+                        } else {
+                            document.getElementById('sink-input-w').value = p.w;
+                            document.getElementById('sink-input-h').value = p.h;
+                        }
+                        container.querySelectorAll('.sink-preset-pill').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                    });
+                    container.appendChild(btn);
+                });
+            },
+
+            apply() {
+                const model = this._activeModel;
+                let w = 56, h = 37;
+                if (model === 'round') {
+                    const d = parseFloat(document.getElementById('sink-input-diam').value) || 40;
+                    w = Math.max(15, d);
+                    h = w;
+                    App.ui.sinkDiam = w;
+                } else {
+                    const nw = parseFloat(document.getElementById('sink-input-w').value) || 56;
+                    const nh = parseFloat(document.getElementById('sink-input-h').value) || 37;
+                    w = Math.max(15, nw);
+                    h = Math.max(15, nh);
+                    if (model === 'double') { App.ui.sinkDoubleW = w; App.ui.sinkDoubleH = h; }
+                    else if (model === 'drainer') { App.ui.sinkDrainerW = w; App.ui.sinkDrainerH = h; }
+                    else { App.ui.sinkSingleW = w; App.ui.sinkSingleH = h; }
+                }
+
+                App.ui.subTool = model;
+
+                if (this._targetElementId) {
+                    const el = App.data.elements.find(x => x.id === this._targetElementId);
+                    if (el && el.type === 'sink') {
+                        HistoryManager.pushState();
+                        el.subtype = model;
+                        const cx = (el.start.x + el.end.x) / 2;
+                        const cy = (el.start.y + el.end.y) / 2;
+                        el.start = { x: cx - w / 2, y: cy - h / 2 };
+                        el.end = { x: cx + w / 2, y: cy + h / 2 };
+                        Renderer.renderAll();
+                        UI.updateSelectionBar();
+                        UI.showToast(model === 'round' ? `Bacha: Ø ${w} cm` : `Bacha: ${w}×${h} cm`);
+                    }
+                } else {
+                    UI.showToast(model === 'round' ? `Medida fijada: Ø ${w} cm (hacé clic en el plano)` : `Medida fijada: ${w}×${h} cm (hacé clic en el plano)`);
+                }
+
+                this.close();
+                if (App.ui.currentTool === 'sink') {
+                    UI.setTool('sink');
+                }
+            }
+        };
+
         const ExportManager = {
             openModal() {
                 const modal = document.getElementById('export-modal');
                 const authorInput = document.getElementById('export-author');
+                const clientInput = document.getElementById('export-client');
+                const sectorInput = document.getElementById('export-sector');
+                const sectorPreset = document.getElementById('export-sector-preset');
                 const projectInput = document.getElementById('export-project-name');
                 const errorSpan = document.getElementById('author-error');
                 
                 // Cargar valores previos si existen
                 const savedAuthor = localStorage.getItem('marmoleria_author') || '';
+                const savedClient = localStorage.getItem('marmoleria_client') || '';
+                const savedSector = localStorage.getItem('marmoleria_sector') || 'Cocina';
+
                 authorInput.value = savedAuthor;
-                projectInput.value = App.data.project.name || 'Mesada Cocina';
+                if (clientInput) clientInput.value = savedClient;
+                if (sectorInput) sectorInput.value = savedSector;
+                if (sectorPreset) {
+                    if (['Cocina', 'Baño / Toilette', 'Lavadero', 'Parrilla / Quincho', 'Bar / Isla'].includes(savedSector)) {
+                        sectorPreset.value = savedSector;
+                    } else if (savedSector) {
+                        sectorPreset.value = 'otro';
+                    }
+                }
+                projectInput.value = App.data.project.name || 'Mesada';
                 
                 authorInput.classList.remove('input-error');
                 if (errorSpan) errorSpan.style.display = 'none';
@@ -2964,6 +3902,8 @@
                 modal.classList.add('active');
                 if (!savedAuthor) {
                     authorInput.focus();
+                } else if (!savedClient && clientInput) {
+                    clientInput.focus();
                 } else {
                     projectInput.focus();
                 }
@@ -2976,13 +3916,21 @@
 
             validateAndGetInfo() {
                 const authorInput = document.getElementById('export-author');
+                const clientInput = document.getElementById('export-client');
+                const sectorInput = document.getElementById('export-sector');
                 const projectInput = document.getElementById('export-project-name');
                 const phoneInput = document.getElementById('export-phone');
+                const orientSelect = document.getElementById('export-orientation');
+                const marginSelect = document.getElementById('export-margins');
                 const errorSpan = document.getElementById('author-error');
 
                 const author = authorInput.value.trim();
+                const client = clientInput ? clientInput.value.trim() : '';
+                const sector = sectorInput ? sectorInput.value.trim() : 'Cocina';
                 const projectName = projectInput.value.trim() || 'Plano de Marmolería';
                 const phone = phoneInput ? phoneInput.value.trim() : '';
+                const orientation = orientSelect ? orientSelect.value : 'landscape';
+                const margin = marginSelect ? parseFloat(marginSelect.value) || 15 : 15;
 
                 if (!author) {
                     authorInput.classList.add('input-error');
@@ -2997,9 +3945,11 @@
 
                 // Guardar en memoria y localStorage
                 localStorage.setItem('marmoleria_author', author);
+                if (client) localStorage.setItem('marmoleria_client', client);
+                if (sector) localStorage.setItem('marmoleria_sector', sector);
                 App.data.project.name = projectName;
 
-                return { author, projectName, phone };
+                return { author, client, sector, projectName, phone, orientation, margin };
             },
 
             exportJSON() {
@@ -3012,45 +3962,83 @@
                 UI.showToast("Respaldo JSON descargado");
             },
 
-            exportPDF(author, projectName) {
+            exportPDF(infoOrAuthor, projectName) {
                 try {
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-                    
-                    const proj = projectName || App.data.project.name || 'Plano Marmolería';
-                    const auth = author || localStorage.getItem('marmoleria_author') || 'Personal técnico';
+                    let info = {};
+                    if (typeof infoOrAuthor === 'object' && infoOrAuthor !== null) {
+                        info = infoOrAuthor;
+                    } else {
+                        info = {
+                            author: infoOrAuthor || localStorage.getItem('marmoleria_author') || 'Personal técnico',
+                            projectName: projectName || App.data.project.name || 'Plano Marmolería',
+                            client: localStorage.getItem('marmoleria_client') || '',
+                            sector: localStorage.getItem('marmoleria_sector') || 'Cocina',
+                            orientation: 'landscape',
+                            margin: 15
+                        };
+                    }
+
+                    const orientation = info.orientation || 'landscape';
+                    const margin = typeof info.margin === 'number' ? info.margin : 15;
+                    const proj = info.projectName || App.data.project.name || 'Plano Marmolería';
+                    const auth = info.author || localStorage.getItem('marmoleria_author') || 'Personal técnico';
+                    const client = info.client || '-';
+                    const sector = info.sector || 'Cocina';
                     const fechaStr = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({ orientation: orientation, unit: 'mm', format: 'a4' });
+                    
+                    const pageW = orientation === 'landscape' ? 297 : 210;
+                    const pageH = orientation === 'landscape' ? 210 : 297;
+
                     // Cabecera profesional estilo membrete técnico
+                    const headerTop = margin;
                     doc.setFont(undefined, 'bold');
-                    doc.setFontSize(15);
-                    doc.text("MARMOLERÍA BENJAMÍN", 12, 14);
-                    
+                    doc.setFontSize(14);
+                    doc.setTextColor(20, 20, 20);
+                    doc.text("MARMOLERÍA BENJAMÍN", margin, headerTop + 5);
+
                     doc.setFont(undefined, 'normal');
-                    doc.setFontSize(9.5);
-                    doc.text(`Proyecto: ${proj}`, 12, 21);
-                    doc.text(`Realizado por: ${auth}`, 12, 27);
-                    
-                    doc.text(`Fecha: ${fechaStr}`, 215, 21);
-                    doc.text("Plano Técnico A4 (Taller / Fabricación)", 215, 27);
-                    
-                    doc.setDrawColor(200, 200, 200);
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(90, 90, 90);
+                    doc.text("Ficha Técnica y Plano de Fabricación", margin, headerTop + 9.5);
+
+                    // Bloque de metadatos (2 columnas)
+                    const col1X = margin;
+                    const col2X = orientation === 'landscape' ? pageW / 2 + 10 : pageW / 2;
+                    const metaRow1 = headerTop + 15;
+                    const metaRow2 = headerTop + 20;
+
+                    doc.setFont(undefined, 'normal');
+                    doc.setFontSize(9);
+                    doc.setTextColor(30, 30, 30);
+                    doc.text(`Proyecto: ${proj}`, col1X, metaRow1);
+                    doc.text(`Cliente: ${client}`, col1X, metaRow2);
+
+                    doc.text(`Sector: ${sector}`, col2X, metaRow1);
+                    doc.text(`Responsable: ${auth}  •  Fecha: ${fechaStr}`, col2X, metaRow2);
+
+                    // Línea separadora superior
+                    const sepY = headerTop + 23;
+                    doc.setDrawColor(210, 210, 210);
                     doc.setLineWidth(0.4);
-                    doc.line(12, 31, 285, 31); // Separador superior
+                    doc.line(margin, sepY, pageW - margin, sepY);
 
                     // Pie de página
-                    doc.setFontSize(8);
-                    doc.setTextColor(130);
-                    doc.text(`Marmolería Benjamín • Documento emitido para fabricación • ${proj} • Responsable: ${auth}`, 12, 203);
+                    const footerY = pageH - Math.max(6, margin - 4);
+                    doc.setFontSize(7.5);
+                    doc.setTextColor(130, 130, 130);
+                    doc.text(`Marmolería Benjamín • Documento emitido para fabricación • ${proj} • Cliente: ${client} • Sector: ${sector} • Responsable: ${auth}`, margin, footerY);
 
-                    // Bounding Box
+                    // Bounding Box para encuadre y centrado
                     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
                     
                     App.data.elements.forEach(el => {
                         const pts = [];
                         if (el.type === 'line' || el.type === 'measure') pts.push(el.start, el.end);
                         if (el.type === 'polyline' || el.type === 'pencil') pts.push(...el.points);
-                        if (el.type === 'rect' || el.type === 'square') pts.push(el.start, el.end);
+                        if (el.type === 'rect' || el.type === 'square' || el.type === 'cooktop' || el.type === 'sink') pts.push(el.start, el.end);
                         if (el.type === 'circle') {
                             pts.push({ x: el.center.x - el.radius, y: el.center.y - el.radius });
                             pts.push({ x: el.center.x + el.radius, y: el.center.y + el.radius });
@@ -3065,41 +4053,68 @@
                     });
 
                     if (minX !== Infinity && App.data.elements.length > 0) {
-                        const pdfW = 270;
-                        const pdfH = 160;
-                        const geomW = (maxX - minX) || 1;
-                        const geomH = (maxY - minY) || 1;
-                        
-                        const scale = Math.min(pdfW / geomW, pdfH / geomH) * 0.88;
-                        const offsetX = 12 + (pdfW - geomW * scale) / 2;
-                        const offsetY = 35 + (pdfH - geomH * scale) / 2;
+                        // Margen de resguardo para que cotas y textos no se corten
+                        const padWorld = 20; // 20cm de holgura
+                        const geomMinX = minX - padWorld;
+                        const geomMinY = minY - padWorld;
+                        const geomMaxX = maxX + padWorld;
+                        const geomMaxY = maxY + padWorld;
 
-                        const toPdfX = (x) => offsetX + (x - minX) * scale;
-                        const toPdfY = (y) => offsetY + (y - minY) * scale;
+                        const availW = pageW - margin * 2;
+                        const availH = (pageH - margin) - (sepY + 6) - 10;
+                        const geomW = (geomMaxX - geomMinX) || 1;
+                        const geomH = (geomMaxY - geomMinY) || 1;
+                        
+                        const scale = Math.min(availW / geomW, availH / geomH) * 0.95;
+                        const offsetX = margin + (availW - geomW * scale) / 2;
+                        const offsetY = sepY + 6 + (availH - geomH * scale) / 2;
+
+                        const toPdfX = (x) => offsetX + (x - geomMinX) * scale;
+                        const toPdfY = (y) => offsetY + (y - geomMinY) * scale;
 
                         doc.setLineWidth(0.5);
 
                         App.data.elements.forEach(el => {
-                            if (el.type === 'line' || el.type === 'measure') {
-                                if (el.type === 'measure') {
-                                    doc.setLineDash([2, 2]);
-                                    doc.setDrawColor(120, 120, 120);
-                                    doc.setTextColor(60, 60, 60);
-                                } else {
-                                    doc.setLineDash([]);
-                                    doc.setDrawColor(20, 20, 20);
-                                    doc.setTextColor(0, 0, 0);
-                                }
-                                
+                            if (el.type === 'line') {
+                                doc.setLineDash([]);
+                                doc.setDrawColor(20, 20, 20);
                                 doc.line(toPdfX(el.start.x), toPdfY(el.start.y), toPdfX(el.end.x), toPdfY(el.end.y));
-                                
-                                if (el.type === 'measure') {
-                                    const mx = toPdfX((el.start.x + el.end.x) / 2);
-                                    const my = toPdfY((el.start.y + el.end.y) / 2);
-                                    const val = el.value || "";
-                                    doc.setFontSize(9);
-                                    doc.text(val, mx, my - 2, { align: 'center' });
-                                }
+                            }
+                            if (el.type === 'measure') {
+                                doc.setLineDash([2, 2]);
+                                doc.setDrawColor(100, 100, 100);
+                                const x1 = toPdfX(el.start.x), y1 = toPdfY(el.start.y);
+                                const x2 = toPdfX(el.end.x), y2 = toPdfY(el.end.y);
+                                doc.line(x1, y1, x2, y2);
+
+                                // Ticks perpendiculares en extremos
+                                const dx = el.end.x - el.start.x;
+                                const dy = el.end.y - el.start.y;
+                                const len = Math.hypot(dx, dy) || 1;
+                                const nx = -dy / len;
+                                const ny = dx / len;
+                                const tickLen = 2; // mm
+                                doc.setLineDash([]);
+                                doc.setDrawColor(60, 60, 60);
+                                doc.line(x1 - nx * tickLen, y1 - ny * tickLen, x1 + nx * tickLen, y1 + ny * tickLen);
+                                doc.line(x2 - nx * tickLen, y2 - ny * tickLen, x2 + nx * tickLen, y2 + ny * tickLen);
+
+                                // Etiqueta desplazada por encima de la línea
+                                const mAngle = Math.atan2(dy, dx) * 180 / Math.PI;
+                                const perpAngleRad = (mAngle - 90) * Math.PI / 180;
+                                const worldLabelX = ((el.start.x + el.end.x) / 2) + Math.cos(perpAngleRad) * 15;
+                                const worldLabelY = ((el.start.y + el.end.y) / 2) + Math.sin(perpAngleRad) * 15;
+                                const mx = toPdfX(worldLabelX);
+                                const my = toPdfY(worldLabelY);
+
+                                let rotAngle = mAngle;
+                                if (rotAngle > 90) rotAngle -= 180;
+                                if (rotAngle < -90) rotAngle += 180;
+
+                                const val = el.value || "";
+                                doc.setFontSize(8);
+                                doc.setTextColor(20, 20, 20);
+                                doc.text(val, mx, my, { align: 'center', angle: rotAngle });
                             }
                             if (el.type === 'polyline' || el.type === 'pencil') {
                                 doc.setLineDash([]);
@@ -3124,6 +4139,147 @@
                                 const cy = toPdfY(el.center.y);
                                 const r = el.radius * scale;
                                 doc.circle(cx, cy, r);
+                                // Cruz de centro
+                                doc.setLineWidth(0.2);
+                                doc.line(cx - 1.5, cy, cx + 1.5, cy);
+                                doc.line(cx, cy - 1.5, cx, cy + 1.5);
+                                doc.setLineWidth(0.5);
+                            }
+                            if (el.type === 'cooktop') {
+                                doc.setLineDash([]);
+                                doc.setDrawColor(30, 30, 30);
+                                const x = toPdfX(Math.min(el.start.x, el.end.x));
+                                const y = toPdfY(Math.min(el.start.y, el.end.y));
+                                const w = Math.abs(el.start.x - el.end.x) * scale;
+                                const h = Math.abs(el.start.y - el.end.y) * scale;
+                                doc.setLineWidth(0.6);
+                                doc.rect(x, y, w, h);
+                                doc.setLineWidth(0.3);
+                                if (w > 4 && h > 4) {
+                                    doc.rect(x + 1.2, y + 1.2, w - 2.4, h - 2.4);
+                                }
+                                const fuegos = el.subtype || 4;
+                                const cx = x + w / 2, cy = y + h / 2;
+                                const rBurner = Math.max(1, Math.min(w, h) * 0.12);
+                                if (fuegos === 2) {
+                                    doc.circle(cx - w * 0.22, cy, rBurner);
+                                    doc.circle(cx + w * 0.22, cy, rBurner);
+                                } else if (fuegos === 5) {
+                                    doc.circle(cx - w * 0.25, cy - h * 0.22, rBurner);
+                                    doc.circle(cx + w * 0.25, cy - h * 0.22, rBurner);
+                                    doc.circle(cx, cy, rBurner * 1.3);
+                                    doc.circle(cx - w * 0.25, cy + h * 0.22, rBurner);
+                                    doc.circle(cx + w * 0.25, cy + h * 0.22, rBurner);
+                                } else {
+                                    doc.circle(cx - w * 0.24, cy - h * 0.22, rBurner);
+                                    doc.circle(cx + w * 0.24, cy - h * 0.22, rBurner);
+                                    doc.circle(cx - w * 0.24, cy + h * 0.22, rBurner);
+                                    doc.circle(cx + w * 0.24, cy + h * 0.22, rBurner);
+                                }
+                                doc.setFontSize(6.5);
+                                doc.setTextColor(80, 80, 80);
+                                doc.text(`ANAFE ${fuegos}F`, cx, y + h - 1.5, { align: 'center' });
+                                doc.setLineWidth(0.5);
+                            }
+                            if (el.type === 'sink') {
+                                doc.setLineDash([]);
+                                doc.setDrawColor(30, 30, 30);
+                                const x = toPdfX(Math.min(el.start.x, el.end.x));
+                                const y = toPdfY(Math.min(el.start.y, el.end.y));
+                                const w = Math.abs(el.start.x - el.end.x) * scale;
+                                const h = Math.abs(el.start.y - el.end.y) * scale;
+                                doc.setLineWidth(0.6);
+                                doc.rect(x, y, w, h);
+                                doc.setLineWidth(0.3);
+
+                                const subtype = el.subtype || 'simple';
+                                const cx = x + w / 2, cy = y + h / 2;
+                                const realW = Math.round(Math.abs(el.end.x - el.start.x));
+                                const realH = Math.round(Math.abs(el.end.y - el.start.y));
+
+                                // Cotas exteriores técnicas para el cliente en el PDF
+                                doc.setDrawColor(2, 132, 199);
+                                doc.setLineWidth(0.25);
+                                doc.setFontSize(6.5);
+                                doc.setTextColor(2, 132, 199);
+
+                                if (subtype === 'round') {
+                                    const diam = Math.round(Math.min(realW, realH));
+                                    // Línea de cota de diámetro superior
+                                    const topY = y - 2.5;
+                                    doc.line(x, topY, x + w, topY);
+                                    doc.line(x, topY - 1, x, topY + 1);
+                                    doc.line(x + w, topY - 1, x + w, topY + 1);
+                                    doc.text(`Ø ${diam} cm`, cx, topY - 0.7, { align: 'center' });
+
+                                    const r = Math.max(1, (Math.min(w, h) / 2) - 1.5);
+                                    doc.circle(cx, cy, r);
+                                    doc.circle(cx, cy, Math.max(0.5, r * 0.2));
+
+                                    // Cartel de medida de bacha
+                                    const bText = `BACHA Ø ${diam} cm`;
+                                    const badgeW = 28, badgeH = 4.2;
+                                    doc.setFillColor(255, 255, 255);
+                                    doc.setDrawColor(2, 132, 199);
+                                    doc.roundedRect(cx - badgeW/2, y + h - badgeH - 1, badgeW, badgeH, 1, 1, 'FD');
+                                    doc.setFontSize(6);
+                                    doc.setTextColor(3, 105, 161);
+                                    doc.text(bText, cx, y + h - 2.2, { align: 'center' });
+                                } else {
+                                    // Cota superior (Ancho)
+                                    const topY = y - 2.5;
+                                    doc.line(x, topY, x + w, topY);
+                                    doc.line(x, topY - 1, x, topY + 1);
+                                    doc.line(x + w, topY - 1, x + w, topY + 1);
+                                    doc.text(`${realW} cm`, cx, topY - 0.7, { align: 'center' });
+
+                                    // Cota izquierda (Profundidad)
+                                    const leftX = x - 2.5;
+                                    doc.line(leftX, y, leftX, y + h);
+                                    doc.line(leftX - 1, y, leftX + 1, y);
+                                    doc.line(leftX - 1, y + h, leftX + 1, y + h);
+                                    doc.text(`${realH} cm`, leftX - 0.7, cy, { align: 'center', angle: 90 });
+
+                                    if (subtype === 'double') {
+                                        const bw = (w - 4) / 2;
+                                        const bh = h - 2.5;
+                                        doc.rect(x + 1.2, y + 1.2, bw, bh);
+                                        doc.rect(x + 1.2 + bw + 1.5, y + 1.2, bw, bh);
+                                        doc.circle(x + 1.2 + bw / 2, cy, 1);
+                                        doc.circle(x + 1.2 + bw + 1.5 + bw / 2, cy, 1);
+                                    } else if (subtype === 'drainer') {
+                                        const bw = (w - 4) * 0.55;
+                                        const bh = h - 2.5;
+                                        doc.rect(x + 1.2, y + 1.2, bw, bh);
+                                        doc.circle(x + 1.2 + bw / 2, cy, 1);
+                                        const ex = x + 1.2 + bw + 2;
+                                        const ew = w - bw - 4.5;
+                                        for (let k = 0; k < 4; k++) {
+                                            const ry = y + 2 + (bh / 5) * (k + 1);
+                                            doc.line(ex, ry, ex + ew, ry);
+                                        }
+                                    } else {
+                                        if (w > 3 && h > 3) {
+                                            doc.rect(x + 1.5, y + 1.5, w - 3, h - 3);
+                                        }
+                                        doc.circle(cx, cy, 1.2);
+                                    }
+
+                                    // Cartel de medida de bacha
+                                    let bText = `BACHA ${realW}×${realH} cm`;
+                                    if (subtype === 'double') bText = `BACHA DOBLE ${realW}×${realH} cm`;
+                                    if (subtype === 'drainer') bText = `BACHA C/ ESC. ${realW}×${realH} cm`;
+
+                                    const badgeW = subtype === 'drainer' ? 36 : (subtype === 'double' ? 34 : 28);
+                                    const badgeH = 4.2;
+                                    doc.setFillColor(255, 255, 255);
+                                    doc.setDrawColor(2, 132, 199);
+                                    doc.roundedRect(cx - badgeW/2, y + h - badgeH - 1, badgeW, badgeH, 1, 1, 'FD');
+                                    doc.setFontSize(6);
+                                    doc.setTextColor(3, 105, 161);
+                                    doc.text(bText, cx, y + h - 2.2, { align: 'center' });
+                                }
+                                doc.setLineWidth(0.5);
                             }
                             if (el.type === 'triangle') {
                                 doc.setLineDash([]);
@@ -3137,14 +4293,15 @@
                             }
                             if (el.type === 'text') {
                                 doc.setTextColor(20, 20, 20);
-                                doc.setFontSize(11);
+                                doc.setFontSize(10);
                                 doc.text(el.text, toPdfX(el.position.x), toPdfY(el.position.y));
                             }
                         });
                     }
 
+                    const safeClient = (client && client !== '-') ? `${client.replace(/[^a-zA-Z0-9_-]/g, '_')}_` : '';
                     const safeName = (proj).replace(/[^a-zA-Z0-9_-]/g, '_');
-                    doc.save(`Plano_${safeName}.pdf`);
+                    doc.save(`Plano_${safeClient}${safeName}.pdf`);
                     UI.showToast("📄 PDF exportado con éxito");
                 } catch (e) {
                     console.error("Error al exportar PDF:", e);
@@ -3160,7 +4317,7 @@
                             const pts = [];
                             if (el.type === 'line' || el.type === 'measure') pts.push(el.start, el.end);
                             if (el.type === 'polyline' || el.type === 'pencil') pts.push(...el.points);
-                            if (el.type === 'rect' || el.type === 'square') pts.push(el.start, el.end);
+                            if (el.type === 'rect' || el.type === 'square' || el.type === 'cooktop' || el.type === 'sink') pts.push(el.start, el.end);
                             if (el.type === 'circle') {
                                 pts.push({ x: el.center.x - el.radius, y: el.center.y - el.radius });
                                 pts.push({ x: el.center.x + el.radius, y: el.center.y + el.radius });
@@ -3229,11 +4386,25 @@
                 });
             },
 
-            async exportWord(author, projectName) {
+            async exportWord(infoOrAuthor, projectName) {
                 try {
                     UI.showToast("⏳ Generando documento Word...");
-                    const proj = projectName || App.data.project.name || 'Plano Marmolería';
-                    const auth = author || localStorage.getItem('marmoleria_author') || 'Personal técnico';
+                    let info = {};
+                    if (typeof infoOrAuthor === 'object' && infoOrAuthor !== null) {
+                        info = infoOrAuthor;
+                    } else {
+                        info = {
+                            author: infoOrAuthor || localStorage.getItem('marmoleria_author') || 'Personal técnico',
+                            projectName: projectName || App.data.project.name || 'Plano Marmolería',
+                            client: localStorage.getItem('marmoleria_client') || '-',
+                            sector: localStorage.getItem('marmoleria_sector') || 'Cocina'
+                        };
+                    }
+
+                    const proj = info.projectName || App.data.project.name || 'Plano Marmolería';
+                    const auth = info.author || localStorage.getItem('marmoleria_author') || 'Personal técnico';
+                    const client = info.client || '-';
+                    const sector = info.sector || 'Cocina';
                     const fechaStr = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });
 
                     const imgDataUrl = await this.generateBlueprintImage();
@@ -3241,6 +4412,8 @@
                     // Medidas y cotas
                     const measures = App.data.elements.filter(e => e.type === 'measure');
                     const texts = App.data.elements.filter(e => e.type === 'text');
+                    const cooktops = App.data.elements.filter(e => e.type === 'cooktop');
+                    const sinks = App.data.elements.filter(e => e.type === 'sink');
                     const geometriesCount = App.data.elements.filter(e => e.type !== 'measure' && e.type !== 'text').length;
 
                     let measuresHtml = '';
@@ -3254,6 +4427,24 @@
                         `).join('');
                     } else {
                         measuresHtml = '<tr><td colspan="3" style="padding: 8px; border: 1px solid #ccc; text-align: center; color: #777;">No se registraron cotas automáticas</td></tr>';
+                    }
+
+                    let equipHtml = '';
+                    if (cooktops.length > 0 || sinks.length > 0) {
+                        const items = [];
+                        cooktops.forEach((c, i) => {
+                            const w = Math.round(Math.abs(c.end.x - c.start.x));
+                            const h = Math.round(Math.abs(c.end.y - c.start.y));
+                            items.push(`<tr><td style="padding: 6px 10px; border: 1px solid #ccc; text-align: center;">${items.length + 1}</td><td style="padding: 6px 10px; border: 1px solid #ccc;">Anafe (${c.subtype || 4} fuegos)</td><td style="padding: 6px 10px; border: 1px solid #ccc; font-weight: bold;">${w} × ${h} cm</td></tr>`);
+                        });
+                        sinks.forEach((s, i) => {
+                            const w = Math.round(Math.abs(s.end.x - s.start.x));
+                            const h = Math.round(Math.abs(s.end.y - s.start.y));
+                            items.push(`<tr><td style="padding: 6px 10px; border: 1px solid #ccc; text-align: center;">${items.length + 1}</td><td style="padding: 6px 10px; border: 1px solid #ccc;">Bacha (${s.subtype || 'simple'})</td><td style="padding: 6px 10px; border: 1px solid #ccc; font-weight: bold;">${w} × ${h} cm</td></tr>`);
+                        });
+                        equipHtml = items.join('');
+                    } else {
+                        equipHtml = '<tr><td colspan="3" style="padding: 8px; border: 1px solid #ccc; text-align: center; color: #777;">Sin anafes ni bachas registradas</td></tr>';
                     }
 
                     let notesHtml = '';
@@ -3273,15 +4464,6 @@
                         <head>
                             <meta charset='utf-8'>
                             <title>${proj}</title>
-                            <!--[if gte mso 9]>
-                            <xml>
-                            <w:WordDocument>
-                            <w:View>Print</w:View>
-                            <w:Zoom>100</w:Zoom>
-                            <w:DoNotOptimizeForBrowser/>
-                            </w:WordDocument>
-                            </xml>
-                            <![endif]-->
                             <style>
                                 body { font-family: 'Segoe UI', Calibri, Arial, sans-serif; margin: 35px; color: #1a1a1a; }
                                 h1 { font-size: 20pt; color: #111; margin-bottom: 2px; }
@@ -3304,8 +4486,14 @@
 
                             <table class="meta-table">
                                 <tr>
-                                    <td class="meta-label">Proyecto / Cliente:</td>
+                                    <td class="meta-label">Proyecto:</td>
                                     <td><strong>${proj}</strong></td>
+                                    <td class="meta-label">Cliente:</td>
+                                    <td><strong>${client}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="meta-label">Sector:</td>
+                                    <td><strong>${sector}</strong></td>
                                     <td class="meta-label">Fecha de Emisión:</td>
                                     <td>${fechaStr}</td>
                                 </tr>
@@ -3333,6 +4521,20 @@
                                 </thead>
                                 <tbody>
                                     ${measuresHtml}
+                                </tbody>
+                            </table>
+
+                            <h2>Equipamiento (Hornallas y Bachas)</h2>
+                            <table class="table-data">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 10%; text-align: center;">#</th>
+                                        <th style="width: 40%;">Elemento</th>
+                                        <th style="width: 50%;">Medidas (Ancho × Largo)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${equipHtml}
                                 </tbody>
                             </table>
 
@@ -3370,24 +4572,59 @@
                 }
             },
 
-            exportWhatsApp(author, projectName, phone) {
-                const proj = projectName || App.data.project.name || 'Plano Marmolería';
-                const auth = author || localStorage.getItem('marmoleria_author') || 'Personal técnico';
+            exportWhatsApp(infoOrAuthor, projectName, phone) {
+                let info = {};
+                if (typeof infoOrAuthor === 'object' && infoOrAuthor !== null) {
+                    info = infoOrAuthor;
+                } else {
+                    info = {
+                        author: infoOrAuthor || localStorage.getItem('marmoleria_author') || 'Personal técnico',
+                        projectName: projectName || App.data.project.name || 'Plano Marmolería',
+                        phone: phone || '',
+                        client: localStorage.getItem('marmoleria_client') || '-',
+                        sector: localStorage.getItem('marmoleria_sector') || 'Cocina',
+                        orientation: 'landscape',
+                        margin: 15
+                    };
+                }
+
+                const proj = info.projectName || App.data.project.name || 'Plano Marmolería';
+                const auth = info.author || localStorage.getItem('marmoleria_author') || 'Personal técnico';
+                const client = info.client || '-';
+                const sector = info.sector || 'Cocina';
                 const fechaStr = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
-                // Descargar el PDF para que el usuario lo tenga listo para adjuntar
-                this.exportPDF(auth, proj);
+                // Descargar el PDF con todos los parámetros
+                this.exportPDF(info);
 
                 // Construir mensaje enriquecido
                 const measures = App.data.elements.filter(e => e.type === 'measure');
                 const texts = App.data.elements.filter(e => e.type === 'text');
+                const cooktops = App.data.elements.filter(e => e.type === 'cooktop');
+                const sinks = App.data.elements.filter(e => e.type === 'sink');
 
                 let msg = `*MARMOLERÍA BENJAMÍN*\n`;
                 msg += `📐 *Plano Técnico de Fabricación*\n`;
                 msg += `─────────────────────────\n`;
                 msg += `📋 *Proyecto:* ${proj}\n`;
-                msg += `👤 *Realizado por:* ${auth}\n`;
+                if (client && client !== '-') msg += `👤 *Cliente:* ${client}\n`;
+                if (sector) msg += `📍 *Sector:* ${sector}\n`;
+                msg += `👷 *Realizado por:* ${auth}\n`;
                 msg += `📅 *Fecha:* ${fechaStr}\n`;
+
+                if (cooktops.length > 0 || sinks.length > 0) {
+                    msg += `\n🍳 *Equipamiento colocado:*\n`;
+                    cooktops.forEach(c => {
+                        const w = Math.round(Math.abs(c.end.x - c.start.x));
+                        const h = Math.round(Math.abs(c.end.y - c.start.y));
+                        msg += `  • Anafe ${c.subtype || 4} fuegos: *${w}×${h} cm*\n`;
+                    });
+                    sinks.forEach(s => {
+                        const w = Math.round(Math.abs(s.end.x - s.start.x));
+                        const h = Math.round(Math.abs(s.end.y - s.start.y));
+                        msg += `  • Bacha (${s.subtype || 'simple'}): *${w}×${h} cm*\n`;
+                    });
+                }
 
                 if (measures.length > 0) {
                     msg += `\n📏 *Medidas y Cotas registradas:*\n`;
@@ -3406,7 +4643,7 @@
                 msg += `─────────────────────────\n`;
                 msg += `📎 *(Descargué el archivo PDF del plano en mi dispositivo para adjuntarlo a este chat)*`;
 
-                const cleanPhone = (phone || '').replace(/[^0-9]/g, '');
+                const cleanPhone = (info.phone || '').replace(/[^0-9]/g, '');
                 let waUrl = cleanPhone
                     ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`
                     : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
@@ -3475,33 +4712,80 @@
                 if (e.target.id === 'export-modal') ExportManager.closeModal();
             });
 
-            const authorInput = document.getElementById('export-author');
-            authorInput.addEventListener('input', () => {
-                if (authorInput.value.trim()) {
-                    authorInput.classList.remove('input-error');
-                    const err = document.getElementById('author-error');
-                    if (err) err.style.display = 'none';
+            // Eventos de la modal de medidas de bacha
+            const sinkModalClose = document.getElementById('sink-modal-close');
+            if (sinkModalClose) sinkModalClose.addEventListener('click', () => SinkDimensionModal.close());
+            const sinkModalCancel = document.getElementById('sink-modal-cancel');
+            if (sinkModalCancel) sinkModalCancel.addEventListener('click', () => SinkDimensionModal.close());
+            const sinkModalApply = document.getElementById('sink-modal-apply');
+            if (sinkModalApply) sinkModalApply.addEventListener('click', () => SinkDimensionModal.apply());
+            const sinkModal = document.getElementById('sink-modal');
+            if (sinkModal) {
+                sinkModal.addEventListener('click', (e) => {
+                    if (e.target.id === 'sink-modal') SinkDimensionModal.close();
+                });
+            }
+            document.querySelectorAll('#sink-model-picker .sink-model-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const m = btn.getAttribute('data-model');
+                    if (m) SinkDimensionModal.setModel(m);
+                });
+            });
+            ['sink-input-w', 'sink-input-h', 'sink-input-diam'].forEach(id => {
+                const inp = document.getElementById(id);
+                if (inp) {
+                    inp.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            SinkDimensionModal.apply();
+                        }
+                    });
                 }
             });
+
+
+            const authorInput = document.getElementById('export-author');
+            if (authorInput) {
+                authorInput.addEventListener('input', () => {
+                    if (authorInput.value.trim()) {
+                        authorInput.classList.remove('input-error');
+                        const err = document.getElementById('author-error');
+                        if (err) err.style.display = 'none';
+                    }
+                });
+            }
+
+            const sectorPreset = document.getElementById('export-sector-preset');
+            const sectorInput = document.getElementById('export-sector');
+            if (sectorPreset && sectorInput) {
+                sectorPreset.addEventListener('change', () => {
+                    if (sectorPreset.value && sectorPreset.value !== 'otro') {
+                        sectorInput.value = sectorPreset.value;
+                    } else if (sectorPreset.value === 'otro') {
+                        sectorInput.value = '';
+                        sectorInput.focus();
+                    }
+                });
+            }
 
             document.getElementById('btn-modal-pdf').addEventListener('click', () => {
                 const info = ExportManager.validateAndGetInfo();
                 if (!info) return;
-                ExportManager.exportPDF(info.author, info.projectName);
+                ExportManager.exportPDF(info);
                 ExportManager.closeModal();
             });
 
             document.getElementById('btn-modal-word').addEventListener('click', () => {
                 const info = ExportManager.validateAndGetInfo();
                 if (!info) return;
-                ExportManager.exportWord(info.author, info.projectName);
+                ExportManager.exportWord(info);
                 ExportManager.closeModal();
             });
 
             document.getElementById('btn-modal-whatsapp').addEventListener('click', () => {
                 const info = ExportManager.validateAndGetInfo();
                 if (!info) return;
-                ExportManager.exportWhatsApp(info.author, info.projectName, info.phone);
+                ExportManager.exportWhatsApp(info);
                 ExportManager.closeModal();
             });
 
@@ -3700,6 +4984,59 @@
                                     else el.value = newText.trim();
                                     Renderer.renderAll();
                                     UI.updateSelectionBar();
+                                }
+                            },
+                            null,
+                            { select: true }
+                        );
+                    } else if (el.type === 'circle') {
+                        const dCm = (el.radius * 2).toFixed(1).replace('.0', '');
+                        CanvasInlineEditor.open(
+                            el.center,
+                            `${dCm} cm`,
+                            "Diámetro en cm (ej: 3.5 o 35)",
+                            (newVal) => {
+                                if (newVal) {
+                                    const num = parseFloat(newVal.replace(',', '.').replace(/[^0-9.]/g, ''));
+                                    if (!isNaN(num) && num > 0) {
+                                        HistoryManager.pushState();
+                                        el.radius = Math.max(0.5, num / 2);
+                                        Renderer.renderAll();
+                                        UI.updateSelectionBar();
+                                        UI.showToast(`Diámetro: ${num} cm`);
+                                    }
+                                }
+                            },
+                            null,
+                            { select: true }
+                        );
+                    } else if (el.type === 'sink') {
+                        SinkDimensionModal.open(el);
+                    } else if (el.type === 'cooktop' || el.type === 'rect' || el.type === 'square') {
+                        const w = Math.round(Math.abs(el.end.x - el.start.x));
+                        const h = Math.round(Math.abs(el.end.y - el.start.y));
+                        const center = { x: (el.start.x + el.end.x) / 2, y: (el.start.y + el.end.y) / 2 };
+                        CanvasInlineEditor.open(
+                            center,
+                            `${w} x ${h} cm`,
+                            "Ancho x Largo en cm (ej: 60 x 50)",
+                            (newVal) => {
+                                if (newVal) {
+                                    const parts = newVal.toLowerCase().split(/[xX*,\s]+/).filter(Boolean);
+                                    if (parts.length >= 2) {
+                                        const nw = parseFloat(parts[0]);
+                                        const nh = parseFloat(parts[1]);
+                                        if (!isNaN(nw) && !isNaN(nh) && nw > 0 && nh > 0) {
+                                            HistoryManager.pushState();
+                                            const cx = (el.start.x + el.end.x) / 2;
+                                            const cy = (el.start.y + el.end.y) / 2;
+                                            el.start = { x: cx - nw / 2, y: cy - nh / 2 };
+                                            el.end = { x: cx + nw / 2, y: cy + nh / 2 };
+                                            Renderer.renderAll();
+                                            UI.updateSelectionBar();
+                                            UI.showToast(`Dimensiones: ${nw}×${nh} cm`);
+                                        }
+                                    }
                                 }
                             },
                             null,
