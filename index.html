@@ -764,8 +764,12 @@
             gap: 6px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
             z-index: 25;
+            max-width: calc(100vw - 16px);
+            overflow-x: auto;
+            scrollbar-width: none;
             animation: slideUpFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
+        .selection-context-bar::-webkit-scrollbar { display: none; }
         @keyframes slideUpFade {
             from { opacity: 0; transform: translate(-50%, 15px); }
             to { opacity: 1; transform: translate(-50%, 0); }
@@ -816,6 +820,50 @@
             padding: 6px 8px;
             font-size: 14px;
         }
+
+        /* Controles de Tamaño con Flechitas para Formas */
+        .sel-size-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 4px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .sel-btn-size {
+            background: rgba(59, 130, 246, 0.16);
+            border-color: rgba(59, 130, 246, 0.35);
+            color: #bae6fd;
+            font-weight: 600;
+            padding: 5px 10px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .sel-btn-size:hover {
+            background: rgba(59, 130, 246, 0.3);
+            color: #ffffff;
+        }
+        .sel-btn-size:active {
+            background: #0284c7;
+            color: #ffffff;
+            transform: scale(0.93);
+        }
+        .sel-btn-shrink {
+            background: rgba(245, 158, 11, 0.16);
+            border-color: rgba(245, 158, 11, 0.35);
+            color: #fde68a;
+        }
+        .sel-btn-shrink:hover {
+            background: rgba(245, 158, 11, 0.3);
+            color: #ffffff;
+        }
+        .sel-btn-shrink:active {
+            background: #d97706;
+            color: #ffffff;
+            transform: scale(0.93);
+        }
+
 
         .btn-divider {
             width: 1px;
@@ -995,7 +1043,20 @@
                 <!-- Barra Contextual de Selección Rápida (Móvil y Desktop) -->
                 <div id="selection-context-bar" class="selection-context-bar" style="display: none;">
                     <span id="sel-info" class="sel-info">Elemento</span>
-                    <button type="button" id="btn-sel-edit" class="sel-btn primary" title="Editar cota o texto">✏️ Editar</button>
+                    <button type="button" id="btn-sel-edit" class="sel-btn primary" title="Editar medidas o texto">✏️ Editar</button>
+
+                    <!-- Flechitas para Achicar y Agrandar el tamaño tanto como se desee -->
+                    <div id="sel-size-group" class="sel-size-group" style="display: none;">
+                        <button type="button" id="btn-sel-shrink" class="sel-btn sel-btn-size sel-btn-shrink" title="Achicar tamaño (Flechita abajo ⬇️ - mantener presionado para achicar continuo)">
+                            <span style="font-size: 13px; line-height: 1;">⬇️</span>
+                            <span class="btn-text">Achicar</span>
+                        </button>
+                        <button type="button" id="btn-sel-enlarge" class="sel-btn sel-btn-size" title="Agrandar tamaño (Flechita arriba ⬆️ - mantener presionado para agrandar continuo)">
+                            <span style="font-size: 13px; line-height: 1;">⬆️</span>
+                            <span class="btn-text">Agrandar</span>
+                        </button>
+                    </div>
+
                     <button type="button" id="btn-sel-duplicate" class="sel-btn" title="Duplicar">⧉ Duplicar</button>
                     <button type="button" id="btn-sel-delete" class="sel-btn danger" title="Eliminar">🗑️ Borrar</button>
                     <button type="button" id="btn-sel-close" class="sel-btn close" title="Deseleccionar">✕</button>
@@ -2091,6 +2152,104 @@
                     App.DOM.uiLayer.appendChild(hitArea);
                     App.DOM.uiLayer.appendChild(visualPoint);
                 });
+
+                // Pastilla flotante con flechitas (▼ Achicar y ▲ Agrandar) directamente sobre la forma
+                const isScalable = ['rect', 'square', 'circle', 'triangle', 'cooktop', 'sink', 'line', 'measure', 'polyline'].includes(elData.type);
+                if (isScalable) {
+                    let topX = 0, topY = 0;
+                    if (elData.type === 'circle') {
+                        topX = elData.center.x;
+                        topY = elData.center.y - elData.radius;
+                    } else if (elData.type === 'rect' || elData.type === 'square' || elData.type === 'cooktop' || elData.type === 'sink') {
+                        topX = (elData.start.x + elData.end.x) / 2;
+                        topY = Math.min(elData.start.y, elData.end.y);
+                    } else if (elData.type === 'triangle') {
+                        topX = (elData.points[0].x + elData.points[1].x + elData.points[2].x) / 3;
+                        topY = Math.min(...elData.points.map(p => p.y));
+                    } else if (elData.type === 'line' || elData.type === 'measure') {
+                        topX = (elData.start.x + elData.end.x) / 2;
+                        topY = Math.min(elData.start.y, elData.end.y);
+                    } else if (elData.type === 'polyline' && elData.points && elData.points.length > 0) {
+                        topX = elData.points.reduce((s, p) => s + p.x, 0) / elData.points.length;
+                        topY = Math.min(...elData.points.map(p => p.y));
+                    }
+
+                    const pillH = 26 / scale;
+                    const pillW = 76 / scale;
+                    const pillY = topY - (pillH / 2 + 12 / scale);
+                    const btnRadius = 14 / scale;
+
+                    // Fondo de pastilla
+                    const pillBg = this.createSVG('rect', {
+                        x: topX - pillW / 2,
+                        y: pillY - pillH / 2,
+                        width: pillW,
+                        height: pillH,
+                        rx: pillH / 2,
+                        fill: 'rgba(15, 23, 42, 0.94)',
+                        stroke: 'rgba(255, 255, 255, 0.25)',
+                        'stroke-width': 1.2 / scale,
+                        style: 'filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)); pointer-events: none;'
+                    });
+                    App.DOM.uiLayer.appendChild(pillBg);
+
+                    // Divisor central sutil
+                    const divider = this.createSVG('line', {
+                        x1: topX, y1: pillY - pillH / 2 + 3 / scale,
+                        x2: topX, y2: pillY + pillH / 2 - 3 / scale,
+                        stroke: 'rgba(255, 255, 255, 0.2)',
+                        'stroke-width': 1 / scale,
+                        style: 'pointer-events: none;'
+                    });
+                    App.DOM.uiLayer.appendChild(divider);
+
+                    // Botón Flechita Abajo (Achicar)
+                    const downX = topX - pillW / 4;
+                    const downHit = this.createSVG('circle', {
+                        cx: downX, cy: pillY, r: btnRadius,
+                        class: 'control-point',
+                        'data-ctrl-id': 'scale_down',
+                        'data-el-id': elData.id,
+                        fill: 'transparent',
+                        stroke: 'transparent',
+                        style: 'cursor: pointer; pointer-events: all;'
+                    });
+                    const downText = this.createSVG('text', {
+                        x: downX, y: pillY + 4 / scale,
+                        'text-anchor': 'middle',
+                        fill: '#fbbf24',
+                        'font-size': `${14 / scale}px`,
+                        'font-weight': 'bold',
+                        style: 'pointer-events: none; user-select: none;'
+                    });
+                    downText.textContent = '▼';
+
+                    // Botón Flechita Arriba (Agrandar)
+                    const upX = topX + pillW / 4;
+                    const upHit = this.createSVG('circle', {
+                        cx: upX, cy: pillY, r: btnRadius,
+                        class: 'control-point',
+                        'data-ctrl-id': 'scale_up',
+                        'data-el-id': elData.id,
+                        fill: 'transparent',
+                        stroke: 'transparent',
+                        style: 'cursor: pointer; pointer-events: all;'
+                    });
+                    const upText = this.createSVG('text', {
+                        x: upX, y: pillY + 4 / scale,
+                        'text-anchor': 'middle',
+                        fill: '#38bdf8',
+                        'font-size': `${14 / scale}px`,
+                        'font-weight': 'bold',
+                        style: 'pointer-events: none; user-select: none;'
+                    });
+                    upText.textContent = '▲';
+
+                    App.DOM.uiLayer.appendChild(downHit);
+                    App.DOM.uiLayer.appendChild(downText);
+                    App.DOM.uiLayer.appendChild(upHit);
+                    App.DOM.uiLayer.appendChild(upText);
+                }
             },
             drawSnap(p) {
                 App.DOM.uiLayer.innerHTML = ''; // Clear prev snap
@@ -2333,8 +2492,23 @@
                     
                     // Click en punto de control
                     if (target.classList.contains('control-point')) {
-                        this._activeCtrl = target.getAttribute('data-ctrl-id');
-                        this._activeEl = App.data.elements.find(el => el.id === target.getAttribute('data-el-id'));
+                        const ctrlId = target.getAttribute('data-ctrl-id');
+                        const elId = target.getAttribute('data-el-id');
+                        this._activeEl = App.data.elements.find(el => el.id === elId);
+
+                        // Soporte para flechitas flotantes en el lienzo (Achicar / Agrandar)
+                        if (ctrlId === 'scale_down') {
+                            this._activeCtrl = 'scale_down';
+                            ShapeScaler.startContinuous(this._activeEl, -1);
+                            return;
+                        }
+                        if (ctrlId === 'scale_up') {
+                            this._activeCtrl = 'scale_up';
+                            ShapeScaler.startContinuous(this._activeEl, +1);
+                            return;
+                        }
+
+                        this._activeCtrl = ctrlId;
                         this._dragPrevPoint = wp;
                         return;
                     }
@@ -2416,7 +2590,7 @@
 
                         const dx = finalP.x - anchorX;
                         const dy = finalP.y - anchorY;
-                        const size = Math.max(10, Math.max(Math.abs(dx), Math.abs(dy)));
+                        const size = Math.max(0.5, Math.max(Math.abs(dx), Math.abs(dy)));
                         const sx = Math.sign(dx) || 1;
                         const sy = Math.sign(dy) || 1;
 
@@ -2447,6 +2621,7 @@
                     Renderer.renderAll();
                 },
                 up() {
+                    ShapeScaler.stopContinuous();
                     if (this._hasModified && this._initialSnapshot) {
                         const currentSnapshot = JSON.stringify(App.data.elements);
                         if (currentSnapshot !== this._initialSnapshot) {
@@ -2630,8 +2805,8 @@
                         delete el._startP;
 
                         if (el.type === 'circle' && el.radius >= 0.5) valid = true;
-                        else if ((el.type === 'rect' || el.type === 'square') && Utils.distance(el.start, el.end) > 5) valid = true;
-                        else if (el.type === 'triangle' && (Utils.distance(el.points[1], el.points[2]) > 5)) valid = true;
+                        else if ((el.type === 'rect' || el.type === 'square') && Utils.distance(el.start, el.end) >= 0.5) valid = true;
+                        else if (el.type === 'triangle' && (Utils.distance(el.points[1], el.points[2]) >= 0.5)) valid = true;
 
                         if (valid) {
                             HistoryManager.pushState();
@@ -3554,6 +3729,13 @@
                         editBtn.style.display = 'none';
                     }
                 }
+
+                const sizeGroup = document.getElementById('sel-size-group');
+                if (sizeGroup) {
+                    const isScalable = ['rect', 'square', 'circle', 'triangle', 'cooktop', 'sink', 'line', 'measure', 'polyline'].includes(el.type);
+                    sizeGroup.style.display = isScalable ? 'flex' : 'none';
+                }
+
                 bar.style.display = 'flex';
             },
             showToast(msg) {
@@ -3703,6 +3885,127 @@
                 } else {
                     sub.classList.remove('visible');
                 }
+            }
+        };
+
+        // Gestor de Escalado y Cambio de Tamaño de Formas con Flechitas (Achicar / Agrandar libremente)
+        const ShapeScaler = {
+            _timer: null,
+            _interval: null,
+
+            step(el, deltaCm, withToast = true) {
+                if (!el) return;
+                HistoryManager.pushState();
+                let changed = false;
+                let desc = '';
+
+                if (el.type === 'circle') {
+                    const currentDiam = el.radius * 2;
+                    // Achicar o agrandar tanto como se quiera (mínimo 0.5 cm)
+                    const newDiam = Math.max(0.5, Math.round((currentDiam + deltaCm) * 10) / 10);
+                    el.radius = newDiam / 2;
+                    changed = true;
+                    desc = `Círculo: Ø ${newDiam} cm`;
+                } else if (el.type === 'square') {
+                    const w = Math.abs(el.end.x - el.start.x);
+                    const cx = (el.start.x + el.end.x) / 2;
+                    const cy = (el.start.y + el.end.y) / 2;
+                    const newSide = Math.max(0.5, Math.round((w + deltaCm) * 10) / 10);
+                    el.start = { x: cx - newSide / 2, y: cy - newSide / 2 };
+                    el.end = { x: cx + newSide / 2, y: cy + newSide / 2 };
+                    changed = true;
+                    desc = `Cuadrado: ${newSide}×${newSide} cm`;
+                } else if (el.type === 'rect' || el.type === 'cooktop' || el.type === 'sink') {
+                    const w = Math.abs(el.end.x - el.start.x);
+                    const h = Math.abs(el.end.y - el.start.y);
+                    const cx = (el.start.x + el.end.x) / 2;
+                    const cy = (el.start.y + el.end.y) / 2;
+
+                    if (el.type === 'sink' && el.subtype === 'round') {
+                        const diam = Math.min(w, h);
+                        const newDiam = Math.max(0.5, Math.round((diam + deltaCm) * 10) / 10);
+                        el.start = { x: cx - newDiam / 2, y: cy - newDiam / 2 };
+                        el.end = { x: cx + newDiam / 2, y: cy + newDiam / 2 };
+                        desc = `Bacha Redonda: Ø ${newDiam} cm`;
+                    } else {
+                        const maxDim = Math.max(w, h) || 1;
+                        const ratioW = w / maxDim;
+                        const ratioH = h / maxDim;
+                        const newW = Math.max(0.5, Math.round((w + deltaCm * ratioW) * 10) / 10);
+                        const newH = Math.max(0.5, Math.round((h + deltaCm * ratioH) * 10) / 10);
+                        el.start = { x: cx - newW / 2, y: cy - newH / 2 };
+                        el.end = { x: cx + newW / 2, y: cy + newH / 2 };
+                        const name = el.type === 'cooktop' ? 'Hornallas' : (el.type === 'sink' ? 'Bacha' : 'Rectángulo');
+                        desc = `${name}: ${newW}×${newH} cm`;
+                    }
+                    changed = true;
+                } else if (el.type === 'triangle') {
+                    const cx = (el.points[0].x + el.points[1].x + el.points[2].x) / 3;
+                    const cy = (el.points[0].y + el.points[1].y + el.points[2].y) / 3;
+                    const maxDist = Math.max(...el.points.map(p => Utils.distance({ x: cx, y: cy }, p))) || 1;
+                    const newDist = Math.max(0.5, maxDist + deltaCm);
+                    const factor = newDist / maxDist;
+                    el.points.forEach(p => {
+                        p.x = cx + (p.x - cx) * factor;
+                        p.y = cy + (p.y - cy) * factor;
+                    });
+                    changed = true;
+                    desc = `Triángulo: ${newDist.toFixed(1)} cm`;
+                } else if (el.type === 'line' || el.type === 'measure') {
+                    const cx = (el.start.x + el.end.x) / 2;
+                    const cy = (el.start.y + el.end.y) / 2;
+                    const len = Utils.distance(el.start, el.end) || 1;
+                    const newLen = Math.max(0.5, len + deltaCm);
+                    const factor = newLen / len;
+                    el.start = { x: cx + (el.start.x - cx) * factor, y: cy + (el.start.y - cy) * factor };
+                    el.end = { x: cx + (el.end.x - cx) * factor, y: cy + (el.end.y - cy) * factor };
+                    if (el.type === 'measure') {
+                        el.value = (newLen / 100).toFixed(2) + " m";
+                        desc = `Cota: ${el.value}`;
+                    } else {
+                        desc = `Línea: ${newLen.toFixed(1)} cm`;
+                    }
+                    changed = true;
+                } else if (el.type === 'polyline' && el.points && el.points.length > 0) {
+                    let sumX = 0, sumY = 0;
+                    el.points.forEach(p => { sumX += p.x; sumY += p.y; });
+                    const cx = sumX / el.points.length;
+                    const cy = sumY / el.points.length;
+                    const maxDist = Math.max(...el.points.map(p => Utils.distance({ x: cx, y: cy }, p))) || 1;
+                    const newDist = Math.max(0.5, maxDist + deltaCm);
+                    const factor = newDist / maxDist;
+                    el.points.forEach(p => {
+                        p.x = cx + (p.x - cx) * factor;
+                        p.y = cy + (p.y - cy) * factor;
+                    });
+                    changed = true;
+                    desc = `Polilínea: ${newDist.toFixed(1)} cm`;
+                }
+
+                if (changed) {
+                    Renderer.renderAll();
+                    UI.updateSelectionBar();
+                    if (withToast && desc) UI.showToast(desc);
+                }
+            },
+
+            startContinuous(el, deltaCm) {
+                if (!el) return;
+                this.step(el, deltaCm, false);
+                this.stopContinuous();
+
+                this._timer = setTimeout(() => {
+                    this._interval = setInterval(() => {
+                        const target = App.data.elements.find(x => x.id === (el.id || App.ui.selectedId));
+                        if (!target) { this.stopContinuous(); return; }
+                        this.step(target, deltaCm, false);
+                    }, 70);
+                }, 260);
+            },
+
+            stopContinuous() {
+                if (this._timer) { clearTimeout(this._timer); this._timer = null; }
+                if (this._interval) { clearInterval(this._interval); this._interval = null; }
             }
         };
 
@@ -5055,7 +5358,38 @@
                 });
             }
 
-            // Teclado: Escape para finalizar/cortar trazo, Enter para confirmar, Suprimir / Backspace para borrar
+            // Controles de Tamaño con Flechitas (Achicar / Agrandar libremente)
+            const btnSelShrink = document.getElementById('btn-sel-shrink');
+            const btnSelEnlarge = document.getElementById('btn-sel-enlarge');
+
+            function bindSizeButton(btn, delta) {
+                if (!btn) return;
+                const onStart = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const el = App.data.elements.find(x => x.id === App.ui.selectedId);
+                    if (el) {
+                        const stepVal = e.shiftKey ? delta * 5 : delta;
+                        ShapeScaler.startContinuous(el, stepVal);
+                    }
+                };
+                const onEnd = (e) => {
+                    ShapeScaler.stopContinuous();
+                };
+
+                btn.addEventListener('pointerdown', onStart);
+                btn.addEventListener('pointerup', onEnd);
+                btn.addEventListener('pointerleave', onEnd);
+                btn.addEventListener('pointercancel', onEnd);
+            }
+
+            bindSizeButton(btnSelShrink, -1);
+            bindSizeButton(btnSelEnlarge, +1);
+
+            window.addEventListener('pointerup', () => ShapeScaler.stopContinuous());
+            window.addEventListener('pointercancel', () => ShapeScaler.stopContinuous());
+
+            // Teclado: Escape para finalizar/cortar trazo, Enter para confirmar, Suprimir / Backspace para borrar, Flechitas para cambiar tamaño
             window.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     if (App.ui.tempElement) {
@@ -5071,6 +5405,19 @@
                         Tools.draw.finishPolyline();
                         return;
                     }
+                }
+
+                // Flechita arriba ⬆️ (aumenta) y flechita abajo ⬇️ (achica) para la forma seleccionada
+                if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && App.ui.selectedId) {
+                    const tag = (document.activeElement ? document.activeElement.tagName.toLowerCase() : '');
+                    if (tag === 'input' || tag === 'textarea') return;
+                    e.preventDefault();
+                    const el = App.data.elements.find(x => x.id === App.ui.selectedId);
+                    if (el) {
+                        const stepVal = e.shiftKey ? 5 : 1;
+                        ShapeScaler.step(el, e.key === 'ArrowUp' ? stepVal : -stepVal);
+                    }
+                    return;
                 }
 
                 if ((e.key === 'Delete' || e.key === 'Backspace') && App.ui.selectedId) {
