@@ -699,6 +699,147 @@
             }
         }
 
+        /* Editor Flotante de Medida Real en la Burbuja */
+        .measure-bubble-editor {
+            position: absolute;
+            transform: translate(-50%, -100%) translateY(-14px);
+            z-index: 2100;
+            background: rgba(15, 23, 42, 0.96);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1.5px solid #0284c7;
+            border-radius: 14px;
+            padding: 10px 12px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 0 3px rgba(2, 132, 199, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 210px;
+            pointer-events: auto;
+            animation: popInScale 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .measure-bubble-editor::after {
+            content: '';
+            position: absolute;
+            bottom: -7px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-top: 7px solid #0284c7;
+        }
+        @keyframes popInScale {
+            from { opacity: 0; transform: translate(-50%, -100%) translateY(-6px) scale(0.95); }
+            to { opacity: 1; transform: translate(-50%, -100%) translateY(-14px) scale(1); }
+        }
+        .measure-editor-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .measure-editor-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .measure-editor-close {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 16px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        .measure-editor-close:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .measure-input-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .measure-val-input {
+            flex: 1;
+            background: #090d16;
+            border: 1.5px solid rgba(56, 189, 248, 0.4);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 700;
+            padding: 6px 8px;
+            text-align: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+            outline: none;
+            width: 90px;
+        }
+        .measure-val-input:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+        }
+        .measure-unit-select {
+            background: #1e293b;
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #f8fafc;
+            font-size: 15px;
+            font-weight: 700;
+            padding: 7px 8px;
+            cursor: pointer;
+            outline: none;
+        }
+        .measure-unit-select:focus {
+            border-color: #38bdf8;
+        }
+        .measure-editor-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 2px;
+        }
+        .measure-btn-cancel {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #cbd5e1;
+            border-radius: 8px;
+            padding: 7px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .measure-btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+        }
+        .measure-btn-save {
+            background: #0284c7;
+            border: 1px solid #38bdf8;
+            color: #ffffff;
+            border-radius: 8px;
+            padding: 7px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+            transition: all 0.15s;
+        }
+        .measure-btn-save:hover {
+            background: #0369a1;
+        }
+        .measure-btn-save:active, .measure-btn-cancel:active {
+            transform: scale(0.96);
+        }
+
         /* HUD Flotante de Navegación del Lienzo (Zoom y Pan) */
         .canvas-nav-hud {
             position: absolute;
@@ -1078,7 +1219,29 @@
                     </div>
                     <span id="inline-editor-tip" class="inline-tip">Enter ↵ o ✓ para confirmar</span>
                 </div>
-                
+
+                <!-- Editor Flotante de Medida Real en la Burbuja -->
+                <div id="measure-bubble-editor" class="measure-bubble-editor" style="display: none;">
+                    <div class="measure-editor-header">
+                        <span class="measure-editor-title">📏 Medida Real</span>
+                        <button type="button" class="measure-editor-close" id="measure-editor-close" title="Cerrar">&times;</button>
+                    </div>
+                    <div class="measure-editor-body">
+                        <div class="measure-input-row">
+                            <input type="text" id="measure-input-val" class="measure-val-input" placeholder="120" autocomplete="off" inputmode="decimal" spellcheck="false">
+                            <select id="measure-input-unit" class="measure-unit-select">
+                                <option value="cm" selected>cm</option>
+                                <option value="m">m</option>
+                                <option value="mm">mm</option>
+                            </select>
+                        </div>
+                        <div class="measure-editor-actions">
+                            <button type="button" id="measure-editor-cancel" class="measure-btn-cancel">Cancelar</button>
+                            <button type="button" id="measure-editor-save" class="measure-btn-save">Guardar</button>
+                        </div>
+                    </div>
+                </div>
+
                 <svg id="canvas" xmlns="http://www.w3.org/2000/svg">
                     <!-- Background para capturar eventos fácilmente -->
                     <rect id="bg-rect" width="100%" height="100%" fill="transparent"></rect>
@@ -1314,10 +1477,8 @@
             }),
             snapAngle: (angle, snapTo = 45) => Math.round(angle / snapTo) * snapTo,
             formatMeasure: (pxDist) => {
-                // Asumimos escala base visual: 100px = 1m para simplicidad, o permitimos cambiarla.
-                // En CAD real la unidad es 1:1. Usaremos 1px = 1cm visualmente por defecto.
-                let cm = Math.round(pxDist);
-                if (cm >= 100) return (cm / 100).toFixed(2) + " m";
+                // En planos de marmolería la unidad estándar comercial es cm (1px = 1cm)
+                const cm = Math.round(pxDist);
                 return cm + " cm";
             }
         };
@@ -1457,6 +1618,10 @@
                 // Mantener posición del editor inline si está activo
                 if (typeof CanvasInlineEditor !== 'undefined' && CanvasInlineEditor.updatePosition) {
                     CanvasInlineEditor.updatePosition();
+                }
+                // Mantener posición del editor de medidas si está activo
+                if (typeof MeasureEditor !== 'undefined' && MeasureEditor.updatePosition) {
+                    MeasureEditor.updatePosition();
                 }
             },
             screenToWorld(clientX, clientY) {
@@ -2026,28 +2191,35 @@
                         if (rotAngle > 90) rotAngle -= 180;
                         if (rotAngle < -90) rotAngle += 180;
 
+                        const isManual = !!elData.isManual;
                         const labelGroup = this.createSVG('g', {
-                            transform: `translate(${labelX}, ${labelY}) rotate(${rotAngle})`
+                            transform: `translate(${labelX}, ${labelY}) rotate(${rotAngle})`,
+                            class: 'measure-bubble-group',
+                            'data-bubble-id': elData.id
                         });
 
                         const mBg = this.createSVG('rect', {
                             x: -mWidth / 2, y: -12, width: mWidth, height: 24,
-                            fill: isSelected ? 'rgba(37, 99, 235, 0.12)' : 'var(--c-surface)',
-                            stroke: isSelected ? 'var(--c-select)' : 'var(--c-border)',
-                            'stroke-width': isSelected ? '2' : '1',
+                            fill: isSelected ? 'rgba(37, 99, 235, 0.14)' : (isManual ? 'rgba(2, 132, 199, 0.08)' : 'var(--c-surface)'),
+                            stroke: isSelected ? 'var(--c-select)' : (isManual ? '#0284c7' : 'var(--c-border)'),
+                            'stroke-width': isSelected ? '2' : (isManual ? '1.5' : '1'),
                             rx: 6,
-                            style: 'cursor: grab; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.08));'
+                            class: 'measure-bubble',
+                            'data-bubble-id': elData.id,
+                            style: 'cursor: pointer; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.08));'
                         });
                         
                         const mText = this.createSVG('text', {
                             x: 0, y: 0,
-                            fill: isSelected ? 'var(--c-select)' : 'var(--c-active)',
+                            fill: isSelected ? 'var(--c-select)' : (isManual ? '#0284c7' : 'var(--c-active)'),
                             'font-family': 'monospace',
                             'font-size': '12px',
                             'font-weight': '700',
                             'text-anchor': 'middle',
                             'dominant-baseline': 'central',
-                            style: 'cursor: grab; pointer-events: none;'
+                            class: 'measure-bubble-text',
+                            'data-bubble-id': elData.id,
+                            style: 'cursor: pointer; pointer-events: none;'
                         });
                         mText.textContent = mVal;
                         
@@ -2476,6 +2648,119 @@
             }
         };
 
+        // Editor interactivo y claro para Medidas Reales en la burbuja
+        const MeasureEditor = {
+            _targetElementId: null,
+            _worldPos: null,
+            _isOpen: false,
+
+            open(el) {
+                if (!el || el.type !== 'measure') return;
+
+                if (typeof CanvasInlineEditor !== 'undefined' && CanvasInlineEditor._isOpen) {
+                    CanvasInlineEditor.close(false);
+                }
+
+                this._targetElementId = el.id;
+                this._isOpen = true;
+
+                // Calcular posición exacta de la burbuja en el espacio del mundo
+                const midX = (el.start.x + el.end.x) / 2;
+                const midY = (el.start.y + el.end.y) / 2;
+                const mAngle = Utils.angle(el.start, el.end);
+                const perpAngleRad = (mAngle - 90) * Math.PI / 180;
+                this._worldPos = {
+                    x: midX + Math.cos(perpAngleRad) * 15,
+                    y: midY + Math.sin(perpAngleRad) * 15
+                };
+
+                const container = document.getElementById('measure-bubble-editor');
+                const inputVal = document.getElementById('measure-input-val');
+                const selectUnit = document.getElementById('measure-input-unit');
+                if (!container || !inputVal || !selectUnit) return;
+
+                // Parsear valor actual (ej: "120 cm", "1.35 m", "2500 mm")
+                const parsed = this.parseValue(el.value || "120 cm");
+                inputVal.value = parsed.num;
+                selectUnit.value = parsed.unit;
+
+                this.updatePosition();
+                container.style.display = 'flex';
+
+                setTimeout(() => {
+                    inputVal.focus();
+                    inputVal.select();
+                }, 40);
+            },
+
+            parseValue(valStr) {
+                if (!valStr || typeof valStr !== 'string') return { num: '0', unit: 'cm' };
+                const str = valStr.trim();
+                let unit = 'cm';
+                if (str.toLowerCase().endsWith('mm')) unit = 'mm';
+                else if (str.toLowerCase().endsWith('cm')) unit = 'cm';
+                else if (str.toLowerCase().endsWith('m')) unit = 'm';
+
+                const numPart = str.replace(/[^0-9.,]/g, '').replace(',', '.');
+                return { num: numPart || '0', unit };
+            },
+
+            updatePosition() {
+                if (!this._isOpen || !this._worldPos) return;
+                const container = document.getElementById('measure-bubble-editor');
+                if (!container) return;
+
+                const wsPos = ViewportManager.worldToWorkspace(this._worldPos);
+                const wsRect = App.DOM.workspace.getBoundingClientRect();
+                const margin = 12;
+                const minX = margin + 110;
+                const maxX = Math.max(minX, wsRect.width - margin - 110);
+                const minY = margin + 110;
+                const maxY = Math.max(minY, wsRect.height - (window.innerWidth <= 768 ? 140 : 60));
+
+                const clampedX = Math.max(minX, Math.min(wsPos.x, maxX));
+                const clampedY = Math.max(minY, Math.min(wsPos.y, maxY));
+
+                container.style.left = `${clampedX}px`;
+                container.style.top = `${clampedY}px`;
+            },
+
+            commit() {
+                if (!this._isOpen || !this._targetElementId) return;
+                const el = App.data.elements.find(x => x.id === this._targetElementId);
+                if (!el || el.type !== 'measure') {
+                    this.close();
+                    return;
+                }
+
+                const inputVal = document.getElementById('measure-input-val');
+                const selectUnit = document.getElementById('measure-input-unit');
+                const rawVal = inputVal ? inputVal.value.trim() : "";
+                const parsed = this.parseValue(rawVal);
+
+                const finalNum = parsed.num || '0';
+                const finalUnit = selectUnit ? selectUnit.value : (parsed.unit || 'cm');
+                const finalString = `${finalNum} ${finalUnit}`;
+
+                HistoryManager.pushState();
+                el.value = finalString;
+                el.isManual = true; // Medida real asignada manualmente por el usuario
+
+                this.close();
+                Renderer.renderAll();
+                UI.updateSelectionBar();
+                UI.showToast(`✓ Medida real: ${finalString}`);
+            },
+
+            close() {
+                this._isOpen = false;
+                this._targetElementId = null;
+                this._worldPos = null;
+                const container = document.getElementById('measure-bubble-editor');
+                if (container) container.style.display = 'none';
+            }
+        };
+
         // Herramientas
         const Tools = {
             _activeCtrl: null,
@@ -2647,21 +2932,17 @@
                         const el = App.data.elements.find(x => x.id === id);
                         if (!el) return;
                         
-                        if (el.type === 'text' || el.type === 'measure') {
-                            const pos = el.type === 'text' 
-                                ? el.position 
-                                : { x: (el.start.x + el.end.x) / 2, y: (el.start.y + el.end.y) / 2 };
-                            const currentText = el.type === 'text' ? el.text : el.value;
-                            
+                        if (el.type === 'measure') {
+                            MeasureEditor.open(el);
+                        } else if (el.type === 'text') {
                             CanvasInlineEditor.open(
-                                pos,
-                                currentText,
-                                el.type === 'text' ? "Editar anotación..." : "0.00 m",
+                                el.position,
+                                el.text,
+                                "Editar anotación...",
                                 (newText) => {
                                     if (newText && newText.trim()) {
                                         HistoryManager.pushState();
-                                        if (el.type === 'text') el.text = newText.trim();
-                                        else el.value = newText.trim();
+                                        el.text = newText.trim();
                                         Renderer.renderAll();
                                     }
                                 },
@@ -3178,40 +3459,21 @@
                             if (edge) {
                                 const dist = Utils.distance(edge.start, edge.end);
                                 const defaultVal = Utils.formatMeasure(dist);
-                                const mid = {
-                                    x: (edge.start.x + edge.end.x) / 2,
-                                    y: (edge.start.y + edge.end.y) / 2
-                                };
 
                                 const newM = {
                                     id: Utils.uuid(),
                                     type: 'measure',
                                     start: edge.start,
                                     end: edge.end,
-                                    value: defaultVal
+                                    value: defaultVal,
+                                    isManual: false
                                 };
+                                HistoryManager.pushState();
                                 App.data.elements.push(newM);
                                 App.ui.selectedId = newM.id;
                                 Renderer.renderAll();
-
-                                // Editor inline titilando sobre el número
-                                CanvasInlineEditor.open(
-                                    mid,
-                                    defaultVal,
-                                    defaultVal,
-                                    (text) => {
-                                        newM.value = text && text.trim() ? text.trim() : defaultVal;
-                                        HistoryManager.pushState();
-                                        Renderer.renderAll();
-                                        UI.showToast("✓ Medida guardada");
-                                    },
-                                    () => {
-                                        newM.value = defaultVal;
-                                        HistoryManager.pushState();
-                                        Renderer.renderAll();
-                                    },
-                                    { select: true, tip: "Enter ↵ para confirmar (o escribí otra medida)" }
-                                );
+                                UI.updateSelectionBar();
+                                UI.showToast(`Medida: ${defaultVal} (tocá la burbuja para cambiarla)`);
                                 return;
                             }
                         }
@@ -3260,25 +3522,8 @@
                             HistoryManager.pushState();
                             StorageManager.save();
                         } else {
-                            // Fue click simple sobre la cota: editarla inline
-                            const mid = {
-                                x: (mEl.start.x + mEl.end.x) / 2,
-                                y: (mEl.start.y + mEl.end.y) / 2
-                            };
-                            CanvasInlineEditor.open(
-                                mid,
-                                mEl.value,
-                                "0.00 m",
-                                (text) => {
-                                    if (text && text.trim()) {
-                                        mEl.value = text.trim();
-                                        HistoryManager.pushState();
-                                        Renderer.renderAll();
-                                    }
-                                },
-                                null,
-                                { select: true }
-                            );
+                            // Fue click simple sobre la cota: abrir editor de medida real
+                            MeasureEditor.open(mEl);
                         }
                         return;
                     }
@@ -3287,42 +3532,23 @@
                         const dist = Utils.distance(App.ui.tempElement.start, App.ui.tempElement.end);
                         if (dist > 5) {
                             const defaultVal = Utils.formatMeasure(dist);
-                            const mid = {
-                                x: (App.ui.tempElement.start.x + App.ui.tempElement.end.x) / 2,
-                                y: (App.ui.tempElement.start.y + App.ui.tempElement.end.y) / 2
-                            };
 
                             const newM = {
                                 id: Utils.uuid(),
                                 type: 'measure',
                                 start: App.ui.tempElement.start,
                                 end: App.ui.tempElement.end,
-                                value: defaultVal
+                                value: defaultVal,
+                                isManual: false
                             };
+                            HistoryManager.pushState();
                             App.data.elements.push(newM);
                             App.ui.selectedId = newM.id;
                             App.ui.tempElement = null;
                             Renderer.renderPreview();
                             Renderer.renderAll();
-
-                            // Abrir editor inline titilando sobre el número
-                            CanvasInlineEditor.open(
-                                mid,
-                                defaultVal,
-                                defaultVal,
-                                (text) => {
-                                    newM.value = text && text.trim() ? text.trim() : defaultVal;
-                                    HistoryManager.pushState();
-                                    Renderer.renderAll();
-                                    UI.showToast("✓ Medida guardada");
-                                },
-                                () => {
-                                    newM.value = defaultVal;
-                                    HistoryManager.pushState();
-                                    Renderer.renderAll();
-                                },
-                                { select: true, tip: "Enter ↵ para confirmar (o escribí otra medida)" }
-                            );
+                            UI.updateSelectionBar();
+                            UI.showToast(`Medida trazada: ${defaultVal} (tocá la burbuja para cambiarla)`);
                         } else {
                             App.ui.tempElement = null;
                             Renderer.renderPreview();
@@ -3505,6 +3731,14 @@
 
         
         function handlePointerDown(e) {
+            // Si el editor de medida estaba abierto y se hace click afuera, guardar su valor
+            if (typeof MeasureEditor !== 'undefined' && MeasureEditor._isOpen) {
+                const editorEl = document.getElementById('measure-bubble-editor');
+                if (editorEl && !editorEl.contains(e.target)) {
+                    MeasureEditor.commit();
+                }
+            }
+
             // Si el editor inline estaba abierto y se hace click afuera, confirmar su valor
             if (typeof CanvasInlineEditor !== 'undefined' && CanvasInlineEditor._isOpen) {
                 CanvasInlineEditor.commit();
@@ -3554,6 +3788,20 @@
 
             // Flujo de herramienta normal (1 dedo / Pen / Mouse Izq)
             if (App.ui.activePointers.size === 1 && e.button === 0 && !App.ui.gestureStarted) {
+                // Si tocó directamente una burbuja de medida: abrir el editor de medida inmediatamente
+                const bubbleEl = e.target.closest ? e.target.closest('[data-bubble-id]') : null;
+                if (bubbleEl) {
+                    const mId = bubbleEl.getAttribute('data-bubble-id');
+                    const mEl = App.data.elements.find(x => x.id === mId && x.type === 'measure');
+                    if (mEl) {
+                        App.ui.selectedId = mEl.id;
+                        Renderer.renderAll();
+                        UI.updateSelectionBar();
+                        MeasureEditor.open(mEl);
+                        return;
+                    }
+                }
+
                 App.ui.isDragging = true;
                 const wp = ViewportManager.screenToWorld(e.clientX, e.clientY);
                 const tool = Tools[App.ui.currentTool];
@@ -5195,6 +5443,64 @@
                 });
             }
 
+            // Eventos del Editor de Medida Real en la Burbuja
+            const measureEditorEl = document.getElementById('measure-bubble-editor');
+            const measureValInput = document.getElementById('measure-input-val');
+            const measureUnitSelect = document.getElementById('measure-input-unit');
+            const measureSaveBtn = document.getElementById('measure-editor-save');
+            const measureCancelBtn = document.getElementById('measure-editor-cancel');
+            const measureCloseBtn = document.getElementById('measure-editor-close');
+
+            if (measureEditorEl && measureValInput) {
+                measureEditorEl.addEventListener('pointerdown', (e) => e.stopPropagation());
+                measureEditorEl.addEventListener('mousedown', (e) => e.stopPropagation());
+                measureEditorEl.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+                measureEditorEl.addEventListener('click', (e) => e.stopPropagation());
+                measureEditorEl.addEventListener('dblclick', (e) => e.stopPropagation());
+
+                if (measureSaveBtn) {
+                    measureSaveBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        MeasureEditor.commit();
+                    });
+                }
+                if (measureCancelBtn) {
+                    measureCancelBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        MeasureEditor.close();
+                    });
+                }
+                if (measureCloseBtn) {
+                    measureCloseBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        MeasureEditor.close();
+                    });
+                }
+
+                measureValInput.addEventListener('keydown', (e) => {
+                    e.stopPropagation();
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        MeasureEditor.commit();
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        MeasureEditor.close();
+                    }
+                });
+
+                // Detección automática inteligente si el usuario escribe la unidad en el input (ej: "135 cm" o "1.20 m")
+                measureValInput.addEventListener('input', () => {
+                    const raw = measureValInput.value;
+                    if (/[a-zA-Z]/.test(raw) && measureUnitSelect) {
+                        const parsed = MeasureEditor.parseValue(raw);
+                        if (parsed.unit && ['cm', 'm', 'mm'].includes(parsed.unit)) {
+                            measureUnitSelect.value = parsed.unit;
+                        }
+                    }
+                });
+            }
+
+
             // Controles Flotantes HUD de Navegación del Lienzo
             const hudZoomIn = document.getElementById('hud-zoom-in');
             const hudZoomOut = document.getElementById('hud-zoom-out');
@@ -5270,21 +5576,17 @@
                     if (!App.ui.selectedId) return;
                     const el = App.data.elements.find(x => x.id === App.ui.selectedId);
                     if (!el) return;
-                    if (el.type === 'text' || el.type === 'measure') {
-                        const pos = el.type === 'text' 
-                            ? el.position 
-                            : { x: (el.start.x + el.end.x) / 2, y: (el.start.y + el.end.y) / 2 };
-                        const currentText = el.type === 'text' ? el.text : el.value;
-                        
+                    if (el.type === 'measure') {
+                        MeasureEditor.open(el);
+                    } else if (el.type === 'text') {
                         CanvasInlineEditor.open(
-                            pos,
-                            currentText,
-                            el.type === 'text' ? "Editar anotación..." : "0.00 m",
+                            el.position,
+                            el.text,
+                            "Editar anotación...",
                             (newText) => {
                                 if (newText && newText.trim()) {
                                     HistoryManager.pushState();
-                                    if (el.type === 'text') el.text = newText.trim();
-                                    else el.value = newText.trim();
+                                    el.text = newText.trim();
                                     Renderer.renderAll();
                                     UI.updateSelectionBar();
                                 }
@@ -5437,6 +5739,9 @@
                 ViewportManager.updateTransform();
                 if (typeof CanvasInlineEditor !== 'undefined' && CanvasInlineEditor._isOpen) {
                     CanvasInlineEditor.updatePosition();
+                }
+                if (typeof MeasureEditor !== 'undefined' && MeasureEditor._isOpen) {
+                    MeasureEditor.updatePosition();
                 }
             });
 
