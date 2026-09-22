@@ -3036,7 +3036,7 @@
             commit() {
                 if (!this._isOpen || !this._targetElementId) return;
                 const el = App.data.elements.find(x => x.id === this._targetElementId);
-                if (!el || el.type !== 'measure') {
+                if (!el || (el.type !== 'measure' && el.type !== 'cota')) {
                     this.close();
                     return;
                 }
@@ -3057,6 +3057,7 @@
                 this.close();
                 Renderer.renderAll();
                 UI.updateSelectionBar();
+                StorageManager.save();
                 UI.showToast(`✓ Medida real: ${finalString}`);
             },
 
