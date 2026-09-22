@@ -176,7 +176,7 @@
 
         /* Cursores personalizados por herramienta */
         main.tool-select { cursor: default; }
-        main.tool-draw, main.tool-shapes, main.tool-pencil, main.tool-measure, main.tool-annotate { cursor: crosshair; }
+        main.tool-draw, main.tool-shapes, main.tool-pencil, main.tool-cota, main.tool-measure, main.tool-annotate { cursor: crosshair; }
         main.tool-erase { 
             cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='white' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21'/%3E%3Cpath d='M22 21H7'/%3E%3Cpath d='m5 11 9 9'/%3E%3C/svg%3E") 6 26, auto; 
         }
@@ -1145,6 +1145,10 @@
                     <span class="tool-icon">〰️</span>
                     <span class="tool-label">Lápiz</span>
                 </button>
+                <button class="tool-btn" data-tool="cota" title="Cota técnica arquitectónica">
+                    <span class="tool-icon">📏</span>
+                    <span class="tool-label">Cota</span>
+                </button>
                 <button class="tool-btn" data-tool="measure" title="Cotas y medidas">
                     <span class="tool-icon">↔️</span>
                     <span class="tool-label">Medir</span>
@@ -1746,6 +1750,122 @@
                 for (let k in attrs) el.setAttribute(k, attrs[k]);
                 return el;
             },
+            getCotaGeometry(elData) {
+                const p1 = elData.start || { x: 0, y: 0 };
+                const p2 = elData.end || { x: 0, y: 0 };
+                const dx = p2.x - p1.x;
+                const dy = p2.y - p1.y;
+                const absDx = Math.abs(dx);
+                const absDy = Math.abs(dy);
+                const orient = elData.orientation || 'auto';
+
+                let effOrient = orient;
+                if (orient === 'auto') {
+                    effOrient = (absDx >= absDy) ? 'horizontal' : 'vertical';
+                }
+
+                let offset = (typeof elData.offset === 'number' && !isNaN(elData.offset)) ? elData.offset : -25;
+                if (Math.abs(offset) < 8) offset = offset < 0 ? -12 : 12;
+
+                let dist = 0;
+                let cotaLine = { x1: 0, y1: 0, x2: 0, y2: 0 };
+                let witness1 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+                let witness2 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+                let mid = { x: 0, y: 0 };
+                let rot = 0;
+                let arrow1 = { tip: { x: 0, y: 0 }, base1: { x: 0, y: 0 }, base2: { x: 0, y: 0 } };
+                let arrow2 = { tip: { x: 0, y: 0 }, base1: { x: 0, y: 0 }, base2: { x: 0, y: 0 } };
+
+                if (effOrient === 'horizontal') {
+                    dist = absDx;
+                    const minX = Math.min(p1.x, p2.x);
+                    const maxX = Math.max(p1.x, p2.x);
+                    const yBase = offset < 0 ? Math.min(p1.y, p2.y) : Math.max(p1.y, p2.y);
+                    const yCota = yBase + offset;
+                    const sign = offset < 0 ? -1 : 1;
+
+                    cotaLine = { x1: minX, y1: yCota, x2: maxX, y2: yCota };
+                    witness1 = { x1: p1.x, y1: p1.y + sign * 2, x2: p1.x, y2: yCota + sign * 5 };
+                    witness2 = { x1: p2.x, y1: p2.y + sign * 2, x2: p2.x, y2: yCota + sign * 5 };
+                    mid = { x: (minX + maxX) / 2, y: yCota };
+                    rot = 0;
+
+                    const aLen = Math.min(8, Math.max(4, dist * 0.2));
+                    arrow1 = {
+                        tip: { x: minX, y: yCota },
+                        base1: { x: minX + aLen, y: yCota - 3.5 },
+                        base2: { x: minX + aLen, y: yCota + 3.5 }
+                    };
+                    arrow2 = {
+                        tip: { x: maxX, y: yCota },
+                        base1: { x: maxX - aLen, y: yCota - 3.5 },
+                        base2: { x: maxX - aLen, y: yCota + 3.5 }
+                    };
+                } else if (effOrient === 'vertical') {
+                    dist = absDy;
+                    const minY = Math.min(p1.y, p2.y);
+                    const maxY = Math.max(p1.y, p2.y);
+                    const xBase = offset < 0 ? Math.min(p1.x, p2.x) : Math.max(p1.x, p2.x);
+                    const xCota = xBase + offset;
+                    const sign = offset < 0 ? -1 : 1;
+
+                    cotaLine = { x1: xCota, y1: minY, x2: xCota, y2: maxY };
+                    witness1 = { x1: p1.x + sign * 2, y1: p1.y, x2: xCota + sign * 5, y2: p1.y };
+                    witness2 = { x1: p2.x + sign * 2, y1: p2.y, x2: xCota + sign * 5, y2: p2.y };
+                    mid = { x: xCota, y: (minY + maxY) / 2 };
+                    rot = -90;
+
+                    const aLen = Math.min(8, Math.max(4, dist * 0.2));
+                    arrow1 = {
+                        tip: { x: xCota, y: minY },
+                        base1: { x: xCota - 3.5, y: minY + aLen },
+                        base2: { x: xCota + 3.5, y: minY + aLen }
+                    };
+                    arrow2 = {
+                        tip: { x: xCota, y: maxY },
+                        base1: { x: xCota - 3.5, y: maxY - aLen },
+                        base2: { x: xCota + 3.5, y: maxY - aLen }
+                    };
+                } else { // aligned
+                    dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                    const angle = Math.atan2(dy, dx);
+                    const perpAngle = angle - Math.PI / 2;
+                    const ux = Math.cos(perpAngle);
+                    const uy = Math.sin(perpAngle);
+
+                    const c1x = p1.x + ux * offset;
+                    const c1y = p1.y + uy * offset;
+                    const c2x = p2.x + ux * offset;
+                    const c2y = p2.y + uy * offset;
+                    const sign = offset < 0 ? -1 : 1;
+
+                    cotaLine = { x1: c1x, y1: c1y, x2: c2x, y2: c2y };
+                    witness1 = { x1: p1.x + ux * 2 * sign, y1: p1.y + uy * 2 * sign, x2: c1x + ux * 5 * sign, y2: c1y + uy * 5 * sign };
+                    witness2 = { x1: p2.x + ux * 2 * sign, y1: p2.y + uy * 2 * sign, x2: c2x + ux * 5 * sign, y2: c2y + uy * 5 * sign };
+                    mid = { x: (c1x + c2x) / 2, y: (c1y + c2y) / 2 };
+
+                    let rotDeg = angle * 180 / Math.PI;
+                    if (rotDeg > 90) rotDeg -= 180;
+                    if (rotDeg < -90) rotDeg += 180;
+                    rot = rotDeg;
+
+                    const aLen = Math.min(8, Math.max(4, dist * 0.2));
+                    const ax = Math.cos(angle);
+                    const ay = Math.sin(angle);
+                    arrow1 = {
+                        tip: { x: c1x, y: c1y },
+                        base1: { x: c1x + ax * aLen - ux * 3.5, y: c1y + ay * aLen - uy * 3.5 },
+                        base2: { x: c1x + ax * aLen + ux * 3.5, y: c1y + ay * aLen + uy * 3.5 }
+                    };
+                    arrow2 = {
+                        tip: { x: c2x, y: c2y },
+                        base1: { x: c2x - ax * aLen - ux * 3.5, y: c2y - ay * aLen - uy * 3.5 },
+                        base2: { x: c2x - ax * aLen + ux * 3.5, y: c2y - ay * aLen + uy * 3.5 }
+                    };
+                }
+
+                return { dist, effOrient, cotaLine, witness1, witness2, mid, rot, arrow1, arrow2, offset };
+            },
             renderElement(elData, isSelected = false) {
                 // Creamos un grupo para tener un "área de impacto" más gruesa invisible para tocar fácilmente con el dedo
                 const group = this.createSVG('g', { 'data-id': elData.id });
@@ -2249,6 +2369,78 @@
                         group.appendChild(tBg);
                         group.appendChild(el);
                         break;
+                    case 'cota': {
+                        const geom = this.getCotaGeometry(elData);
+                        const mVal = elData.isManual ? (elData.value || "0 cm") : Utils.formatMeasure(geom.dist);
+                        const isManual = !!elData.isManual;
+
+                        // 1. Hitbox gruesa para seleccionar y arrastrar
+                        group.appendChild(this.createSVG('line', {
+                            x1: geom.cotaLine.x1, y1: geom.cotaLine.y1, x2: geom.cotaLine.x2, y2: geom.cotaLine.y2,
+                            stroke: 'transparent', 'stroke-width': '28', fill: 'none', style: 'cursor: grab; pointer-events: all;'
+                        }));
+
+                        // 2. Líneas auxiliares de referencia (testigos hacia el objeto medido)
+                        const witnessColor = isSelected ? 'rgba(37, 99, 235, 0.7)' : '#94a3b8';
+                        group.appendChild(this.createSVG('line', {
+                            x1: geom.witness1.x1, y1: geom.witness1.y1, x2: geom.witness1.x2, y2: geom.witness1.y2,
+                            stroke: witnessColor, 'stroke-width': '1', 'stroke-dasharray': '3 2'
+                        }));
+                        group.appendChild(this.createSVG('line', {
+                            x1: geom.witness2.x1, y1: geom.witness2.y1, x2: geom.witness2.x2, y2: geom.witness2.y2,
+                            stroke: witnessColor, 'stroke-width': '1', 'stroke-dasharray': '3 2'
+                        }));
+
+                        // 3. Línea de cota principal
+                        const cotaColor = isSelected ? 'var(--c-select)' : (isManual ? '#0284c7' : '#334155');
+                        group.appendChild(this.createSVG('line', {
+                            x1: geom.cotaLine.x1, y1: geom.cotaLine.y1, x2: geom.cotaLine.x2, y2: geom.cotaLine.y2,
+                            stroke: cotaColor, 'stroke-width': isSelected ? '2' : '1.5'
+                        }));
+
+                        // 4. Flechas técnicas en los extremos
+                        const arrowColor = isSelected ? 'var(--c-select)' : (isManual ? '#0284c7' : '#1e293b');
+                        const pArr1 = `${geom.arrow1.tip.x},${geom.arrow1.tip.y} ${geom.arrow1.base1.x},${geom.arrow1.base1.y} ${geom.arrow1.base2.x},${geom.arrow1.base2.y}`;
+                        const pArr2 = `${geom.arrow2.tip.x},${geom.arrow2.tip.y} ${geom.arrow2.base1.x},${geom.arrow2.base1.y} ${geom.arrow2.base2.x},${geom.arrow2.base2.y}`;
+                        group.appendChild(this.createSVG('polygon', { points: pArr1, fill: arrowColor }));
+                        group.appendChild(this.createSVG('polygon', { points: pArr2, fill: arrowColor }));
+
+                        // 5. Burbuja de medida con edición directa
+                        const fontSize = 11.5;
+                        const charW = fontSize * 0.62;
+                        const pillW = Math.max(50, mVal.length * charW + 18);
+                        const pillH = 22;
+
+                        const bubbleGroup = this.createSVG('g', {
+                            transform: `translate(${geom.mid.x}, ${geom.mid.y}) rotate(${geom.rot})`,
+                            class: 'cota-bubble-group',
+                            'data-bubble-id': elData.id,
+                            style: 'cursor: pointer;'
+                        });
+
+                        bubbleGroup.appendChild(this.createSVG('rect', {
+                            x: -pillW / 2, y: -pillH / 2, width: pillW, height: pillH, rx: 6,
+                            fill: isSelected ? 'rgba(37, 99, 235, 0.12)' : (isManual ? 'rgba(2, 132, 199, 0.08)' : 'rgba(255, 255, 255, 0.96)'),
+                            stroke: isSelected ? 'var(--c-select)' : (isManual ? '#0284c7' : '#cbd5e1'),
+                            'stroke-width': isSelected ? '2' : (isManual ? '1.5' : '1'),
+                            class: 'measure-bubble',
+                            'data-bubble-id': elData.id,
+                            style: 'filter: drop-shadow(0 2px 5px rgba(0,0,0,0.12)); cursor: pointer;'
+                        }));
+
+                        const txt = this.createSVG('text', {
+                            x: 0, y: 0,
+                            'text-anchor': 'middle', 'dominant-baseline': 'central',
+                            'font-size': `${fontSize}px`, 'font-family': 'monospace', 'font-weight': '700',
+                            fill: isSelected ? 'var(--c-select)' : (isManual ? '#0284c7' : '#0f172a'),
+                            'data-bubble-id': elData.id,
+                            style: 'cursor: pointer; pointer-events: none;'
+                        });
+                        txt.textContent = mVal;
+                        bubbleGroup.appendChild(txt);
+                        group.appendChild(bubbleGroup);
+                        break;
+                    }
                     case 'measure':
                         const midX = (elData.start.x + elData.end.x) / 2;
                         const midY = (elData.start.y + elData.end.y) / 2;
@@ -2367,6 +2559,11 @@
                 if (elData.type === 'line' || elData.type === 'measure') {
                     pts.push({ id: 'start', x: elData.start.x, y: elData.start.y });
                     pts.push({ id: 'end', x: elData.end.x, y: elData.end.y });
+                } else if (elData.type === 'cota') {
+                    pts.push({ id: 'start', x: elData.start.x, y: elData.start.y });
+                    pts.push({ id: 'end', x: elData.end.x, y: elData.end.y });
+                    const geom = this.getCotaGeometry(elData);
+                    pts.push({ id: 'cota_offset', x: geom.mid.x, y: geom.mid.y });
                 } else if (elData.type === 'polyline') {
                     elData.points.forEach((p, i) => pts.push({ id: `p${i}`, x: p.x, y: p.y }));
                 } else if (elData.type === 'text') {
@@ -2761,7 +2958,7 @@
             _isOpen: false,
 
             open(el) {
-                if (!el || el.type !== 'measure') return;
+                if (!el || (el.type !== 'measure' && el.type !== 'cota')) return;
 
                 if (typeof CanvasInlineEditor !== 'undefined' && CanvasInlineEditor._isOpen) {
                     CanvasInlineEditor.close(false);
@@ -2771,14 +2968,19 @@
                 this._isOpen = true;
 
                 // Calcular posición exacta de la burbuja en el espacio del mundo
-                const midX = (el.start.x + el.end.x) / 2;
-                const midY = (el.start.y + el.end.y) / 2;
-                const mAngle = Utils.angle(el.start, el.end);
-                const perpAngleRad = (mAngle - 90) * Math.PI / 180;
-                this._worldPos = {
-                    x: midX + Math.cos(perpAngleRad) * 15,
-                    y: midY + Math.sin(perpAngleRad) * 15
-                };
+                if (el.type === 'cota') {
+                    const geom = Renderer.getCotaGeometry(el);
+                    this._worldPos = { x: geom.mid.x, y: geom.mid.y };
+                } else {
+                    const midX = (el.start.x + el.end.x) / 2;
+                    const midY = (el.start.y + el.end.y) / 2;
+                    const mAngle = Utils.angle(el.start, el.end);
+                    const perpAngleRad = (mAngle - 90) * Math.PI / 180;
+                    this._worldPos = {
+                        x: midX + Math.cos(perpAngleRad) * 15,
+                        y: midY + Math.sin(perpAngleRad) * 15
+                    };
+                }
 
                 const container = document.getElementById('measure-bubble-editor');
                 const inputVal = document.getElementById('measure-input-val');
@@ -2953,6 +3155,43 @@
                     if (this._activeEl.type === 'line' || this._activeEl.type === 'measure') {
                         if (this._activeCtrl === 'start') this._activeEl.start = finalP;
                         if (this._activeCtrl === 'end') this._activeEl.end = finalP;
+                    } else if (this._activeEl.type === 'cota') {
+                        if (this._activeCtrl === 'start') {
+                            this._activeEl.start = finalP;
+                        } else if (this._activeCtrl === 'end') {
+                            this._activeEl.end = finalP;
+                        } else if (this._activeCtrl === 'cota_offset') {
+                            const p1 = this._activeEl.start;
+                            const p2 = this._activeEl.end;
+                            const orient = this._activeEl.orientation || 'auto';
+                            let effOrient = orient;
+                            if (orient === 'auto') {
+                                effOrient = (Math.abs(p2.x - p1.x) >= Math.abs(p2.y - p1.y)) ? 'horizontal' : 'vertical';
+                            }
+                            if (effOrient === 'horizontal') {
+                                const yBase = this._activeEl.offset < 0 ? Math.min(p1.y, p2.y) : Math.max(p1.y, p2.y);
+                                const newOff = Math.round(finalP.y - yBase);
+                                this._activeEl.offset = Math.abs(newOff) < 8 ? (newOff < 0 ? -12 : 12) : newOff;
+                            } else if (effOrient === 'vertical') {
+                                const xBase = this._activeEl.offset < 0 ? Math.min(p1.x, p2.x) : Math.max(p1.x, p2.x);
+                                const newOff = Math.round(finalP.x - xBase);
+                                this._activeEl.offset = Math.abs(newOff) < 8 ? (newOff < 0 ? -12 : 12) : newOff;
+                            } else {
+                                const dx = p2.x - p1.x;
+                                const dy = p2.y - p1.y;
+                                const angle = Math.atan2(dy, dx);
+                                const perpAngle = angle - Math.PI / 2;
+                                const ux = Math.cos(perpAngle);
+                                const uy = Math.sin(perpAngle);
+                                const dist = (finalP.x - p1.x) * ux + (finalP.y - p1.y) * uy;
+                                const newOff = Math.round(dist);
+                                this._activeEl.offset = Math.abs(newOff) < 8 ? (newOff < 0 ? -12 : 12) : newOff;
+                            }
+                        }
+                        if (!this._activeEl.isManual) {
+                            const geom = Renderer.getCotaGeometry(this._activeEl);
+                            this._activeEl.value = Utils.formatMeasure(geom.dist);
+                        }
                     } else if (this._activeEl.type === 'polyline') {
                         if (this._activeCtrl.startsWith('p')) {
                             const idx = parseInt(this._activeCtrl.substring(1));
@@ -3038,7 +3277,7 @@
                         const el = App.data.elements.find(x => x.id === id);
                         if (!el) return;
                         
-                        if (el.type === 'measure') {
+                        if (el.type === 'measure' || el.type === 'cota') {
                             MeasureEditor.open(el);
                         } else if (el.type === 'text') {
                             CanvasInlineEditor.open(
@@ -3677,6 +3916,216 @@
                 }
             },
 
+            cota: {
+                _firstPoint: null,
+                _activeCota: null,
+                _dragPrevPoint: null,
+                _hasMoved: false,
+
+                getOrientation() {
+                    return App.ui.subTool || 'auto';
+                },
+
+                down(wp, e) {
+                    const target = e.target;
+                    const elNode = target.closest ? target.closest('[data-id]') : null;
+                    const id = elNode ? elNode.getAttribute('data-id') : null;
+
+                    // 1. Si tocó una cota existente: seleccionarla, arrastrarla o abrir editor
+                    if (id && id !== 'bg-rect' && id !== 'viewport-transform' && id !== 'scene' && id !== 'canvas') {
+                        const el = App.data.elements.find(x => x.id === id);
+                        if (el && el.type === 'cota') {
+                            this._activeCota = el;
+                            this._dragPrevPoint = wp;
+                            this._hasMoved = false;
+                            this._firstPoint = null;
+                            App.ui.selectedId = el.id;
+                            Renderer.renderAll();
+                            UI.updateSelectionBar();
+                            return;
+                        }
+
+                        // 2. Si tocó un elemento (mesada, bacha, etc) y no teníamos _firstPoint:
+                        // auto-detectar el borde tocado para generar la cota en un solo toque
+                        if (!this._firstPoint) {
+                            const edge = Tools.measure.getGeometryEdge(el, wp);
+                            if (edge) {
+                                const orient = this.getOrientation();
+                                const p1 = edge.start;
+                                const p2 = edge.end;
+                                
+                                // Determinar offset inicial (-25 o +25 según de qué lado del borde hizo click)
+                                const midEdge = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+                                const edx = p2.x - p1.x;
+                                const edy = p2.y - p1.y;
+                                const norm = Math.hypot(edx, edy) || 1;
+                                const nx = -edy / norm;
+                                const ny = edx / norm;
+                                const side = (wp.x - midEdge.x) * nx + (wp.y - midEdge.y) * ny;
+                                const off = side < 0 ? -25 : 25;
+
+                                const tempCota = {
+                                    id: Utils.uuid(),
+                                    type: 'cota',
+                                    start: p1,
+                                    end: p2,
+                                    offset: off,
+                                    orientation: orient,
+                                    isManual: false
+                                };
+                                const geom = Renderer.getCotaGeometry(tempCota);
+                                const defaultVal = Utils.formatMeasure(geom.dist);
+                                tempCota.value = defaultVal;
+
+                                HistoryManager.pushState();
+                                App.data.elements.push(tempCota);
+                                App.ui.selectedId = tempCota.id;
+                                Renderer.renderAll();
+                                UI.updateSelectionBar();
+                                UI.showToast(`Cota técnica colocada: ${defaultVal} (tocá la burbuja para cambiarla)`);
+                                return;
+                            }
+                        }
+                    }
+
+                    // 3. Creación entre dos puntos libres o vértices snappeados
+                    const snap = Snapper.findSnap(wp);
+                    const pt = snap ? { x: snap.x, y: snap.y } : wp;
+
+                    if (!this._firstPoint) {
+                        // Primer punto (soporta 2 toques o drag continuo)
+                        this._firstPoint = pt;
+                        const orient = this.getOrientation();
+                        App.ui.tempElement = {
+                            id: Utils.uuid(),
+                            type: 'cota',
+                            start: pt,
+                            end: { ...pt },
+                            offset: -25,
+                            orientation: orient,
+                            isManual: false,
+                            value: ''
+                        };
+                    } else {
+                        // Segundo toque (modo 2 toques)
+                        const p1 = this._firstPoint;
+                        const p2 = pt;
+                        this._firstPoint = null;
+
+                        const orient = this.getOrientation();
+                        const tempCota = {
+                            id: Utils.uuid(),
+                            type: 'cota',
+                            start: p1,
+                            end: p2,
+                            offset: -25,
+                            orientation: orient,
+                            isManual: false
+                        };
+                        const geom = Renderer.getCotaGeometry(tempCota);
+                        if (geom.dist > 3) {
+                            const defaultVal = Utils.formatMeasure(geom.dist);
+                            tempCota.value = defaultVal;
+                            HistoryManager.pushState();
+                            App.data.elements.push(tempCota);
+                            App.ui.selectedId = tempCota.id;
+                            App.ui.tempElement = null;
+                            Renderer.renderPreview();
+                            Renderer.renderAll();
+                            UI.updateSelectionBar();
+                            UI.showToast(`Cota colocada: ${defaultVal}`);
+                        } else {
+                            App.ui.tempElement = null;
+                            Renderer.renderPreview();
+                        }
+                        Renderer.drawSnap(null);
+                    }
+                },
+
+                move(wp) {
+                    // Si estamos arrastrando una cota existente
+                    if (this._activeCota) {
+                        this._hasMoved = true;
+                        if (!this._dragPrevPoint) this._dragPrevPoint = wp;
+                        const dx = wp.x - this._dragPrevPoint.x;
+                        const dy = wp.y - this._dragPrevPoint.y;
+                        this._dragPrevPoint = wp;
+
+                        this._activeCota.start.x += dx;
+                        this._activeCota.start.y += dy;
+                        this._activeCota.end.x += dx;
+                        this._activeCota.end.y += dy;
+                        Renderer.renderAll();
+                        return;
+                    }
+
+                    // Si estamos creando con drag o previsualizando
+                    if (App.ui.tempElement && App.ui.tempElement.type === 'cota') {
+                        const snap = Snapper.findSnap(wp);
+                        let currP = snap ? { x: snap.x, y: snap.y } : wp;
+                        
+                        const orient = this.getOrientation();
+                        if (orient === 'horizontal') {
+                            currP.y = App.ui.tempElement.start.y;
+                        } else if (orient === 'vertical') {
+                            currP.x = App.ui.tempElement.start.x;
+                        }
+
+                        App.ui.tempElement.end = currP;
+                        const geom = Renderer.getCotaGeometry(App.ui.tempElement);
+                        App.ui.tempElement.value = Utils.formatMeasure(geom.dist);
+                        Renderer.renderPreview();
+                        Renderer.drawSnap(snap);
+                    }
+                },
+
+                up() {
+                    // Si soltamos cota existente
+                    if (this._activeCota) {
+                        const cotaEl = this._activeCota;
+                        const wasMoved = this._hasMoved;
+                        this._activeCota = null;
+                        this._dragPrevPoint = null;
+                        this._hasMoved = false;
+
+                        if (wasMoved) {
+                            HistoryManager.pushState();
+                            StorageManager.save();
+                        } else {
+                            MeasureEditor.open(cotaEl);
+                        }
+                        return;
+                    }
+
+                    // Si estábamos arrastrando para colocar la cota
+                    if (App.ui.tempElement && App.ui.tempElement.type === 'cota') {
+                        const geom = Renderer.getCotaGeometry(App.ui.tempElement);
+                        if (geom.dist > 15) {
+                            const newCota = {
+                                id: App.ui.tempElement.id,
+                                type: 'cota',
+                                start: App.ui.tempElement.start,
+                                end: App.ui.tempElement.end,
+                                offset: App.ui.tempElement.offset || -25,
+                                orientation: App.ui.tempElement.orientation || this.getOrientation(),
+                                value: Utils.formatMeasure(geom.dist),
+                                isManual: false
+                            };
+                            this._firstPoint = null;
+                            App.ui.tempElement = null;
+                            HistoryManager.pushState();
+                            App.data.elements.push(newCota);
+                            App.ui.selectedId = newCota.id;
+                            Renderer.renderPreview();
+                            Renderer.renderAll();
+                            UI.updateSelectionBar();
+                            UI.showToast(`Cota colocada: ${newCota.value} (tocá para editar)`);
+                        }
+                    }
+                    Renderer.drawSnap(null);
+                }
+            },
+
             annotate: {
                 _activeNote: null,
                 _dragPrevPoint: null,
@@ -3797,6 +4246,9 @@
                             let d = Infinity;
                             if (el.type === 'line' || el.type === 'measure') {
                                 d = Utils.pointToSegmentDist(wp, el.start, el.end);
+                            } else if (el.type === 'cota') {
+                                const geom = Renderer.getCotaGeometry(el);
+                                d = Utils.pointToSegmentDist(wp, {x: geom.cotaLine.x1, y: geom.cotaLine.y1}, {x: geom.cotaLine.x2, y: geom.cotaLine.y2});
                             } else if (el.type === 'rect' || el.type === 'square' || el.type === 'cooktop' || el.type === 'sink') {
                                 const rx = Math.min(el.start.x, el.end.x);
                                 const ry = Math.min(el.start.y, el.end.y);
@@ -3911,7 +4363,7 @@
                 const bubbleEl = e.target.closest ? e.target.closest('[data-bubble-id]') : null;
                 if (bubbleEl) {
                     const mId = bubbleEl.getAttribute('data-bubble-id');
-                    const mEl = App.data.elements.find(x => x.id === mId && x.type === 'measure');
+                    const mEl = App.data.elements.find(x => x.id === mId && (x.type === 'measure' || x.type === 'cota'));
                     if (mEl) {
                         App.ui.selectedId = mEl.id;
                         Renderer.renderAll();
@@ -4049,6 +4501,7 @@
                     'pencil': '〰️ Trazo',
                     'text': 'T Anotación',
                     'measure': '↔️ Cota',
+                    'cota': '📏 Cota técnica',
                     'cooktop': '🔥 Hornallas',
                     'sink': '🚰 Bacha'
                 };
@@ -4080,13 +4533,16 @@
                 } else if (el.type === 'measure') {
                     label = `↔️ Cota (${el.value || ''})`;
                     if (editBtn) editBtn.innerHTML = '✏️ Editar';
+                } else if (el.type === 'cota') {
+                    label = `📏 Cota (${el.value || ''})`;
+                    if (editBtn) editBtn.innerHTML = '✏️ Editar medida';
                 } else {
                     if (editBtn) editBtn.innerHTML = '✏️ Editar';
                 }
 
                 if (info) info.textContent = label;
                 if (editBtn) {
-                    if (['text', 'measure', 'circle', 'cooktop', 'sink', 'rect', 'square'].includes(el.type)) {
+                    if (['text', 'measure', 'cota', 'circle', 'cooktop', 'sink', 'rect', 'square'].includes(el.type)) {
                         editBtn.style.display = 'flex';
                         if (el.type === 'circle') editBtn.title = "Editar diámetro en cm";
                         else if (el.type === 'sink') editBtn.title = "Personalizar medidas de la bacha en cm";
@@ -4136,7 +4592,10 @@
                 btnConfirm.onclick = onConfirm;
                 btnCancel.onclick = onCancel;
                 
-                const onKey = (e) => { if(e.key === 'Enter') onConfirm(); if(e.key === 'Escape') onCancel(); };
+                const onKey = (e) => {
+                    if (e.key === 'Enter') onConfirm();
+                    if (e.key === 'Escape') onCancel();
+                };
                 input.addEventListener('keydown', onKey);
                 
                 function cleanup() {
@@ -4147,6 +4606,15 @@
             setTool(toolName) {
                 App.ui.currentTool = toolName;
                 
+                // Limpiar estados de herramientas previas
+                if (Tools.cota && toolName !== 'cota') {
+                    Tools.cota._firstPoint = null;
+                }
+                if (App.ui.tempElement) {
+                    App.ui.tempElement = null;
+                    Renderer.renderPreview();
+                }
+
                 // Actualizar botones barra
                 document.querySelectorAll('.tool-btn').forEach(btn => {
                     btn.classList.toggle('active', btn.getAttribute('data-tool') === toolName);
@@ -4178,6 +4646,24 @@
                         b.addEventListener('click', (e) => {
                             App.ui.subTool = e.currentTarget.getAttribute('data-sub');
                             this.setTool('draw'); // Refresh
+                        });
+                    });
+                } else if (toolName === 'cota') {
+                    if (Tools.cota) Tools.cota._firstPoint = null;
+                    if (!['auto', 'horizontal', 'vertical', 'aligned'].includes(App.ui.subTool)) App.ui.subTool = 'auto';
+                    sub.innerHTML = `
+                        <button class="subtool-btn ${App.ui.subTool==='auto'?'active':''}" data-sub="auto" title="Detecta automáticamente si la cota es horizontal o vertical">📐 Automática</button>
+                        <button class="subtool-btn ${App.ui.subTool==='horizontal'?'active':''}" data-sub="horizontal" title="Forzar cota horizontal">↔️ Horizontal</button>
+                        <button class="subtool-btn ${App.ui.subTool==='vertical'?'active':''}" data-sub="vertical" title="Forzar cota vertical">↕️ Vertical</button>
+                        <button class="subtool-btn ${App.ui.subTool==='aligned'?'active':''}" data-sub="aligned" title="Cota inclinada o alineada a los puntos">↗️ Alineada</button>
+                    `;
+                    sub.classList.add('visible');
+                    
+                    sub.querySelectorAll('.subtool-btn').forEach(b => {
+                        b.addEventListener('click', (e) => {
+                            App.ui.subTool = e.currentTarget.getAttribute('data-sub');
+                            if (Tools.cota) Tools.cota._firstPoint = null;
+                            this.setTool('cota');
                         });
                     });
                 } else if (toolName === 'shapes') {
@@ -4317,7 +4803,7 @@
                     });
                     changed = true;
                     desc = `Triángulo: ${newDist.toFixed(1)} cm`;
-                } else if (el.type === 'line' || el.type === 'measure') {
+                } else if (el.type === 'line' || el.type === 'measure' || el.type === 'cota') {
                     const cx = (el.start.x + el.end.x) / 2;
                     const cy = (el.start.y + el.end.y) / 2;
                     const len = Utils.distance(el.start, el.end) || 1;
@@ -4325,7 +4811,13 @@
                     const factor = newLen / len;
                     el.start = { x: cx + (el.start.x - cx) * factor, y: cy + (el.start.y - cy) * factor };
                     el.end = { x: cx + (el.end.x - cx) * factor, y: cy + (el.end.y - cy) * factor };
-                    if (el.type === 'measure') {
+                    if (el.type === 'cota') {
+                        if (!el.isManual) {
+                            const geom = Renderer.getCotaGeometry(el);
+                            el.value = Utils.formatMeasure(geom.dist);
+                        }
+                        desc = `Cota: ${el.value}`;
+                    } else if (el.type === 'measure') {
                         el.value = (newLen / 100).toFixed(2) + " m";
                         desc = `Cota: ${el.value}`;
                     } else {
@@ -4706,6 +5198,11 @@
                     App.data.elements.forEach(el => {
                         const pts = [];
                         if (el.type === 'line' || el.type === 'measure') pts.push(el.start, el.end);
+                        if (el.type === 'cota') {
+                            pts.push(el.start, el.end);
+                            const geom = Renderer.getCotaGeometry(el);
+                            pts.push({ x: geom.cotaLine.x1, y: geom.cotaLine.y1 }, { x: geom.cotaLine.x2, y: geom.cotaLine.y2 });
+                        }
                         if (el.type === 'polyline' || el.type === 'pencil') pts.push(...el.points);
                         if (el.type === 'rect' || el.type === 'square' || el.type === 'cooktop' || el.type === 'sink') pts.push(el.start, el.end);
                         if (el.type === 'circle') {
@@ -4784,6 +5281,29 @@
                                 doc.setFontSize(8);
                                 doc.setTextColor(20, 20, 20);
                                 doc.text(val, mx, my, { align: 'center', angle: rotAngle });
+                            }
+                            if (el.type === 'cota') {
+                                const geom = Renderer.getCotaGeometry(el);
+                                // Líneas de testigo
+                                doc.setLineDash([1.5, 1.5]);
+                                doc.setDrawColor(120, 120, 120);
+                                doc.setLineWidth(0.3);
+                                doc.line(toPdfX(geom.witness1.x1), toPdfY(geom.witness1.y1), toPdfX(geom.witness1.x2), toPdfY(geom.witness1.y2));
+                                doc.line(toPdfX(geom.witness2.x1), toPdfY(geom.witness2.y1), toPdfX(geom.witness2.x2), toPdfY(geom.witness2.y2));
+
+                                // Línea de cota
+                                doc.setLineDash([]);
+                                doc.setDrawColor(37, 99, 235);
+                                doc.setLineWidth(0.4);
+                                doc.line(toPdfX(geom.cotaLine.x1), toPdfY(geom.cotaLine.y1), toPdfX(geom.cotaLine.x2), toPdfY(geom.cotaLine.y2));
+
+                                // Medida en el centro
+                                const mx = toPdfX(geom.mid.x);
+                                const my = toPdfY(geom.mid.y);
+                                const val = el.value || Utils.formatMeasure(geom.dist);
+                                doc.setFontSize(8);
+                                doc.setTextColor(30, 41, 59);
+                                doc.text(val, mx, my - 1, { align: 'center', angle: geom.rot });
                             }
                             if (el.type === 'polyline' || el.type === 'pencil') {
                                 doc.setLineDash([]);
@@ -4985,6 +5505,11 @@
                         App.data.elements.forEach(el => {
                             const pts = [];
                             if (el.type === 'line' || el.type === 'measure') pts.push(el.start, el.end);
+                            if (el.type === 'cota') {
+                                pts.push(el.start, el.end);
+                                const geom = Renderer.getCotaGeometry(el);
+                                pts.push({ x: geom.cotaLine.x1, y: geom.cotaLine.y1 }, { x: geom.cotaLine.x2, y: geom.cotaLine.y2 });
+                            }
                             if (el.type === 'polyline' || el.type === 'pencil') pts.push(...el.points);
                             if (el.type === 'rect' || el.type === 'square' || el.type === 'cooktop' || el.type === 'sink') pts.push(el.start, el.end);
                             if (el.type === 'circle') {
@@ -5079,11 +5604,11 @@
                     const imgDataUrl = await this.generateBlueprintImage();
 
                     // Medidas y cotas
-                    const measures = App.data.elements.filter(e => e.type === 'measure');
+                    const measures = App.data.elements.filter(e => e.type === 'measure' || e.type === 'cota');
                     const texts = App.data.elements.filter(e => e.type === 'text');
                     const cooktops = App.data.elements.filter(e => e.type === 'cooktop');
                     const sinks = App.data.elements.filter(e => e.type === 'sink');
-                    const geometriesCount = App.data.elements.filter(e => e.type !== 'measure' && e.type !== 'text').length;
+                    const geometriesCount = App.data.elements.filter(e => e.type !== 'measure' && e.type !== 'cota' && e.type !== 'text').length;
 
                     let measuresHtml = '';
                     if (measures.length > 0) {
@@ -5267,7 +5792,7 @@
                 this.exportPDF(info);
 
                 // Construir mensaje enriquecido
-                const measures = App.data.elements.filter(e => e.type === 'measure');
+                const measures = App.data.elements.filter(e => e.type === 'measure' || e.type === 'cota');
                 const texts = App.data.elements.filter(e => e.type === 'text');
                 const cooktops = App.data.elements.filter(e => e.type === 'cooktop');
                 const sinks = App.data.elements.filter(e => e.type === 'sink');
@@ -5694,7 +6219,7 @@
                     if (!App.ui.selectedId) return;
                     const el = App.data.elements.find(x => x.id === App.ui.selectedId);
                     if (!el) return;
-                    if (el.type === 'measure') {
+                    if (el.type === 'measure' || el.type === 'cota') {
                         MeasureEditor.open(el);
                     } else if (el.type === 'text') {
                         CanvasInlineEditor.open(
