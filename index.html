@@ -3931,64 +3931,21 @@
                     const elNode = target.closest ? target.closest('[data-id]') : null;
                     const id = elNode ? elNode.getAttribute('data-id') : null;
 
-                    // 1. Si tocó una cota existente: seleccionarla, arrastrarla o abrir editor
-                    if (id && id !== 'bg-rect' && id !== 'viewport-transform' && id !== 'scene' && id !== 'canvas') {
+                    // 1. Si no teníamos un punto inicial y tocó una cota existente: seleccionarla o arrastrarla
+                    if (!this._firstPoint && id && id !== 'bg-rect' && id !== 'viewport-transform' && id !== 'scene' && id !== 'canvas') {
                         const el = App.data.elements.find(x => x.id === id);
                         if (el && el.type === 'cota') {
                             this._activeCota = el;
                             this._dragPrevPoint = wp;
                             this._hasMoved = false;
-                            this._firstPoint = null;
                             App.ui.selectedId = el.id;
                             Renderer.renderAll();
                             UI.updateSelectionBar();
                             return;
                         }
-
-                        // 2. Si tocó un elemento (mesada, bacha, etc) y no teníamos _firstPoint:
-                        // auto-detectar el borde tocado para generar la cota en un solo toque
-                        if (!this._firstPoint) {
-                            const edge = Tools.measure.getGeometryEdge(el, wp);
-                            if (edge) {
-                                const orient = this.getOrientation();
-                                const p1 = edge.start;
-                                const p2 = edge.end;
-                                
-                                // Determinar offset inicial (-25 o +25 según de qué lado del borde hizo click)
-                                const midEdge = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
-                                const edx = p2.x - p1.x;
-                                const edy = p2.y - p1.y;
-                                const norm = Math.hypot(edx, edy) || 1;
-                                const nx = -edy / norm;
-                                const ny = edx / norm;
-                                const side = (wp.x - midEdge.x) * nx + (wp.y - midEdge.y) * ny;
-                                const off = side < 0 ? -25 : 25;
-
-                                const tempCota = {
-                                    id: Utils.uuid(),
-                                    type: 'cota',
-                                    start: p1,
-                                    end: p2,
-                                    offset: off,
-                                    orientation: orient,
-                                    isManual: false
-                                };
-                                const geom = Renderer.getCotaGeometry(tempCota);
-                                const defaultVal = Utils.formatMeasure(geom.dist);
-                                tempCota.value = defaultVal;
-
-                                HistoryManager.pushState();
-                                App.data.elements.push(tempCota);
-                                App.ui.selectedId = tempCota.id;
-                                Renderer.renderAll();
-                                UI.updateSelectionBar();
-                                UI.showToast(`Cota técnica colocada: ${defaultVal} (tocá la burbuja para cambiarla)`);
-                                return;
-                            }
-                        }
                     }
 
-                    // 3. Creación entre dos puntos libres o vértices snappeados
+                    // 2. Creación entre dos puntos elegidos por el usuario (soporta arrastre y 2 toques)
                     const snap = Snapper.findSnap(wp);
                     const pt = snap ? { x: snap.x, y: snap.y } : wp;
 
