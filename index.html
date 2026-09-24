@@ -494,6 +494,64 @@
             border-color: #0284c7;
         }
 
+        /* Modal Personalizar Medidas de Hornallas / Anafe */
+        #cooktop-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            padding: 16px;
+        }
+        #cooktop-modal.active { display: flex; }
+        .cooktop-model-btn {
+            padding: 9px 6px;
+            border: 1px solid var(--c-border);
+            border-radius: 8px;
+            background: var(--c-bg);
+            color: var(--c-text);
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            text-align: center;
+        }
+        .cooktop-model-btn:hover {
+            border-color: #ea580c;
+            background: #fff7ed;
+        }
+        .cooktop-model-btn.active {
+            background: #ea580c;
+            color: white;
+            border-color: #ea580c;
+            font-weight: 600;
+        }
+        .cooktop-preset-pill {
+            padding: 6px 12px;
+            border-radius: 16px;
+            border: 1.5px solid #fed7aa;
+            background: #fff7ed;
+            color: #c2410c;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .cooktop-preset-pill:hover, .cooktop-preset-pill.active {
+            background: #ea580c;
+            color: white;
+            border-color: #ea580c;
+        }
+        .sel-btn-color {
+            cursor: pointer;
+        }
+        .sel-btn-color:hover {
+            background: rgba(255, 255, 255, 0.16);
+        }
+
         .export-section-title {
             font-size: 11px;
             font-weight: 700;
@@ -1220,6 +1278,10 @@
                     <span class="tool-icon" style="font-size: 19px; font-weight: 700;">∠</span>
                     <span class="tool-label">Ángulo</span>
                 </button>
+                <button class="tool-btn" data-tool="terminacion" data-subtype="z" title="Terminación 4: Tipo Z">
+                    <span class="tool-icon" style="font-size: 19px; font-weight: 700;">Z</span>
+                    <span class="tool-label">Tipo Z</span>
+                </button>
                 <div class="toolbar-section-divider"></div>
                 <button class="tool-btn" data-tool="annotate" title="Anotaciones de texto">
                     <span class="tool-icon">T</span>
@@ -1232,6 +1294,18 @@
                 <button class="tool-btn" data-tool="sink" title="Bachas y Piletas">
                     <span class="tool-icon">🚰</span>
                     <span class="tool-label">Bachas</span>
+                </button>
+                <button class="tool-btn" data-tool="z_shape" title="Elemento Z (Símbolo Z)">
+                    <span class="tool-icon" style="font-size: 19px; font-weight: 700;">Z</span>
+                    <span class="tool-label">Elemento Z</span>
+                </button>
+                <button class="tool-btn" data-tool="lines_45" title="Nuevo elemento de líneas 45°">
+                    <span class="tool-icon" style="display: flex; align-items: center; justify-content: center;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M 4 5 L 20 5 L 14 16 L 6 16" />
+                        </svg>
+                    </span>
+                    <span class="tool-label">Línea 45°</span>
                 </button>
                 <button class="tool-btn" data-tool="erase" title="Borrar trazos">
                     <span class="tool-icon">⌫</span>
@@ -1258,6 +1332,13 @@
                     <span id="sel-info" class="sel-info">Elemento</span>
                     <button type="button" id="btn-sel-edit" class="sel-btn primary" title="Editar medidas o texto">✏️ Editar</button>
                     <button type="button" id="btn-sel-rotate" class="sel-btn" style="display: none;" title="Girar orientación (45°)">↻ Girar</button>
+
+                    <!-- Selector de Color Libre para cualquier elemento -->
+                    <label for="sel-color-input" class="sel-btn sel-btn-color" id="btn-sel-color" title="Cambiar color del elemento" style="cursor: pointer; display: flex; align-items: center; gap: 6px; position: relative;">
+                        <span id="sel-color-swatch" style="width: 14px; height: 14px; border-radius: 50%; background: #3b82f6; border: 1.5px solid rgba(255,255,255,0.7); display: inline-block;"></span>
+                        <span class="btn-text">Color</span>
+                        <input type="color" id="sel-color-input" style="opacity: 0; width: 0; height: 0; position: absolute; pointer-events: none;">
+                    </label>
 
                     <!-- Flechitas para Achicar y Agrandar el tamaño tanto como se desee -->
                     <div id="sel-size-group" class="sel-size-group" style="display: none;">
@@ -1400,6 +1481,56 @@
                 <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px;">
                     <button type="button" class="btn" id="sink-modal-cancel" style="padding: 10px 16px;">Cancelar</button>
                     <button type="button" class="btn primary" id="sink-modal-apply" style="padding: 10px 20px; font-weight: 600; background: #0284c7; border-color: #0284c7;">✓ Aplicar Medidas</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Personalizar Medidas de Hornallas / Anafe -->
+    <div id="cooktop-modal">
+        <div class="export-card">
+            <div class="export-header">
+                <h2><span>🔥</span> Medidas de Hornallas</h2>
+                <button class="export-close-btn" id="cooktop-modal-close" title="Cerrar">&times;</button>
+            </div>
+            <div class="export-body" style="padding: 18px 20px;">
+                <p style="margin: 0 0 14px 0; font-size: 13px; color: var(--c-text-muted); line-height: 1.4;">
+                    Personalizá los centímetros exactos de las hornallas para una representación clara y proporcionada en el plano.
+                </p>
+
+                <!-- Selección de Modelo de Fuegos -->
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 12px; font-weight: 600; color: var(--c-text); display: block; margin-bottom: 6px;">Cantidad de Fuegos:</label>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;" id="cooktop-model-picker">
+                        <button type="button" class="cooktop-model-btn" data-model="2_burners">🔥 2 Fuegos</button>
+                        <button type="button" class="cooktop-model-btn active" data-model="4_burners">🔥 4 Fuegos</button>
+                        <button type="button" class="cooktop-model-btn" data-model="5_burners">🔥 5 Fuegos</button>
+                    </div>
+                </div>
+
+                <!-- Presets Rápidos -->
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="font-size: 12px; font-weight: 600; color: var(--c-text); display: block; margin-bottom: 6px;">Medidas habituales estándar (un toque):</label>
+                    <div id="cooktop-presets-container" style="display: flex; flex-wrap: wrap; gap: 6px;">
+                        <!-- Se puebla dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Inputs manuales en cm -->
+                <div id="cooktop-inputs-rect" class="form-row-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                    <div class="form-group" style="margin: 0;">
+                        <label for="cooktop-input-w" style="font-size: 12px; font-weight: 600; color: var(--c-text); display: block; margin-bottom: 4px;">Ancho / Frente (cm)</label>
+                        <input type="number" id="cooktop-input-w" value="60" min="15" max="300" step="0.5" style="width: 100%; font-size: 15px; font-weight: bold; text-align: center;">
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label for="cooktop-input-h" style="font-size: 12px; font-weight: 600; color: var(--c-text); display: block; margin-bottom: 4px;">Profundidad / Fondo (cm)</label>
+                        <input type="number" id="cooktop-input-h" value="50" min="15" max="300" step="0.5" style="width: 100%; font-size: 15px; font-weight: bold; text-align: center;">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px;">
+                    <button type="button" class="btn" id="cooktop-modal-cancel" style="padding: 10px 16px;">Cancelar</button>
+                    <button type="button" class="btn primary" id="cooktop-modal-apply" style="padding: 10px 20px; font-weight: 600; background: #ea580c; border-color: #ea580c;">✓ Aplicar Medidas</button>
                 </div>
             </div>
         </div>
@@ -1553,6 +1684,24 @@
                 // En planos de marmolería la unidad estándar comercial es cm (1px = 1cm)
                 const cm = Math.round(pxDist);
                 return cm + " cm";
+            },
+            parseColor: (colorStr, defaultColor = { r: 15, g: 23, b: 42 }) => {
+                if (!colorStr) return defaultColor;
+                if (colorStr.startsWith('#')) {
+                    let hex = colorStr.slice(1);
+                    if (hex.length === 3) {
+                        hex = hex.split('').map(c => c + c).join('');
+                    }
+                    if (hex.length === 6) {
+                        const num = parseInt(hex, 16);
+                        return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+                    }
+                }
+                return defaultColor;
+            },
+            hexToRgba: (hex, alpha = 0.1) => {
+                const rgb = Utils.parseColor(hex);
+                return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
             }
         };
 
@@ -1568,7 +1717,7 @@
                 renderSVG(elData, isSelected, renderer) {
                     const g = renderer.createSVG('g', { class: 'terminacion-symbol symbol-x' });
                     const s = (elData.size || 18) / 2;
-                    const strokeColor = isSelected ? 'var(--c-select)' : '#d97706';
+                    const strokeColor = isSelected ? 'var(--c-select)' : (elData.color || '#d97706');
                     const strokeW = isSelected ? '2.5' : '2';
 
                     const l1 = renderer.createSVG('line', {
@@ -1584,7 +1733,7 @@
                     g.appendChild(l2);
                     return g;
                 },
-                renderPDF(doc, cx, cy, angleDeg, scale, size = 18) {
+                renderPDF(doc, cx, cy, angleDeg, scale, size = 18, color = null) {
                     const s = (size * scale) / 2;
                     const rad = angleDeg * Math.PI / 180;
                     const cos = Math.cos(rad);
@@ -1593,7 +1742,8 @@
                         x: cx + x * cos - y * sin,
                         y: cy + x * sin + y * cos
                     });
-                    doc.setDrawColor(217, 119, 6);
+                    const c = color ? Utils.parseColor(color) : { r: 217, g: 119, b: 6 };
+                    doc.setDrawColor(c.r, c.g, c.b);
                     doc.setLineWidth(0.6);
                     const p1 = rot(-s, -s), p2 = rot(s, s);
                     doc.line(p1.x, p1.y, p2.x, p2.y);
@@ -1610,7 +1760,7 @@
                 renderSVG(elData, isSelected, renderer) {
                     const g = renderer.createSVG('g', { class: 'terminacion-symbol symbol-circle-x' });
                     const r = (elData.size || 20) / 2;
-                    const strokeColor = isSelected ? 'var(--c-select)' : '#0284c7';
+                    const strokeColor = isSelected ? 'var(--c-select)' : (elData.color || '#0284c7');
                     const strokeW = isSelected ? '2.5' : '1.8';
 
                     // Círculo base blanco para ocultar la línea subyacente y asegurar legibilidad
@@ -1633,10 +1783,11 @@
                     g.appendChild(l2);
                     return g;
                 },
-                renderPDF(doc, cx, cy, angleDeg, scale, size = 20) {
+                renderPDF(doc, cx, cy, angleDeg, scale, size = 20, color = null) {
                     const r = (size * scale) / 2;
+                    const c = color ? Utils.parseColor(color) : { r: 2, g: 132, b: 199 };
                     doc.setFillColor(255, 255, 255);
-                    doc.setDrawColor(2, 132, 199);
+                    doc.setDrawColor(c.r, c.g, c.b);
                     doc.setLineWidth(0.5);
                     doc.circle(cx, cy, r, 'FD');
 
@@ -1663,7 +1814,7 @@
                 renderSVG(elData, isSelected, renderer) {
                     const g = renderer.createSVG('g', { class: 'terminacion-symbol symbol-angle' });
                     const s = (elData.size || 20) / 2;
-                    const strokeColor = isSelected ? 'var(--c-select)' : '#059669';
+                    const strokeColor = isSelected ? 'var(--c-select)' : (elData.color || '#059669');
                     const strokeW = isSelected ? '2.5' : '2';
 
                     // Símbolo ángulo técnico: segmento base sobre el borde y segmento en ángulo
@@ -1684,7 +1835,7 @@
                     g.appendChild(arc);
                     return g;
                 },
-                renderPDF(doc, cx, cy, angleDeg, scale, size = 20) {
+                renderPDF(doc, cx, cy, angleDeg, scale, size = 20, color = null) {
                     const s = (size * scale) / 2;
                     const rad = angleDeg * Math.PI / 180;
                     const cos = Math.cos(rad);
@@ -1693,12 +1844,52 @@
                         x: cx + x * cos - y * sin,
                         y: cy + x * sin + y * cos
                     });
-                    doc.setDrawColor(5, 150, 105);
+                    const c = color ? Utils.parseColor(color) : { r: 5, g: 150, b: 105 };
+                    doc.setDrawColor(c.r, c.g, c.b);
                     doc.setLineWidth(0.6);
                     const p1 = rot(-s, s * 0.7), p2 = rot(s, s * 0.7);
                     doc.line(p1.x, p1.y, p2.x, p2.y);
                     const p3 = rot(s * 0.6, -s * 0.7);
                     doc.line(p1.x, p1.y, p3.x, p3.y);
+                }
+            },
+            z: {
+                id: 'z',
+                name: 'Terminación 4 (Tipo Z)',
+                shortName: 'Tipo Z',
+                icon: 'Z',
+                defaultSize: 18,
+                renderSVG(elData, isSelected, renderer) {
+                    const g = renderer.createSVG('g', { class: 'terminacion-symbol symbol-z' });
+                    const s = (elData.size || 18) / 2;
+                    const strokeColor = isSelected ? 'var(--c-select)' : (elData.color || '#8b5cf6');
+                    const strokeW = isSelected ? '2.5' : '2';
+
+                    const path = renderer.createSVG('path', {
+                        d: `M ${-s} ${-s} L ${s} ${-s} L ${-s} ${s} L ${s} ${s}`,
+                        stroke: strokeColor, 'stroke-width': strokeW, fill: 'none',
+                        'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+                    });
+                    g.appendChild(path);
+                    return g;
+                },
+                renderPDF(doc, cx, cy, angleDeg, scale, size = 18, color = null) {
+                    const s = (size * scale) / 2;
+                    const rad = angleDeg * Math.PI / 180;
+                    const cos = Math.cos(rad);
+                    const sin = Math.sin(rad);
+                    const rot = (x, y) => ({
+                        x: cx + x * cos - y * sin,
+                        y: cy + x * sin + y * cos
+                    });
+                    const c = color ? Utils.parseColor(color) : { r: 139, g: 92, b: 246 };
+                    doc.setDrawColor(c.r, c.g, c.b);
+                    doc.setLineWidth(0.6);
+                    const p1 = rot(-s, -s), p2 = rot(s, -s);
+                    const p3 = rot(-s, s), p4 = rot(s, s);
+                    doc.line(p1.x, p1.y, p2.x, p2.y);
+                    doc.line(p2.x, p2.y, p3.x, p3.y);
+                    doc.line(p3.x, p3.y, p4.x, p4.y);
                 }
             }
         };
@@ -1710,7 +1901,7 @@
                 if (el.type === 'line') {
                     return [{ start: { ...el.start }, end: { ...el.end }, index: 0 }];
                 }
-                if (el.type === 'rect' || el.type === 'square' || el.type === 'cooktop' || el.type === 'sink') {
+                if (el.type === 'rect' || el.type === 'square' || el.type === 'cooktop' || el.type === 'sink' || el.type === 'z_shape' || el.type === 'lines_45') {
                     const x1 = Math.min(el.start.x, el.end.x);
                     const y1 = Math.min(el.start.y, el.end.y);
                     const x2 = Math.max(el.start.x, el.end.x);
@@ -2203,76 +2394,102 @@
                 const classes = isSelected ? 'selected' : '';
                 
                 switch(elData.type) {
-                    case 'line':
+                    case 'line': {
+                        const strokeColor = isSelected ? 'var(--c-select)' : (elData.color || '#1e293b');
                         group.appendChild(this.createSVG('line', {
                             x1: elData.start.x, y1: elData.start.y, x2: elData.end.x, y2: elData.end.y,
                             stroke: 'transparent', 'stroke-width': '32', fill: 'none', style: 'cursor:pointer;'
                         }));
                         group.appendChild(this.createSVG('line', {
                             x1: elData.start.x, y1: elData.start.y, x2: elData.end.x, y2: elData.end.y,
+                            stroke: strokeColor, 'stroke-width': isSelected ? '3' : '2', 'stroke-linecap': 'round',
                             class: `svg-line ${classes}`
                         }));
                         break;
-                    case 'polyline':
+                    }
+                    case 'polyline': {
+                        const strokeColor = isSelected ? 'var(--c-select)' : (elData.color || '#1e293b');
                         const pointsStr = elData.points.map(p => `${p.x},${p.y}`).join(' ');
                         group.appendChild(this.createSVG('polyline', {
                             points: pointsStr, stroke: 'transparent', 'stroke-width': '32', fill: 'none', style: 'cursor:pointer;'
                         }));
                         group.appendChild(this.createSVG('polyline', {
-                            points: pointsStr, class: `svg-poly ${classes}`
+                            points: pointsStr, stroke: strokeColor, 'stroke-width': isSelected ? '3' : '2',
+                            fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+                            class: `svg-poly ${classes}`
                         }));
                         break;
+                    }
                     case 'rect':
-                    case 'square':
+                    case 'square': {
                         const rx = Math.min(elData.start.x, elData.end.x);
                         const ry = Math.min(elData.start.y, elData.end.y);
                         const rw = Math.abs(elData.start.x - elData.end.x);
                         const rh = Math.abs(elData.start.y - elData.end.y);
+                        const strokeColor = isSelected ? 'var(--c-select)' : (elData.color || '#1e293b');
+                        const fillColor = elData.color ? Utils.hexToRgba(elData.color, 0.06) : (isSelected ? 'rgba(37, 99, 235, 0.05)' : 'none');
                         group.appendChild(this.createSVG('rect', {
                             x: rx, y: ry, width: rw, height: rh, stroke: 'transparent', 'stroke-width': '25', fill: 'rgba(0,0,0,0.001)', style: 'cursor:pointer; pointer-events: all;'
                         }));
                         group.appendChild(this.createSVG('rect', {
-                            x: rx, y: ry, width: rw, height: rh, class: `svg-rect ${classes}`
+                            x: rx, y: ry, width: rw, height: rh, stroke: strokeColor, 'stroke-width': isSelected ? '2.5' : '2', fill: fillColor,
+                            class: `svg-rect ${classes}`
                         }));
                         break;
-                    case 'circle':
+                    }
+                    case 'circle': {
+                        const strokeColor = isSelected ? 'var(--c-select)' : (elData.color || '#1e293b');
+                        const fillColor = elData.color ? Utils.hexToRgba(elData.color, 0.06) : (isSelected ? 'rgba(37, 99, 235, 0.05)' : 'none');
                         group.appendChild(this.createSVG('circle', {
                             cx: elData.center.x, cy: elData.center.y, r: Math.max(0.5, elData.radius),
                             stroke: 'transparent', 'stroke-width': '25', fill: 'rgba(0,0,0,0.001)', style: 'cursor:pointer; pointer-events: all;'
                         }));
                         group.appendChild(this.createSVG('circle', {
                             cx: elData.center.x, cy: elData.center.y, r: Math.max(0.5, elData.radius),
+                            stroke: strokeColor, 'stroke-width': isSelected ? '2.5' : '2', fill: fillColor,
                             class: `svg-circle ${classes}`
                         }));
                         // Marcador de centro para perforaciones y círculos pequeños
                         group.appendChild(this.createSVG('circle', {
                             cx: elData.center.x, cy: elData.center.y, r: 1.5,
-                            fill: isSelected ? 'var(--c-select)' : '#666', stroke: 'none', style: 'pointer-events: none;'
+                            fill: isSelected ? 'var(--c-select)' : (elData.color || '#666'), stroke: 'none', style: 'pointer-events: none;'
                         }));
                         break;
-                    case 'triangle':
+                    }
+                    case 'triangle': {
+                        const strokeColor = isSelected ? 'var(--c-select)' : (elData.color || '#1e293b');
+                        const fillColor = elData.color ? Utils.hexToRgba(elData.color, 0.06) : (isSelected ? 'rgba(37, 99, 235, 0.05)' : 'none');
                         const triPointsStr = elData.points.map(p => `${p.x},${p.y}`).join(' ');
                         group.appendChild(this.createSVG('polygon', {
                             points: triPointsStr, stroke: 'transparent', 'stroke-width': '25', fill: 'rgba(0,0,0,0.001)', style: 'cursor:pointer; pointer-events: all;'
                         }));
                         group.appendChild(this.createSVG('polygon', {
-                            points: triPointsStr, class: `svg-poly ${classes}`
+                            points: triPointsStr, stroke: strokeColor, 'stroke-width': isSelected ? '2.5' : '2', fill: fillColor,
+                            class: `svg-poly ${classes}`
                         }));
                         break;
-                    case 'pencil':
+                    }
+                    case 'pencil': {
+                        const strokeColor = isSelected ? 'var(--c-select)' : (elData.color || '#1e293b');
                         const d = 'M ' + elData.points.map(p => `${p.x} ${p.y}`).join(' L ');
                         group.appendChild(this.createSVG('path', {
                             d: d, stroke: 'transparent', 'stroke-width': '32', fill: 'none', style: 'cursor:pointer;'
                         }));
                         group.appendChild(this.createSVG('path', {
-                            d: d, class: `svg-pencil ${classes}`
+                            d: d, stroke: strokeColor, 'stroke-width': isSelected ? '3' : '2', fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+                            class: `svg-pencil ${classes}`
                         }));
                         break;
+                    }
                     case 'cooktop': {
                         const rx = Math.min(elData.start.x, elData.end.x);
                         const ry = Math.min(elData.start.y, elData.end.y);
                         const rw = Math.max(5, Math.abs(elData.start.x - elData.end.x));
                         const rh = Math.max(5, Math.abs(elData.start.y - elData.end.y));
+                        const numW = Math.round(rw);
+                        const numH = Math.round(rh);
+                        const mainColor = isSelected ? 'var(--c-select)' : (elData.color || '#334155');
+                        const cotaColor = isSelected ? '#2563eb' : (elData.color || '#475569');
 
                         // Hitbox
                         group.appendChild(this.createSVG('rect', {
@@ -2282,8 +2499,8 @@
                         const cornerR = Math.max(2, Math.min(6, Math.min(rw, rh) * 0.1));
                         group.appendChild(this.createSVG('rect', {
                             x: rx, y: ry, width: rw, height: rh, rx: cornerR,
-                            fill: isSelected ? 'rgba(37, 99, 235, 0.08)' : '#f8fafc',
-                            stroke: isSelected ? 'var(--c-select)' : '#334155',
+                            fill: isSelected ? 'rgba(37, 99, 235, 0.08)' : (elData.color ? Utils.hexToRgba(elData.color, 0.05) : '#f8fafc'),
+                            stroke: mainColor,
                             'stroke-width': isSelected ? '2' : '1.5'
                         }));
 
@@ -2292,7 +2509,8 @@
                         if (rw > m * 4 && rh > m * 4) {
                             group.appendChild(this.createSVG('rect', {
                                 x: rx + m, y: ry + m, width: rw - m * 2, height: rh - m * 2, rx: Math.max(1, m * 0.7),
-                                fill: 'none', stroke: isSelected ? 'rgba(37, 99, 235, 0.4)' : '#94a3b8', 'stroke-width': '0.8', 'stroke-dasharray': '3 2'
+                                fill: 'none', stroke: isSelected ? 'rgba(37, 99, 235, 0.4)' : (elData.color ? Utils.hexToRgba(elData.color, 0.4) : '#94a3b8'),
+                                'stroke-width': '0.8', 'stroke-dasharray': '3 2'
                             }));
                         }
 
@@ -2340,7 +2558,8 @@
                             // Aro exterior
                             group.appendChild(this.createSVG('circle', {
                                 cx: b.x, cy: b.y, r: b.r,
-                                fill: 'none', stroke: isSelected ? 'var(--c-select)' : '#1e293b', 'stroke-width': Math.max(0.8, Math.min(1.5, b.r * 0.2))
+                                fill: 'none', stroke: isSelected ? 'var(--c-select)' : (elData.color || '#1e293b'),
+                                'stroke-width': Math.max(0.8, Math.min(1.5, b.r * 0.2))
                             }));
                             // Corona intermedia
                             if (b.r > 3) {
@@ -2380,8 +2599,52 @@
                             }
                         });
 
-                        // Etiqueta de medida nítida, contenida y legible
-                        const tagText = `🔥 ${Math.round(rw)}×${Math.round(rh)} cm`;
+                        // Cotas Exteriores Adaptativas limpias (Sin texto "Anafe")
+                        const cotaY = ry - 7;
+                        group.appendChild(this.createSVG('line', {
+                            x1: rx, y1: cotaY, x2: rx + rw, y2: cotaY,
+                            stroke: cotaColor, 'stroke-width': '1', 'stroke-dasharray': '2,2'
+                        }));
+                        group.appendChild(this.createSVG('line', {
+                            x1: rx, y1: cotaY - 3, x2: rx, y2: cotaY + 3,
+                            stroke: cotaColor, 'stroke-width': '1.2'
+                        }));
+                        group.appendChild(this.createSVG('line', {
+                            x1: rx + rw, y1: cotaY - 3, x2: rx + rw, y2: cotaY + 3,
+                            stroke: cotaColor, 'stroke-width': '1.2'
+                        }));
+                        const cotaWText = this.createSVG('text', {
+                            x: rx + rw / 2, y: cotaY - 3,
+                            'text-anchor': 'middle', 'font-size': `${Math.max(7.5, Math.min(10, Math.min(rw, rh) * 0.16))}px`, 'font-weight': '700',
+                            fill: cotaColor, 'font-family': 'system-ui, sans-serif'
+                        });
+                        cotaWText.textContent = `↔ ${numW} cm`;
+                        group.appendChild(cotaWText);
+
+                        const cotaX = rx - 7;
+                        group.appendChild(this.createSVG('line', {
+                            x1: cotaX, y1: ry, x2: cotaX, y2: ry + rh,
+                            stroke: cotaColor, 'stroke-width': '1', 'stroke-dasharray': '2,2'
+                        }));
+                        group.appendChild(this.createSVG('line', {
+                            x1: cotaX - 3, y1: ry, x2: cotaX + 3, y2: ry,
+                            stroke: cotaColor, 'stroke-width': '1.2'
+                        }));
+                        group.appendChild(this.createSVG('line', {
+                            x1: cotaX - 3, y1: ry + rh, x2: cotaX + 3, y2: ry + rh,
+                            stroke: cotaColor, 'stroke-width': '1.2'
+                        }));
+                        const cotaHText = this.createSVG('text', {
+                            x: cotaX - 3, y: ry + rh / 2,
+                            'text-anchor': 'middle', 'font-size': `${Math.max(7.5, Math.min(10, Math.min(rw, rh) * 0.16))}px`, 'font-weight': '700',
+                            fill: cotaColor, 'font-family': 'system-ui, sans-serif',
+                            transform: `rotate(-90, ${cotaX - 3}, ${ry + rh / 2})`
+                        });
+                        cotaHText.textContent = `↕ ${numH} cm`;
+                        group.appendChild(cotaHText);
+
+                        // Etiqueta de medida limpia y contenida: solo dimensiones (SIN "Anafe")
+                        const tagText = `${numW}×${numH} cm`;
                         const tagFontSize = Math.max(7, Math.min(9.5, Math.min(rw * 0.12, rh * 0.22)));
                         const tagCharW = tagFontSize * 0.62;
                         const pillW = Math.min(rw - 2, tagText.length * tagCharW + 10);
@@ -2391,13 +2654,13 @@
 
                         group.appendChild(this.createSVG('rect', {
                             x: pillX, y: pillY, width: pillW, height: pillH, rx: pillH / 2,
-                            fill: 'rgba(255, 255, 255, 0.92)', stroke: '#cbd5e1', 'stroke-width': '0.8',
+                            fill: 'rgba(255, 255, 255, 0.95)', stroke: elData.color || '#cbd5e1', 'stroke-width': '0.8',
                             style: 'pointer-events: none;'
                         }));
                         const tag = this.createSVG('text', {
                             x: rx + rw / 2, y: pillY + pillH / 2 + tagFontSize * 0.35,
                             'text-anchor': 'middle', 'font-size': `${tagFontSize}px`, 'font-family': 'monospace',
-                            'font-weight': '700', fill: '#334155', 'pointer-events': 'none'
+                            'font-weight': '700', fill: elData.color || '#334155', 'pointer-events': 'none'
                         });
                         tag.textContent = tagText;
                         group.appendChild(tag);
@@ -2415,7 +2678,8 @@
                             x: rx, y: ry, width: rw, height: rh, stroke: 'transparent', 'stroke-width': '20', fill: 'rgba(0,0,0,0.001)', style: 'cursor:pointer; pointer-events: all;'
                         }));
 
-                        const cotaColor = isSelected ? '#2563eb' : '#0284c7';
+                        const mainColor = isSelected ? 'var(--c-select)' : (elData.color || '#0284c7');
+                        const cotaColor = isSelected ? '#2563eb' : (elData.color || '#0284c7');
                         const numW = Math.round(rw);
                         const numH = Math.round(rh);
 
@@ -2429,8 +2693,8 @@
                             // Borde exterior / pestaña de encastre
                             group.appendChild(this.createSVG('circle', {
                                 cx: cx, cy: cy, r: Math.max(2, rOuter),
-                                fill: isSelected ? 'rgba(37, 99, 235, 0.08)' : '#f0f9ff',
-                                stroke: isSelected ? 'var(--c-select)' : '#0284c7',
+                                fill: isSelected ? 'rgba(37, 99, 235, 0.08)' : (elData.color ? Utils.hexToRgba(elData.color, 0.06) : '#f0f9ff'),
+                                stroke: mainColor,
                                 'stroke-width': isSelected ? '2' : '1.5'
                             }));
 
@@ -2438,7 +2702,7 @@
                             const innerR = Math.max(2, rOuter - Math.max(1.5, rOuter * 0.12));
                             group.appendChild(this.createSVG('circle', {
                                 cx: cx, cy: cy, r: innerR,
-                                fill: '#e0f2fe', stroke: '#0369a1', 'stroke-width': '1.2'
+                                fill: '#e0f2fe', stroke: elData.color || '#0369a1', 'stroke-width': '1.2'
                             }));
 
                             // Sopapa de desagüe en el centro exacto
@@ -2474,14 +2738,10 @@
                             cotaText.textContent = `Ø ${diam} cm`;
                             group.appendChild(cotaText);
 
-                            // Cartel de Medida Central Adaptativo
+                            // Cartel de Medida Central Adaptativo (SIN texto "Bacha")
                             const badgeFontSize = Math.max(7, Math.min(9.5, diam * 0.14));
-                            const bachaTitle = `Bacha Ø ${diam} cm`;
+                            const badgeText = `Ø ${diam} cm`;
                             const charW = badgeFontSize * 0.62;
-                            const fullBadgeText = `🚰 ${bachaTitle}`;
-                            const shortBadgeText = `🚰 Ø ${diam} cm`;
-                            const useFull = (fullBadgeText.length * charW + 10) <= (diam * 0.95);
-                            const badgeText = useFull ? fullBadgeText : shortBadgeText;
                             const badgeW = Math.min(diam - 2, badgeText.length * charW + 10);
                             const badgeH = badgeFontSize + 6;
                             const badgeX = cx - badgeW / 2;
@@ -2489,13 +2749,13 @@
 
                             group.appendChild(this.createSVG('rect', {
                                 x: badgeX, y: badgeY, width: badgeW, height: badgeH, rx: badgeH / 2,
-                                fill: 'rgba(255, 255, 255, 0.95)', stroke: '#0284c7', 'stroke-width': '1',
+                                fill: 'rgba(255, 255, 255, 0.95)', stroke: elData.color || '#0284c7', 'stroke-width': '1',
                                 style: 'filter: drop-shadow(0 1px 3px rgba(0,0,0,0.15)); cursor: pointer;'
                             }));
                             const tag = this.createSVG('text', {
                                 x: cx, y: badgeY + badgeH / 2 + badgeFontSize * 0.35,
                                 'text-anchor': 'middle', 'font-size': `${badgeFontSize}px`, 'font-family': 'system-ui, -apple-system, sans-serif',
-                                'font-weight': '700', fill: '#0369a1', style: 'cursor: pointer;'
+                                'font-weight': '700', fill: elData.color || '#0369a1', style: 'cursor: pointer;'
                             });
                             tag.textContent = badgeText;
                             group.appendChild(tag);
@@ -2504,8 +2764,8 @@
                             const outerRx = Math.max(2, Math.min(8, Math.min(rw, rh) * 0.1));
                             group.appendChild(this.createSVG('rect', {
                                 x: rx, y: ry, width: rw, height: rh, rx: outerRx,
-                                fill: isSelected ? 'rgba(37, 99, 235, 0.08)' : '#f0f9ff',
-                                stroke: isSelected ? 'var(--c-select)' : '#0284c7',
+                                fill: isSelected ? 'rgba(37, 99, 235, 0.08)' : (elData.color ? Utils.hexToRgba(elData.color, 0.06) : '#f0f9ff'),
+                                stroke: mainColor,
                                 'stroke-width': isSelected ? '2' : '1.5'
                             }));
 
@@ -2520,7 +2780,7 @@
                                 // Bacha 1
                                 group.appendChild(this.createSVG('rect', {
                                     x: rx + pad, y: ry + pad, width: bw, height: bh, rx: innerRx,
-                                    fill: '#e0f2fe', stroke: '#0369a1', 'stroke-width': '1.2'
+                                    fill: '#e0f2fe', stroke: elData.color || '#0369a1', 'stroke-width': '1.2'
                                 }));
                                 const rSopapa = Math.max(1.5, Math.min(bw, bh) * 0.16);
                                 group.appendChild(this.createSVG('circle', {
@@ -2530,7 +2790,7 @@
                                 // Bacha 2
                                 group.appendChild(this.createSVG('rect', {
                                     x: rx + pad + bw + padMid, y: ry + pad, width: bw, height: bh, rx: innerRx,
-                                    fill: '#e0f2fe', stroke: '#0369a1', 'stroke-width': '1.2'
+                                    fill: '#e0f2fe', stroke: elData.color || '#0369a1', 'stroke-width': '1.2'
                                 }));
                                 group.appendChild(this.createSVG('circle', {
                                     cx: rx + pad + bw + padMid + bw / 2, cy: ry + pad + bh / 2, r: rSopapa,
@@ -2546,7 +2806,7 @@
                                 // Cuba principal
                                 group.appendChild(this.createSVG('rect', {
                                     x: rx + pad, y: ry + pad, width: bowlW, height: bh, rx: innerRx,
-                                    fill: '#e0f2fe', stroke: '#0369a1', 'stroke-width': '1.2'
+                                    fill: '#e0f2fe', stroke: elData.color || '#0369a1', 'stroke-width': '1.2'
                                 }));
                                 const rSopapa = Math.max(1.5, Math.min(bowlW, bh) * 0.16);
                                 group.appendChild(this.createSVG('circle', {
@@ -2558,7 +2818,7 @@
                                 const drX = rx + pad + bowlW + padMid;
                                 group.appendChild(this.createSVG('rect', {
                                     x: drX, y: ry + pad, width: drainerW, height: bh, rx: Math.max(1.5, innerRx * 0.7),
-                                    fill: '#f0f9ff', stroke: '#7dd3fc', 'stroke-width': '1'
+                                    fill: '#f0f9ff', stroke: elData.color || '#7dd3fc', 'stroke-width': '1'
                                 }));
                                 const gPad = Math.max(1.5, Math.min(5, drainerW * 0.15));
                                 const gx1 = drX + gPad;
@@ -2569,7 +2829,7 @@
                                         const gy = ry + pad + (bh / (numGrooves + 1)) * gi;
                                         group.appendChild(this.createSVG('line', {
                                             x1: gx1, y1: gy, x2: gx2, y2: gy,
-                                            stroke: '#38bdf8', 'stroke-width': '1.3', 'stroke-linecap': 'round'
+                                            stroke: elData.color || '#38bdf8', 'stroke-width': '1.3', 'stroke-linecap': 'round'
                                         }));
                                     }
                                 }
@@ -2579,7 +2839,7 @@
                                 const innerRx = Math.max(1.5, Math.min(8, Math.min(bw, bh) * 0.15));
                                 group.appendChild(this.createSVG('rect', {
                                     x: rx + pad, y: ry + pad, width: bw, height: bh, rx: innerRx,
-                                    fill: '#e0f2fe', stroke: '#0369a1', 'stroke-width': '1.2'
+                                    fill: '#e0f2fe', stroke: elData.color || '#0369a1', 'stroke-width': '1.2'
                                 }));
                                 // Sopapa
                                 const rSopapa = Math.max(1.5, Math.min(bw, bh) * 0.16);
@@ -2593,7 +2853,7 @@
                                 }));
                             }
 
-                            // Cotas Exteriores Adaptativas
+                            // Cotas Exteriores Adaptativas (Sin texto "Bacha")
                             const cotaY = ry - 7;
                             group.appendChild(this.createSVG('line', {
                                 x1: rx, y1: cotaY, x2: rx + rw, y2: cotaY,
@@ -2637,18 +2897,10 @@
                             cotaHText.textContent = `↕ ${numH} cm`;
                             group.appendChild(cotaHText);
 
-                            // Cartel de Medida Central Adaptativo
-                            let bachaTitle = 'Bacha';
-                            if (sub === 'double') bachaTitle = `Bacha Doble: ${numW}×${numH} cm`;
-                            else if (sub === 'drainer') bachaTitle = `Bacha c/ Esc.: ${numW}×${numH} cm`;
-                            else bachaTitle = `Bacha: ${numW}×${numH} cm`;
-
+                            // Cartel de Medida Central Adaptativo (SIN texto "Bacha")
+                            const badgeText = `${numW}×${numH} cm`;
                             const badgeFontSize = Math.max(7, Math.min(9.5, Math.min(rw * 0.12, rh * 0.22)));
                             const charW = badgeFontSize * 0.62;
-                            const fullBadgeText = `🚰 ${bachaTitle}`;
-                            const shortBadgeText = `🚰 ${numW}×${numH}`;
-                            const useFull = (fullBadgeText.length * charW + 10) <= (rw - 4);
-                            const badgeText = useFull ? fullBadgeText : shortBadgeText;
                             const badgeW = Math.min(rw - 2, badgeText.length * charW + 10);
                             const badgeH = badgeFontSize + 6;
                             const badgeX = rx + rw / 2 - badgeW / 2;
@@ -2656,24 +2908,32 @@
 
                             group.appendChild(this.createSVG('rect', {
                                 x: badgeX, y: badgeY, width: badgeW, height: badgeH, rx: badgeH / 2,
-                                fill: 'rgba(255, 255, 255, 0.95)', stroke: '#0284c7', 'stroke-width': '1',
+                                fill: 'rgba(255, 255, 255, 0.95)', stroke: elData.color || '#0284c7', 'stroke-width': '1',
                                 style: 'filter: drop-shadow(0 1px 3px rgba(0,0,0,0.15)); cursor: pointer;'
                             }));
 
                             const tag = this.createSVG('text', {
                                 x: rx + rw / 2, y: badgeY + badgeH / 2 + badgeFontSize * 0.35,
                                 'text-anchor': 'middle', 'font-size': `${badgeFontSize}px`, 'font-family': 'system-ui, -apple-system, sans-serif',
-                                'font-weight': '700', fill: '#0369a1', style: 'cursor: pointer;'
+                                'font-weight': '700', fill: elData.color || '#0369a1', style: 'cursor: pointer;'
                             });
                             tag.textContent = badgeText;
                             group.appendChild(tag);
                         }
                         break;
                     }
-                    case 'text':
+                    case 'text': {
                         const textStr = elData.text || "Anotación";
                         const tagW = Math.max(68, textStr.length * 8 + 22);
                         const tagH = 26;
+                        const tAngle = elData.angle || 0;
+                        const cx = elData.position.x + (tagW - 20) / 2;
+                        const cy = elData.position.y;
+                        const customColor = elData.color || null;
+
+                        const textGroup = this.createSVG('g', {
+                            transform: `rotate(${tAngle}, ${cx}, ${cy})`
+                        });
 
                         // Fondo tipo etiqueta con sombra y cursor grab para arrastrar fácilmente
                         const tBg = this.createSVG('rect', {
@@ -2682,24 +2942,27 @@
                             width: tagW,
                             height: tagH,
                             rx: 6,
-                            fill: isSelected ? 'rgba(37, 99, 235, 0.15)' : 'var(--c-surface)',
-                            stroke: isSelected ? 'var(--c-select)' : 'var(--c-border)',
-                            'stroke-width': isSelected ? '2' : '1',
+                            fill: isSelected ? 'rgba(37, 99, 235, 0.15)' : (customColor ? Utils.hexToRgba(customColor, 0.08) : 'var(--c-surface)'),
+                            stroke: isSelected ? 'var(--c-select)' : (customColor || 'var(--c-border)'),
+                            'stroke-width': isSelected ? '2' : '1.2',
                             style: 'cursor: grab; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));'
                         });
 
                         const el = this.createSVG('text', {
-                            x: elData.position.x + (tagW - 20) / 2,
-                            y: elData.position.y,
+                            x: cx,
+                            y: cy,
                             class: `svg-text ${isSelected?'selected-text':''}`,
                             'text-anchor': 'middle',
                             'dominant-baseline': 'middle',
-                            style: 'cursor: grab; pointer-events: none; font-weight: 500;'
+                            fill: customColor || undefined,
+                            style: `cursor: grab; pointer-events: none; font-weight: 500; ${customColor ? 'fill:' + customColor : ''}`
                         });
                         el.textContent = textStr;
-                        group.appendChild(tBg);
-                        group.appendChild(el);
+                        textGroup.appendChild(tBg);
+                        textGroup.appendChild(el);
+                        group.appendChild(textGroup);
                         break;
+                    }
                     case 'terminacion': {
                         const subtype = elData.subtype || 'x';
                         const symbolDef = TerminacionSymbols[subtype] || TerminacionSymbols['x'];
@@ -2708,7 +2971,7 @@
                         const py = elData.position ? elData.position.y : 0;
                         const isTemp = !!elData.isPreview;
 
-                        // Área de toque ergonómica invisible amplia para mouse y táctil (calibrada para Mobile-First)
+                        // Área de toque ergonómica invisible amplia para mouse y táctil
                         const scale = App.viewport ? (App.viewport.scale || 1) : 1;
                         const hitR = Math.max(22 / scale, (elData.size || 18) * 1.2);
                         group.appendChild(this.createSVG('circle', {
@@ -2744,9 +3007,9 @@
                         const mVal = elData.isManual ? (elData.value || "0 cm") : Utils.formatMeasure(geom.dist);
                         const isManual = !!elData.isManual;
                         const vs = Math.max(0.25, elData.visualScale || 1.0);
+                        const customColor = elData.color || null;
 
-                        // 1. Hitbox ergonómica integral para seleccionar y arrastrar (incluso en cotas muy pequeñas)
-                        // A) Zona de influencia a lo largo de la línea de cota (extendida en los extremos)
+                        // 1. Hitbox ergonómica integral
                         const p1 = elData.start;
                         const p2 = elData.end;
                         const cdx = geom.cotaLine.x2 - geom.cotaLine.x1;
@@ -2762,7 +3025,6 @@
                             stroke: 'transparent', 'stroke-width': `${Math.max(28, 34 * vs)}`, fill: 'none', style: 'cursor: grab; pointer-events: all;'
                         }));
 
-                        // B) Hitbox de superficie: cubre el cuadrilátero entre los puntos medidos y la línea de cota
                         const polyPts = `${p1.x},${p1.y} ${geom.cotaLine.x1},${geom.cotaLine.y1} ${geom.cotaLine.x2},${geom.cotaLine.y2} ${p2.x},${p2.y}`;
                         group.appendChild(this.createSVG('polygon', {
                             points: polyPts,
@@ -2772,8 +3034,8 @@
                             style: 'cursor: grab; pointer-events: all;'
                         }));
 
-                        // 2. Líneas auxiliares de referencia (testigos hacia el objeto medido)
-                        const witnessColor = isSelected ? 'rgba(37, 99, 235, 0.7)' : '#94a3b8';
+                        // 2. Líneas auxiliares de referencia
+                        const witnessColor = isSelected ? 'rgba(37, 99, 235, 0.7)' : (customColor ? Utils.hexToRgba(customColor, 0.6) : '#94a3b8');
                         const wStroke = Math.max(0.6, 0.95 * vs);
                         group.appendChild(this.createSVG('line', {
                             x1: geom.witness1.x1, y1: geom.witness1.y1, x2: geom.witness1.x2, y2: geom.witness1.y2,
@@ -2785,21 +3047,21 @@
                         }));
 
                         // 3. Línea de cota principal
-                        const cotaColor = isSelected ? 'var(--c-select)' : (isManual ? '#0284c7' : '#334155');
+                        const cotaLineColor = isSelected ? 'var(--c-select)' : (customColor || (isManual ? '#0284c7' : '#334155'));
                         const cotaStroke = isSelected ? Math.max(1.6, 2 * vs) : Math.max(0.9, 1.4 * vs);
                         group.appendChild(this.createSVG('line', {
                             x1: geom.cotaLine.x1, y1: geom.cotaLine.y1, x2: geom.cotaLine.x2, y2: geom.cotaLine.y2,
-                            stroke: cotaColor, 'stroke-width': `${cotaStroke}`
+                            stroke: cotaLineColor, 'stroke-width': `${cotaStroke}`
                         }));
 
                         // 4. Flechas técnicas en los extremos
-                        const arrowColor = isSelected ? 'var(--c-select)' : (isManual ? '#0284c7' : '#1e293b');
+                        const arrowColor = isSelected ? 'var(--c-select)' : (customColor || (isManual ? '#0284c7' : '#1e293b'));
                         const pArr1 = `${geom.arrow1.tip.x},${geom.arrow1.tip.y} ${geom.arrow1.base1.x},${geom.arrow1.base1.y} ${geom.arrow1.base2.x},${geom.arrow1.base2.y}`;
                         const pArr2 = `${geom.arrow2.tip.x},${geom.arrow2.tip.y} ${geom.arrow2.base1.x},${geom.arrow2.base1.y} ${geom.arrow2.base2.x},${geom.arrow2.base2.y}`;
                         group.appendChild(this.createSVG('polygon', { points: pArr1, fill: arrowColor }));
                         group.appendChild(this.createSVG('polygon', { points: pArr2, fill: arrowColor }));
 
-                        // 5. Burbuja de medida (con cursor grab y como punto de arrastre natural)
+                        // 5. Burbuja de medida
                         const fontSize = 11.5 * vs;
                         const charW = fontSize * 0.62;
                         const pillW = Math.max(22 * vs, mVal.length * charW + 12 * vs);
@@ -2815,7 +3077,7 @@
                         bubbleGroup.appendChild(this.createSVG('rect', {
                             x: -pillW / 2, y: -pillH / 2, width: pillW, height: pillH, rx: pillRx,
                             fill: isSelected ? 'rgba(37, 99, 235, 0.12)' : (isManual ? 'rgba(2, 132, 199, 0.08)' : 'rgba(255, 255, 255, 0.96)'),
-                            stroke: isSelected ? 'var(--c-select)' : (isManual ? '#0284c7' : '#cbd5e1'),
+                            stroke: isSelected ? 'var(--c-select)' : (customColor || (isManual ? '#0284c7' : '#cbd5e1')),
                             'stroke-width': isSelected ? `${Math.max(1.5, 2 * vs)}` : (isManual ? `${Math.max(1.2, 1.5 * vs)}` : `${Math.max(0.8, 1 * vs)}`),
                             class: 'measure-bubble',
                             style: 'filter: drop-shadow(0 2px 5px rgba(0,0,0,0.12)); cursor: grab; pointer-events: all;'
@@ -2825,7 +3087,7 @@
                             x: 0, y: 0,
                             'text-anchor': 'middle', 'dominant-baseline': 'central',
                             'font-size': `${fontSize}px`, 'font-family': 'monospace', 'font-weight': '700',
-                            fill: isSelected ? 'var(--c-select)' : (isManual ? '#0284c7' : '#0f172a'),
+                            fill: isSelected ? 'var(--c-select)' : (customColor || (isManual ? '#0284c7' : '#0f172a')),
                             style: 'cursor: grab; pointer-events: none;'
                         });
                         txt.textContent = mVal;
@@ -2833,11 +3095,12 @@
                         group.appendChild(bubbleGroup);
                         break;
                     }
-                    case 'measure':
+                    case 'measure': {
                         const midX = (elData.start.x + elData.end.x) / 2;
                         const midY = (elData.start.y + elData.end.y) / 2;
                         const mVal = elData.value || "0.00 m";
                         const mWidth = Math.max(54, mVal.length * 7.5 + 18);
+                        const customColor = elData.color || null;
                         
                         // Hitbox gruesa para medidas
                         group.appendChild(this.createSVG('line', {
@@ -2845,12 +3108,12 @@
                             stroke: 'transparent', 'stroke-width': '25', fill: 'none', style: 'cursor: grab;'
                         }));
                         
+                        // LÍNEA CONTINUA (sin 'stroke-dasharray' según requerimiento 3)
                         const mLine = this.createSVG('line', {
                             x1: elData.start.x, y1: elData.start.y,
                             x2: elData.end.x, y2: elData.end.y,
-                            stroke: isSelected ? 'var(--c-select)' : 'var(--c-text-muted)',
-                            'stroke-width': '1.5',
-                            'stroke-dasharray': '5 5'
+                            stroke: isSelected ? 'var(--c-select)' : (customColor || 'var(--c-text-muted)'),
+                            'stroke-width': isSelected ? '2' : '1.5'
                         });
 
                         // Remates en los extremos de la cota (ticks perpendiculares estilo CAD)
@@ -2863,15 +3126,15 @@
 
                         const tick1 = this.createSVG('line', {
                             x1: p1A.x, y1: p1A.y, x2: p1B.x, y2: p1B.y,
-                            stroke: isSelected ? 'var(--c-select)' : 'var(--c-text-muted)', 'stroke-width': '1.5'
+                            stroke: isSelected ? 'var(--c-select)' : (customColor || 'var(--c-text-muted)'), 'stroke-width': '1.5'
                         });
                         const tick2 = this.createSVG('line', {
                             x1: p2A.x, y1: p2A.y, x2: p2B.x, y2: p2B.y,
-                            stroke: isSelected ? 'var(--c-select)' : 'var(--c-text-muted)', 'stroke-width': '1.5'
+                            stroke: isSelected ? 'var(--c-select)' : (customColor || 'var(--c-text-muted)'), 'stroke-width': '1.5'
                         });
                         
                         // Posición de la etiqueta: DESPLAZADA POR ENCIMA DE LA LÍNEA DE MEDICIÓN
-                        const offsetDist = 15; // 15px de separación perpendicular hacia arriba
+                        const offsetDist = 15;
                         const dx = elData.end.x - elData.start.x;
                         const dy = elData.end.y - elData.start.y;
                         const len = Math.hypot(dx, dy) || 1;
@@ -2886,7 +3149,7 @@
                         const labelX = midX + upNx * offsetDist;
                         const labelY = midY + upNy * offsetDist;
 
-                        // Rotación orientada a la línea (vertical en líneas verticales)
+                        // Rotación orientada a la línea
                         let rotAngle = Math.atan2(dy, dx) * 180 / Math.PI;
                         if (rotAngle >= 89.999) rotAngle -= 180;
                         if (rotAngle < -90.001) rotAngle += 180;
@@ -2901,7 +3164,7 @@
                         const mBg = this.createSVG('rect', {
                             x: -mWidth / 2, y: -12, width: mWidth, height: 24,
                             fill: isSelected ? 'rgba(37, 99, 235, 0.14)' : (isManual ? 'rgba(2, 132, 199, 0.08)' : 'var(--c-surface)'),
-                            stroke: isSelected ? 'var(--c-select)' : (isManual ? '#0284c7' : 'var(--c-border)'),
+                            stroke: isSelected ? 'var(--c-select)' : (customColor || (isManual ? '#0284c7' : 'var(--c-border)')),
                             'stroke-width': isSelected ? '2' : (isManual ? '1.5' : '1'),
                             rx: 6,
                             class: 'measure-bubble',
@@ -2911,7 +3174,7 @@
                         
                         const mText = this.createSVG('text', {
                             x: 0, y: 0,
-                            fill: isSelected ? 'var(--c-select)' : (isManual ? '#0284c7' : 'var(--c-active)'),
+                            fill: isSelected ? 'var(--c-select)' : (customColor || (isManual ? '#0284c7' : 'var(--c-active)')),
                             'font-family': 'monospace',
                             'font-size': '12px',
                             'font-weight': '700',
@@ -2931,6 +3194,82 @@
                         group.appendChild(tick2);
                         group.appendChild(labelGroup);
                         break;
+                    }
+                    case 'z_shape': {
+                        const rx = Math.min(elData.start.x, elData.end.x);
+                        const ry = Math.min(elData.start.y, elData.end.y);
+                        const rw = Math.max(10, Math.abs(elData.start.x - elData.end.x));
+                        const rh = Math.max(10, Math.abs(elData.start.y - elData.end.y));
+                        const cx = rx + rw / 2;
+                        const cy = ry + rh / 2;
+                        const angle = elData.angle || 0;
+                        const strokeColor = isSelected ? 'var(--c-select)' : (elData.color || '#334155');
+
+                        const zGroup = this.createSVG('g', {
+                            transform: `translate(${cx}, ${cy}) rotate(${angle})`
+                        });
+
+                        // Hitbox
+                        zGroup.appendChild(this.createSVG('rect', {
+                            x: -rw / 2, y: -rh / 2, width: rw, height: rh,
+                            stroke: 'transparent', 'stroke-width': '20', fill: 'rgba(0,0,0,0.001)', style: 'cursor:pointer; pointer-events: all;'
+                        }));
+
+                        // Trazado de letra Z
+                        const pathD = `M ${-rw / 2} ${-rh / 2} L ${rw / 2} ${-rh / 2} L ${-rw / 2} ${rh / 2} L ${rw / 2} ${rh / 2}`;
+                        zGroup.appendChild(this.createSVG('path', {
+                            d: pathD,
+                            stroke: strokeColor,
+                            'stroke-width': isSelected ? '3' : '2.5',
+                            fill: 'none',
+                            'stroke-linecap': 'round',
+                            'stroke-linejoin': 'round'
+                        }));
+                        group.appendChild(zGroup);
+                        break;
+                    }
+                    case 'lines_45': {
+                        const rx = Math.min(elData.start.x, elData.end.x);
+                        const ry = Math.min(elData.start.y, elData.end.y);
+                        const rw = Math.max(15, Math.abs(elData.start.x - elData.end.x));
+                        const rh = Math.max(10, Math.abs(elData.start.y - elData.end.y));
+                        const cx = rx + rw / 2;
+                        const cy = ry + rh / 2;
+                        const angle = elData.angle || 0;
+                        const strokeColor = isSelected ? 'var(--c-select)' : (elData.color || '#334155');
+
+                        const lGroup = this.createSVG('g', {
+                            transform: `translate(${cx}, ${cy}) rotate(${angle})`
+                        });
+
+                        // Hitbox
+                        lGroup.appendChild(this.createSVG('rect', {
+                            x: -rw / 2, y: -rh / 2, width: rw, height: rh,
+                            stroke: 'transparent', 'stroke-width': '20', fill: 'rgba(0,0,0,0.001)', style: 'cursor:pointer; pointer-events: all;'
+                        }));
+
+                        // 1. Línea recta horizontal superior
+                        // 2. Desde su extremo derecho continúa una línea inclinada 45° hacia abajo
+                        // 3. Luego continúa otra línea recta hacia la izquierda, paralela a la línea superior y de menor longitud
+                        const drop = Math.min(rh, rw * 0.45);
+                        const p0x = -rw / 2, p0y = -rh / 2;
+                        const p1x = rw / 2, p1y = -rh / 2;
+                        const p2x = rw / 2 - drop, p2y = -rh / 2 + drop;
+                        const bottomLen = Math.max(8, rw * 0.45);
+                        const p3x = p2x - bottomLen, p3y = p2y;
+
+                        const pathD = `M ${p0x} ${p0y} L ${p1x} ${p1y} L ${p2x} ${p2y} L ${p3x} ${p3y}`;
+                        lGroup.appendChild(this.createSVG('path', {
+                            d: pathD,
+                            stroke: strokeColor,
+                            'stroke-width': isSelected ? '3' : '2.5',
+                            fill: 'none',
+                            'stroke-linecap': 'round',
+                            'stroke-linejoin': 'round'
+                        }));
+                        group.appendChild(lGroup);
+                        break;
+                    }
                 }
                 return group;
             },
@@ -2970,9 +3309,31 @@
                     }
                 } else if (elData.type === 'polyline') {
                     elData.points.forEach((p, i) => pts.push({ id: `p${i}`, x: p.x, y: p.y }));
-                } else if (elData.type === 'text' || elData.type === 'terminacion') {
+                } else if (elData.type === 'text') {
+                    const textStr = elData.text || "Anotación";
+                    const tagW = Math.max(68, textStr.length * 8 + 22);
+                    const cx = elData.position.x + (tagW - 20) / 2;
+                    const cy = elData.position.y;
+                    pts.push({ id: 'pos', x: cx, y: cy });
+
+                    // Tirador de rotación libre sobre la anotación
+                    const scale = App.viewport ? (App.viewport.scale || 1) : 1;
+                    const rotDist = 32 / scale;
+                    const angRad = (elData.angle || 0) * Math.PI / 180;
+                    const rx = cx + Math.sin(angRad) * rotDist;
+                    const ry = cy - Math.cos(angRad) * rotDist;
+                    pts.push({ id: 'rotate_text', x: rx, y: ry, isRot: true });
+
+                    // Línea auxiliar del tirador de rotación
+                    const stem = this.createSVG('line', {
+                        x1: cx, y1: cy, x2: rx, y2: ry,
+                        stroke: 'var(--c-select)', 'stroke-width': `${1.2 / scale}`, 'stroke-dasharray': `${2 / scale} ${2 / scale}`,
+                        style: 'pointer-events: none;'
+                    });
+                    App.DOM.uiLayer.appendChild(stem);
+                } else if (elData.type === 'terminacion') {
                     if (elData.position) pts.push({ id: 'pos', x: elData.position.x, y: elData.position.y });
-                } else if (elData.type === 'rect' || elData.type === 'square' || elData.type === 'cooktop' || elData.type === 'sink') {
+                } else if (elData.type === 'rect' || elData.type === 'square' || elData.type === 'cooktop' || elData.type === 'sink' || elData.type === 'z_shape' || elData.type === 'lines_45') {
                     const x1 = elData.start.x, y1 = elData.start.y;
                     const x2 = elData.end.x, y2 = elData.end.y;
                     // 4 esquinas de redimensión (achicar / agrandar)
@@ -2985,6 +3346,26 @@
                     pts.push({ id: 'bm', x: (x1 + x2) / 2, y: y2 });
                     pts.push({ id: 'lm', x: x1, y: (y1 + y2) / 2 });
                     pts.push({ id: 'rm', x: x2, y: (y1 + y2) / 2 });
+
+                    // Tirador de rotación para z_shape y lines_45
+                    if (elData.type === 'z_shape' || elData.type === 'lines_45') {
+                        const cx = (x1 + x2) / 2;
+                        const cy = (y1 + y2) / 2;
+                        const rh = Math.abs(y2 - y1);
+                        const scale = App.viewport ? (App.viewport.scale || 1) : 1;
+                        const rotDist = (rh / 2 + 25) / scale;
+                        const angRad = (elData.angle || 0) * Math.PI / 180;
+                        const rx = cx + Math.sin(angRad) * rotDist;
+                        const ry = cy - Math.cos(angRad) * rotDist;
+                        pts.push({ id: `rotate_${elData.type}`, x: rx, y: ry, isRot: true });
+
+                        const stem = this.createSVG('line', {
+                            x1: cx, y1: cy, x2: rx, y2: ry,
+                            stroke: 'var(--c-select)', 'stroke-width': `${1.2 / scale}`, 'stroke-dasharray': `${2 / scale} ${2 / scale}`,
+                            style: 'pointer-events: none;'
+                        });
+                        App.DOM.uiLayer.appendChild(stem);
+                    }
                 } else if (elData.type === 'circle') {
                     // Centro
                     pts.push({ id: 'center', x: elData.center.x, y: elData.center.y });
@@ -3018,14 +3399,17 @@
                         fill: 'transparent',
                         stroke: 'transparent',
                         'stroke-width': '0',
-                        style: 'cursor: grab; pointer-events: all;'
+                        style: p.isRot ? 'cursor: grab; pointer-events: all;' : 'cursor: grab; pointer-events: all;'
                     });
-                    // Punto visual nítido y calibrado
+                    // Punto visual nítido y calibrado (verde/dorado para rotación)
                     const visualPoint = this.createSVG('circle', {
-                        cx: p.x, cy: p.y, r: visualR,
+                        cx: p.x, cy: p.y, r: p.isRot ? visualR * 1.25 : visualR,
                         class: 'control-point-visual',
                         'data-ctrl-id': p.id,
                         'data-el-id': elData.id,
+                        fill: p.isRot ? '#10b981' : undefined,
+                        stroke: p.isRot ? '#ffffff' : undefined,
+                        'stroke-width': p.isRot ? `${1.5 / scale}` : undefined,
                         style: 'pointer-events: none;'
                     });
                     App.DOM.uiLayer.appendChild(hitArea);
@@ -3033,7 +3417,7 @@
                 });
 
                 // Pastilla flotante con flechitas (▼ Achicar y ▲ Agrandar) directamente sobre formas 2D y terminaciones
-                const isScalable = ['rect', 'square', 'circle', 'triangle', 'cooktop', 'sink', 'line', 'measure', 'polyline', 'cota', 'terminacion'].includes(elData.type);
+                const isScalable = ['rect', 'square', 'circle', 'triangle', 'cooktop', 'sink', 'line', 'measure', 'polyline', 'cota', 'terminacion', 'z_shape', 'lines_45'].includes(elData.type);
                 if (isScalable) {
                     let topX = 0, topY = 0;
                     if (elData.type === 'cota') {
@@ -3043,7 +3427,7 @@
                     } else if (elData.type === 'circle') {
                         topX = elData.center.x;
                         topY = elData.center.y - elData.radius;
-                    } else if (elData.type === 'rect' || elData.type === 'square' || elData.type === 'cooktop' || elData.type === 'sink') {
+                    } else if (['rect', 'square', 'cooktop', 'sink', 'z_shape', 'lines_45'].includes(elData.type)) {
                         topX = (elData.start.x + elData.end.x) / 2;
                         topY = Math.min(elData.start.y, elData.end.y);
                     } else if (elData.type === 'triangle') {
@@ -3649,8 +4033,22 @@
                         }
                     } else if (this._activeEl.type === 'text' && this._activeCtrl === 'pos') {
                         this._activeEl.position = finalP;
-                    } else if (this._activeEl.type === 'rect' || this._activeEl.type === 'cooktop' || (this._activeEl.type === 'sink' && this._activeEl.subtype !== 'round')) {
-                        // Achicar y agrandar Rectángulo, Hornallas o Bachas rectangulares
+                    } else if (this._activeEl.type === 'text' && this._activeCtrl === 'rotate_text') {
+                        const textStr = this._activeEl.text || "Anotación";
+                        const tagW = Math.max(68, textStr.length * 8 + 22);
+                        const cx = this._activeEl.position.x + (tagW - 20) / 2;
+                        const cy = this._activeEl.position.y;
+                        let deg = Math.atan2(wp.y - cy, wp.x - cx) * 180 / Math.PI + 90;
+                        if (e && e.shiftKey) deg = Math.round(deg / 15) * 15;
+                        this._activeEl.angle = Math.round(deg);
+                    } else if ((this._activeEl.type === 'z_shape' || this._activeEl.type === 'lines_45') && (this._activeCtrl === 'rotate_z_shape' || this._activeCtrl === 'rotate_lines_45')) {
+                        const cx = (this._activeEl.start.x + this._activeEl.end.x) / 2;
+                        const cy = (this._activeEl.start.y + this._activeEl.end.y) / 2;
+                        let deg = Math.atan2(wp.y - cy, wp.x - cx) * 180 / Math.PI + 90;
+                        if (e && e.shiftKey) deg = Math.round(deg / 15) * 15;
+                        this._activeEl.angle = Math.round(deg);
+                    } else if (this._activeEl.type === 'rect' || this._activeEl.type === 'cooktop' || this._activeEl.type === 'z_shape' || this._activeEl.type === 'lines_45' || (this._activeEl.type === 'sink' && this._activeEl.subtype !== 'round')) {
+                        // Achicar y agrandar Rectángulo, Hornallas, Bachas, Z o Líneas 45°
                         if (this._activeCtrl === 'tl') { this._activeEl.start.x = finalP.x; this._activeEl.start.y = finalP.y; }
                         else if (this._activeCtrl === 'tr') { this._activeEl.end.x = finalP.x; this._activeEl.start.y = finalP.y; }
                         else if (this._activeCtrl === 'br') { this._activeEl.end.x = finalP.x; this._activeEl.end.y = finalP.y; }
@@ -3945,9 +4343,11 @@
                     const snap = Snapper.findSnap(wp);
                     const startP = snap ? { x: snap.x, y: snap.y } : wp;
                     const sub = App.ui.subTool || '4_burners';
-                    let w = 60, h = 50;
-                    if (sub === '2_burners') { w = 30; h = 50; }
-                    else if (sub === '5_burners') { w = 75; h = 50; }
+                    let defW = 60, defH = 50;
+                    if (sub === '2_burners') { defW = 30; defH = 50; }
+                    else if (sub === '5_burners') { defW = 75; defH = 50; }
+                    const w = (App.ui.cooktopModel === sub && App.ui.cooktopW) ? App.ui.cooktopW : defW;
+                    const h = (App.ui.cooktopModel === sub && App.ui.cooktopH) ? App.ui.cooktopH : defH;
 
                     App.ui.tempElement = {
                         id: Utils.uuid(),
@@ -4772,7 +5172,7 @@
                             } else if (el.type === 'cota') {
                                 const geom = Renderer.getCotaGeometry(el);
                                 d = Utils.pointToSegmentDist(wp, {x: geom.cotaLine.x1, y: geom.cotaLine.y1}, {x: geom.cotaLine.x2, y: geom.cotaLine.y2});
-                            } else if (el.type === 'rect' || el.type === 'square' || el.type === 'cooktop' || el.type === 'sink') {
+                            } else if (el.type === 'rect' || el.type === 'square' || el.type === 'cooktop' || el.type === 'sink' || el.type === 'z_shape' || el.type === 'lines_45') {
                                 const rx = Math.min(el.start.x, el.end.x);
                                 const ry = Math.min(el.start.y, el.end.y);
                                 const rw = Math.abs(el.start.x - el.end.x);
@@ -4824,7 +5224,7 @@
 
             terminacion: {
                 hoverMove(wp, e) {
-                    const subtype = (App.ui.subTool && ['x', 'circle_x', 'angle'].includes(App.ui.subTool)) ? App.ui.subTool : 'x';
+                    const subtype = (App.ui.subTool && ['x', 'circle_x', 'angle', 'z'].includes(App.ui.subTool)) ? App.ui.subTool : 'x';
                     const snapDist = 25 / (App.viewport.scale || 1);
                     const hit = GeometryUtils.findNearestEdge(wp, snapDist);
 
@@ -4849,7 +5249,7 @@
                     this.hoverMove(wp, e);
                 },
                 down(wp, e) {
-                    const subtype = (App.ui.subTool && ['x', 'circle_x', 'angle'].includes(App.ui.subTool)) ? App.ui.subTool : 'x';
+                    const subtype = (App.ui.subTool && ['x', 'circle_x', 'angle', 'z'].includes(App.ui.subTool)) ? App.ui.subTool : 'x';
                     const snapDist = 25 / (App.viewport.scale || 1);
                     const hit = GeometryUtils.findNearestEdge(wp, snapDist);
                     const newTerm = {
@@ -4879,6 +5279,102 @@
                         App.ui.tempElement = null;
                         Renderer.renderPreview();
                     }
+                }
+            },
+
+            z_shape: {
+                down(wp) {
+                    const snap = Snapper.findSnap(wp);
+                    const startP = snap ? { x: snap.x, y: snap.y } : wp;
+                    const w = 50, h = 50;
+                    App.ui.tempElement = {
+                        id: Utils.uuid(),
+                        type: 'z_shape',
+                        start: { x: startP.x - w / 2, y: startP.y - h / 2 },
+                        end: { x: startP.x + w / 2, y: startP.y + h / 2 },
+                        angle: 0,
+                        _anchor: startP
+                    };
+                    Renderer.renderPreview();
+                },
+                move(wp) {
+                    if (!App.ui.tempElement) return;
+                    const snap = Snapper.findSnap(wp);
+                    const currP = snap ? { x: snap.x, y: snap.y } : wp;
+                    Renderer.drawSnap(snap);
+                    const anchor = App.ui.tempElement._anchor;
+                    if (anchor && Utils.distance(anchor, currP) > 8) {
+                        App.ui.tempElement.start = { x: Math.min(anchor.x, currP.x), y: Math.min(anchor.y, currP.y) };
+                        App.ui.tempElement.end = { x: Math.max(anchor.x, currP.x), y: Math.max(anchor.y, currP.y) };
+                    }
+                    Renderer.renderPreview();
+                },
+                up() {
+                    if (App.ui.tempElement) {
+                        const el = App.ui.tempElement;
+                        delete el._anchor;
+                        const w = Math.abs(el.end.x - el.start.x);
+                        const h = Math.abs(el.end.y - el.start.y);
+                        if (w >= 5 && h >= 5) {
+                            HistoryManager.pushState();
+                            App.data.elements.push(el);
+                            App.ui.selectedId = el.id;
+                            UI.showToast("⚡ Elemento Z colocado.");
+                        }
+                        App.ui.tempElement = null;
+                        Renderer.renderPreview();
+                        Renderer.renderAll();
+                        UI.updateSelectionBar();
+                    }
+                    Renderer.drawSnap(null);
+                }
+            },
+
+            lines_45: {
+                down(wp) {
+                    const snap = Snapper.findSnap(wp);
+                    const startP = snap ? { x: snap.x, y: snap.y } : wp;
+                    const w = 60, h = 30;
+                    App.ui.tempElement = {
+                        id: Utils.uuid(),
+                        type: 'lines_45',
+                        start: { x: startP.x - w / 2, y: startP.y - h / 2 },
+                        end: { x: startP.x + w / 2, y: startP.y + h / 2 },
+                        angle: 0,
+                        _anchor: startP
+                    };
+                    Renderer.renderPreview();
+                },
+                move(wp) {
+                    if (!App.ui.tempElement) return;
+                    const snap = Snapper.findSnap(wp);
+                    const currP = snap ? { x: snap.x, y: snap.y } : wp;
+                    Renderer.drawSnap(snap);
+                    const anchor = App.ui.tempElement._anchor;
+                    if (anchor && Utils.distance(anchor, currP) > 8) {
+                        App.ui.tempElement.start = { x: Math.min(anchor.x, currP.x), y: Math.min(anchor.y, currP.y) };
+                        App.ui.tempElement.end = { x: Math.max(anchor.x, currP.x), y: Math.max(anchor.y, currP.y) };
+                    }
+                    Renderer.renderPreview();
+                },
+                up() {
+                    if (App.ui.tempElement) {
+                        const el = App.ui.tempElement;
+                        delete el._anchor;
+                        const w = Math.abs(el.end.x - el.start.x);
+                        const h = Math.abs(el.end.y - el.start.y);
+                        if (w >= 5 && h >= 5) {
+                            HistoryManager.pushState();
+                            App.data.elements.push(el);
+                            App.ui.selectedId = el.id;
+                            UI.showToast("📐 Elemento Línea 45° colocado.");
+                        }
+                        App.ui.tempElement = null;
+                        Renderer.renderPreview();
+                        Renderer.renderAll();
+                        UI.updateSelectionBar();
+                    }
+                    Renderer.drawSnap(null);
                 }
             }
         };
@@ -5076,7 +5572,9 @@
                     'cota': '📏 Cota técnica',
                     'cooktop': '🔥 Hornallas',
                     'sink': '🚰 Bacha',
-                    'terminacion': '✂️ Terminación'
+                    'terminacion': '✂️ Terminación',
+                    'z_shape': '⚡ Elemento Z',
+                    'lines_45': '📐 Línea 45°'
                 };
 
                 let label = typeLabels[el.type] || 'Elemento';
@@ -5097,10 +5595,15 @@
                         label = `🚰 Bacha ${subName} (${w}×${h} cm)`;
                         if (editBtn) editBtn.innerHTML = `✏️ Medidas (${w}×${h} cm)`;
                     }
-                } else if (el.type === 'cooktop' || el.type === 'rect' || el.type === 'square') {
+                } else if (el.type === 'cooktop') {
                     const w = Math.round(Math.abs(el.end.x - el.start.x));
                     const h = Math.round(Math.abs(el.end.y - el.start.y));
-                    const prefix = el.type === 'cooktop' ? '🔥 Hornallas' : (el.type === 'square' ? '🟩 Cuadrado' : '▭ Rectángulo');
+                    label = `🔥 Hornallas (${w}×${h} cm)`;
+                    if (editBtn) editBtn.innerHTML = `✏️ Medidas (${w}×${h} cm)`;
+                } else if (el.type === 'rect' || el.type === 'square' || el.type === 'z_shape' || el.type === 'lines_45') {
+                    const w = Math.round(Math.abs(el.end.x - el.start.x));
+                    const h = Math.round(Math.abs(el.end.y - el.start.y));
+                    const prefix = el.type === 'square' ? '🟩 Cuadrado' : (el.type === 'z_shape' ? '⚡ Elemento Z' : (el.type === 'lines_45' ? '📐 Línea 45°' : '▭ Rectángulo'));
                     label = `${prefix} (${w}×${h} cm)`;
                     if (editBtn) editBtn.innerHTML = '✏️ Editar';
                 } else if (el.type === 'measure') {
@@ -5121,29 +5624,43 @@
 
                 if (info) info.textContent = label;
                 if (editBtn) {
-                    if (['text', 'measure', 'cota', 'circle', 'cooktop', 'sink', 'rect', 'square', 'terminacion'].includes(el.type)) {
+                    if (['text', 'measure', 'cota', 'circle', 'cooktop', 'sink', 'rect', 'square', 'terminacion', 'z_shape', 'lines_45'].includes(el.type)) {
                         editBtn.style.display = 'flex';
                         if (el.type === 'terminacion') editBtn.title = "Cambiar tipo de símbolo de terminación";
                         else if (el.type === 'circle') editBtn.title = "Editar diámetro en cm";
                         else if (el.type === 'sink') editBtn.title = "Personalizar medidas de la bacha en cm";
-                        else if (['cooktop', 'rect', 'square'].includes(el.type)) editBtn.title = "Editar dimensiones (Ancho × Largo)";
+                        else if (el.type === 'cooktop') editBtn.title = "Personalizar medidas de hornallas en cm";
+                        else if (['rect', 'square', 'z_shape', 'lines_45'].includes(el.type)) editBtn.title = "Editar dimensiones (Ancho × Largo)";
                         else editBtn.title = "Editar cota o texto";
                     } else {
                         editBtn.style.display = 'none';
                     }
                 }
 
+                // Control de rotación rápida (+45°)
                 const rotateBtn = document.getElementById('btn-sel-rotate');
                 if (rotateBtn) {
-                    rotateBtn.style.display = el.type === 'terminacion' ? 'flex' : 'none';
-                    if (el.type === 'terminacion') {
+                    const canRotate = ['terminacion', 'text', 'z_shape', 'lines_45'].includes(el.type);
+                    rotateBtn.style.display = canRotate ? 'flex' : 'none';
+                    if (canRotate) {
                         rotateBtn.title = `Girar orientación 45° (Actual: ${Math.round(el.angle || 0)}°)`;
                     }
                 }
 
+                // Control de color universal para cualquier elemento seleccionado
+                const colorBtn = document.getElementById('btn-sel-color');
+                const colorPreview = document.getElementById('sel-color-preview');
+                const colorInput = document.getElementById('sel-color-input');
+                if (colorBtn) {
+                    colorBtn.style.display = 'flex';
+                    const curColor = el.color || (el.type === 'sink' ? '#0284c7' : (el.type === 'cota' ? '#334155' : (el.type === 'terminacion' ? '#d97706' : '#1e293b')));
+                    if (colorPreview) colorPreview.style.backgroundColor = curColor;
+                    if (colorInput && curColor.startsWith('#')) colorInput.value = curColor;
+                }
+
                 const sizeGroup = document.getElementById('sel-size-group');
                 if (sizeGroup) {
-                    const isScalable = ['rect', 'square', 'circle', 'triangle', 'cooktop', 'sink', 'line', 'measure', 'polyline', 'cota', 'terminacion'].includes(el.type);
+                    const isScalable = ['rect', 'square', 'circle', 'triangle', 'cooktop', 'sink', 'line', 'measure', 'polyline', 'cota', 'terminacion', 'z_shape', 'lines_45'].includes(el.type);
                     sizeGroup.style.display = isScalable ? 'flex' : 'none';
                 }
 
@@ -5195,7 +5712,7 @@
                 App.ui.currentTool = toolName;
                 if (subTool) {
                     App.ui.subTool = subTool;
-                } else if (toolName === 'terminacion' && !['x', 'circle_x', 'angle'].includes(App.ui.subTool)) {
+                } else if (toolName === 'terminacion' && !['x', 'circle_x', 'angle', 'z'].includes(App.ui.subTool)) {
                     App.ui.subTool = 'x';
                 }
                 
@@ -5286,19 +5803,31 @@
                     });
                 } else if (toolName === 'cooktop') {
                     if (!['2_burners', '4_burners', '5_burners'].includes(App.ui.subTool)) App.ui.subTool = '4_burners';
+                    const subM = App.ui.subTool;
+                    const dimText = `${App.ui.cooktopW || (subM === '2_burners' ? 30 : (subM === '5_burners' ? 75 : 60))}×${App.ui.cooktopH || 50} cm`;
                     sub.innerHTML = `
-                        <button class="subtool-btn ${App.ui.subTool==='2_burners'?'active':''}" data-sub="2_burners">🔥 2 Fuegos (30×50)</button>
-                        <button class="subtool-btn ${App.ui.subTool==='4_burners'?'active':''}" data-sub="4_burners">🔥 4 Fuegos (60×50)</button>
-                        <button class="subtool-btn ${App.ui.subTool==='5_burners'?'active':''}" data-sub="5_burners">🔥 5 Fuegos (75×50)</button>
+                        <button class="subtool-btn ${subM==='4_burners'?'active':''}" data-sub="4_burners">4 Fuegos</button>
+                        <button class="subtool-btn ${subM==='5_burners'?'active':''}" data-sub="5_burners">5 Fuegos</button>
+                        <button class="subtool-btn ${subM==='2_burners'?'active':''}" data-sub="2_burners">2 Fuegos</button>
+                        <button type="button" class="subtool-btn" id="btn-sub-cooktop-dim" style="border: 1.5px solid #d97706; background: #fffbeb; color: #b45309; font-weight: 700; border-radius: 6px; margin-left: 6px;" title="Personalizar medidas exactas de hornallas">
+                            📏 ${dimText} ▾
+                        </button>
                     `;
                     sub.classList.add('visible');
                     
-                    sub.querySelectorAll('.subtool-btn').forEach(b => {
+                    sub.querySelectorAll('.subtool-btn[data-sub]').forEach(b => {
                         b.addEventListener('click', (e) => {
                             App.ui.subTool = e.currentTarget.getAttribute('data-sub');
                             this.setTool('cooktop');
                         });
                     });
+
+                    const dimBtn = document.getElementById('btn-sub-cooktop-dim');
+                    if (dimBtn) {
+                        dimBtn.addEventListener('click', () => {
+                            CooktopDimensionModal.open();
+                        });
+                    }
                 } else if (toolName === 'sink') {
                     if (!['single', 'double', 'round', 'drainer'].includes(App.ui.subTool)) App.ui.subTool = 'single';
                     const subM = App.ui.subTool;
@@ -5370,7 +5899,7 @@
                     el.end = { x: cx + newSide / 2, y: cy + newSide / 2 };
                     changed = true;
                     desc = `Cuadrado: ${newSide}×${newSide} cm`;
-                } else if (el.type === 'rect' || el.type === 'cooktop' || el.type === 'sink') {
+                } else if (el.type === 'rect' || el.type === 'cooktop' || el.type === 'sink' || el.type === 'z_shape' || el.type === 'lines_45') {
                     const w = Math.abs(el.end.x - el.start.x);
                     const h = Math.abs(el.end.y - el.start.y);
                     const cx = (el.start.x + el.end.x) / 2;
@@ -5389,7 +5918,7 @@
                         const newH = Math.max(0.5, Math.round(h * factor * 10) / 10);
                         el.start = { x: cx - newW / 2, y: cy - newH / 2 };
                         el.end = { x: cx + newW / 2, y: cy + newH / 2 };
-                        const name = el.type === 'cooktop' ? 'Hornallas' : (el.type === 'sink' ? 'Bacha' : 'Rectángulo');
+                        const name = el.type === 'cooktop' ? 'Hornallas' : (el.type === 'sink' ? 'Bacha' : (el.type === 'z_shape' ? 'Elemento Z' : (el.type === 'lines_45' ? 'Línea 45°' : 'Rectángulo')));
                         desc = `${name}: ${newW}×${newH} cm`;
                     }
                     changed = true;
@@ -5643,6 +6172,131 @@
             }
         };
 
+        // Gestor de Personalización de Medidas de Hornallas / Anafes
+        const CooktopDimensionModal = {
+            _targetElementId: null,
+            _activeModel: '4_burners',
+
+            presets: {
+                '2_burners': [
+                    { label: '30 × 50', w: 30, h: 50 },
+                    { label: '32 × 52', w: 32, h: 52 },
+                    { label: '30 × 60', w: 30, h: 60 }
+                ],
+                '4_burners': [
+                    { label: '58 × 50', w: 58, h: 50 },
+                    { label: '60 × 50', w: 60, h: 50 },
+                    { label: '60 × 52', w: 60, h: 52 },
+                    { label: '60 × 60', w: 60, h: 60 }
+                ],
+                '5_burners': [
+                    { label: '70 × 51', w: 70, h: 51 },
+                    { label: '75 × 51', w: 75, h: 51 },
+                    { label: '86 × 50', w: 86, h: 50 },
+                    { label: '90 × 51', w: 90, h: 51 }
+                ]
+            },
+
+            open(targetEl = null) {
+                this._targetElementId = targetEl ? targetEl.id : (App.ui.selectedId ? App.ui.selectedId : null);
+                const modal = document.getElementById('cooktop-modal');
+                if (!modal) return;
+
+                let el = null;
+                if (this._targetElementId) {
+                    el = App.data.elements.find(x => x.id === this._targetElementId && x.type === 'cooktop');
+                    if (!el) this._targetElementId = null;
+                }
+
+                const currentModel = el ? (el.subtype || '4_burners') : (App.ui.subTool && ['2_burners','4_burners','5_burners'].includes(App.ui.subTool) ? App.ui.subTool : '4_burners');
+                this.setModel(currentModel);
+
+                if (el) {
+                    const w = Math.round(Math.abs(el.end.x - el.start.x));
+                    const h = Math.round(Math.abs(el.end.y - el.start.y));
+                    document.getElementById('cooktop-input-w').value = w;
+                    document.getElementById('cooktop-input-h').value = h;
+                } else {
+                    let defW = 60, defH = 50;
+                    if (currentModel === '2_burners') { defW = 30; defH = 50; }
+                    else if (currentModel === '5_burners') { defW = 75; defH = 50; }
+                    document.getElementById('cooktop-input-w').value = App.ui.cooktopW || defW;
+                    document.getElementById('cooktop-input-h').value = App.ui.cooktopH || defH;
+                }
+
+                modal.classList.add('active');
+            },
+
+            close() {
+                const modal = document.getElementById('cooktop-modal');
+                if (modal) modal.classList.remove('active');
+                this._targetElementId = null;
+            },
+
+            setModel(model) {
+                this._activeModel = model;
+                document.querySelectorAll('.cooktop-model-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-model') === model);
+                });
+                this.renderPresets(model);
+            },
+
+            renderPresets(model) {
+                const container = document.getElementById('cooktop-presets-container');
+                if (!container) return;
+                container.innerHTML = '';
+                const list = this.presets[model] || [];
+                list.forEach(p => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'cooktop-preset-pill';
+                    btn.textContent = p.label + ' cm';
+                    btn.addEventListener('click', () => {
+                        document.getElementById('cooktop-input-w').value = p.w;
+                        document.getElementById('cooktop-input-h').value = p.h;
+                        container.querySelectorAll('.cooktop-preset-pill').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                    });
+                    container.appendChild(btn);
+                });
+            },
+
+            apply() {
+                const model = this._activeModel;
+                const nw = parseFloat(document.getElementById('cooktop-input-w').value) || 60;
+                const nh = parseFloat(document.getElementById('cooktop-input-h').value) || 50;
+                const w = Math.max(5, nw);
+                const h = Math.max(5, nh);
+
+                App.ui.cooktopModel = model;
+                App.ui.cooktopW = w;
+                App.ui.cooktopH = h;
+                App.ui.subTool = model;
+
+                if (this._targetElementId) {
+                    const el = App.data.elements.find(x => x.id === this._targetElementId);
+                    if (el && el.type === 'cooktop') {
+                        HistoryManager.pushState();
+                        el.subtype = model;
+                        const cx = (el.start.x + el.end.x) / 2;
+                        const cy = (el.start.y + el.end.y) / 2;
+                        el.start = { x: cx - w / 2, y: cy - h / 2 };
+                        el.end = { x: cx + w / 2, y: cy + h / 2 };
+                        Renderer.renderAll();
+                        UI.updateSelectionBar();
+                        UI.showToast(`Hornallas: ${w}×${h} cm`);
+                    }
+                } else {
+                    UI.showToast(`Medida fijada: ${w}×${h} cm (hacé clic en el plano)`);
+                }
+
+                this.close();
+                if (App.ui.currentTool === 'cooktop') {
+                    UI.setTool('cooktop');
+                }
+            }
+        };
+
         const ExportManager = {
             openModal() {
                 const modal = document.getElementById('export-modal');
@@ -5805,7 +6459,60 @@
                     doc.setTextColor(130, 130, 130);
                     doc.text(`Marmolería Benjamín • Documento emitido para fabricación • ${proj} • Cliente: ${client} • Sector: ${sector} • Responsable: ${auth}`, margin, footerY);
 
-                    // Bounding Box para encuadre y centrado
+                    // Helper técnico para dibujar textos rotados con fondo tipo pastilla/cota sin desfases espaciales (lo que se ve = lo que se imprime)
+                    const drawRotatedPillText = (text, cx, cy, svgAngleDeg, fontSizePt, textColor, bgColor, borderColor, borderWidth = 0.25, vs = 1.0) => {
+                        if (!text) return;
+                        let normAngle = svgAngleDeg;
+                        while (normAngle > 90) normAngle -= 180;
+                        while (normAngle <= -90) normAngle += 180;
+
+                        doc.setFontSize(fontSizePt);
+                        doc.setFont(undefined, 'bold');
+                        const textW = doc.getTextWidth(text);
+                        const fontMm = fontSizePt * 0.3528;
+                        const pillW = textW + Math.max(2.5, 4.0 * Math.min(1.5, vs));
+                        const pillH = Math.max(3.6, fontMm + 1.8);
+
+                        const rad = (normAngle * Math.PI) / 180;
+                        const cos = Math.cos(rad);
+                        const sin = Math.sin(rad);
+                        const rotPt = (dx, dy) => ({
+                            x: cx + dx * cos - dy * sin,
+                            y: cy + dx * sin + dy * cos
+                        });
+
+                        if (bgColor) {
+                            const bg = Utils.parseColor(bgColor, { r: 255, g: 255, b: 255 });
+                            const bd = borderColor ? Utils.parseColor(borderColor, { r: 203, g: 213, b: 225 }) : null;
+                            doc.setFillColor(bg.r, bg.g, bg.b);
+                            if (bd) {
+                                doc.setDrawColor(bd.r, bd.g, bd.b);
+                                doc.setLineWidth(borderWidth);
+                            }
+                            const p1 = rotPt(-pillW / 2, -pillH / 2);
+                            const p2 = rotPt(pillW / 2, -pillH / 2);
+                            const p3 = rotPt(pillW / 2, pillH / 2);
+                            const p4 = rotPt(-pillW / 2, pillH / 2);
+
+                            doc.triangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, bd ? 'FD' : 'F');
+                            doc.triangle(p1.x, p1.y, p3.x, p3.y, p4.x, p4.y, bd ? 'FD' : 'F');
+                            if (bd) {
+                                doc.line(p1.x, p1.y, p2.x, p2.y);
+                                doc.line(p2.x, p2.y, p3.x, p3.y);
+                                doc.line(p3.x, p3.y, p4.x, p4.y);
+                                doc.line(p4.x, p4.y, p1.x, p1.y);
+                            }
+                        }
+
+                        const tc = textColor ? Utils.parseColor(textColor, { r: 15, g: 23, b: 42 }) : { r: 15, g: 23, b: 42 };
+                        doc.setTextColor(tc.r, tc.g, tc.b);
+                        const localStartX = -textW / 2;
+                        const localStartY = fontMm * 0.35;
+                        const textStartPt = rotPt(localStartX, localStartY);
+                        doc.text(text, textStartPt.x, textStartPt.y, { angle: -normAngle });
+                    };
+
+                    // Bounding Box para encuadre y centrado exacto
                     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
                     
                     App.data.elements.forEach(el => {
@@ -5821,21 +6528,44 @@
                             let upNx = -dy / len;
                             let upNy = dx / len;
                             if (upNy > 0 || (Math.abs(upNy) < 1e-6 && upNx > 0)) { upNx = -upNx; upNy = -upNy; }
-                            pts.push({ x: midX + upNx * 8, y: midY + upNy * 8 });
+                            pts.push({ x: midX + upNx * 16, y: midY + upNy * 16 });
                         }
                         if (el.type === 'cota') {
                             pts.push(el.start, el.end);
                             const geom = Renderer.getCotaGeometry(el);
-                            pts.push({ x: geom.cotaLine.x1, y: geom.cotaLine.y1 }, { x: geom.cotaLine.x2, y: geom.cotaLine.y2 });
+                            pts.push({ x: geom.cotaLine.x1, y: geom.cotaLine.y1 }, { x: geom.cotaLine.x2, y: geom.cotaLine.y2 }, { x: geom.mid.x, y: geom.mid.y });
                         }
                         if (el.type === 'polyline' || el.type === 'pencil') pts.push(...el.points);
                         if (el.type === 'rect' || el.type === 'square' || el.type === 'cooktop' || el.type === 'sink') pts.push(el.start, el.end);
+                        if (el.type === 'z_shape' || el.type === 'lines_45') {
+                            const minP = { x: Math.min(el.start.x, el.end.x), y: Math.min(el.start.y, el.end.y) };
+                            const maxP = { x: Math.max(el.start.x, el.end.x), y: Math.max(el.start.y, el.end.y) };
+                            const cx = (minP.x + maxP.x) / 2;
+                            const cy = (minP.y + maxP.y) / 2;
+                            const hw = (maxP.x - minP.x) / 2;
+                            const hh = (maxP.y - minP.y) / 2;
+                            const rad = ((el.angle || 0) * Math.PI) / 180;
+                            const cos = Math.cos(rad);
+                            const sin = Math.sin(rad);
+                            pts.push(
+                                { x: cx + (-hw) * cos - (-hh) * sin, y: cy + (-hw) * sin + (-hh) * cos },
+                                { x: cx + (hw) * cos - (-hh) * sin, y: cy + (hw) * sin + (-hh) * cos },
+                                { x: cx + (hw) * cos - (hh) * sin, y: cy + (hw) * sin + (hh) * cos },
+                                { x: cx + (-hw) * cos - (hh) * sin, y: cy + (-hw) * sin + (hh) * cos }
+                            );
+                        }
                         if (el.type === 'circle') {
                             pts.push({ x: el.center.x - el.radius, y: el.center.y - el.radius });
                             pts.push({ x: el.center.x + el.radius, y: el.center.y + el.radius });
                         }
                         if (el.type === 'triangle') pts.push(...el.points);
-                        if (el.type === 'text' || el.type === 'terminacion') pts.push(el.position);
+                        if (el.type === 'text') {
+                            const approxW = Math.max(35, (el.text || '').length * 8);
+                            const rad = ((el.angle || 0) * Math.PI) / 180;
+                            pts.push(el.position);
+                            pts.push({ x: el.position.x + approxW * Math.cos(rad), y: el.position.y + approxW * Math.sin(rad) });
+                        }
+                        if (el.type === 'terminacion') pts.push(el.position);
                         
                         pts.forEach(p => {
                             if(p.x < minX) minX = p.x; if(p.x > maxX) maxX = p.x;
@@ -5866,15 +6596,19 @@
                         doc.setLineWidth(0.5);
 
                         App.data.elements.forEach(el => {
+                            const customColor = el.color ? Utils.parseColor(el.color) : null;
+
                             if (el.type === 'line') {
                                 doc.setLineDash([]);
-                                doc.setDrawColor(20, 20, 20);
+                                const c = customColor || { r: 20, g: 20, b: 20 };
+                                doc.setDrawColor(c.r, c.g, c.b);
                                 doc.line(toPdfX(el.start.x), toPdfY(el.start.y), toPdfX(el.end.x), toPdfY(el.end.y));
                             }
                             if (el.type === 'measure') {
-                                // Línea de medición continua/sólida en PDF
+                                // Línea de medición continua/sólida en PDF (Requerimiento 3)
                                 doc.setLineDash([]);
-                                doc.setDrawColor(40, 40, 40);
+                                const mColor = customColor || { r: 40, g: 40, b: 40 };
+                                doc.setDrawColor(mColor.r, mColor.g, mColor.b);
                                 doc.setLineWidth(0.45);
                                 const x1 = toPdfX(el.start.x), y1 = toPdfY(el.start.y);
                                 const x2 = toPdfX(el.end.x), y2 = toPdfY(el.end.y);
@@ -5893,35 +6627,36 @@
                                 doc.line(x1 - perpX * tickLen, y1 - perpY * tickLen, x1 + perpX * tickLen, y1 + perpY * tickLen);
                                 doc.line(x2 - perpX * tickLen, y2 - perpY * tickLen, x2 + perpX * tickLen, y2 + perpY * tickLen);
 
-                                // Vector normal que apunta estrictamente arriba de la línea de medición
-                                let upNx = -uy;
-                                let upNy = ux;
+                                // Posición exacta de la etiqueta idéntica al editor (Requerimiento 6: lo que se ve en el editor = lo que aparece en el PDF)
+                                const offsetDist = 15;
+                                const dx = el.end.x - el.start.x;
+                                const dy = el.end.y - el.start.y;
+                                const len = Math.hypot(dx, dy) || 1;
+                                let upNx = -dy / len;
+                                let upNy = dx / len;
                                 if (upNy > 0 || (Math.abs(upNy) < 1e-6 && upNx > 0)) {
                                     upNx = -upNx;
                                     upNy = -upNy;
                                 }
+                                const labelX = (el.start.x + el.end.x) / 2 + upNx * offsetDist;
+                                const labelY = (el.start.y + el.end.y) / 2 + upNy * offsetDist;
+                                const cx = toPdfX(labelX);
+                                const cy = toPdfY(labelY);
 
-                                // Ángulo de lectura del texto (entre -90° y +90° para que nunca quede invertido)
-                                let rotAngle = Math.atan2(pdy, pdx) * 180 / Math.PI;
+                                let rotAngle = Math.atan2(dy, dx) * 180 / Math.PI;
                                 if (rotAngle >= 89.999) rotAngle -= 180;
                                 if (rotAngle < -90.001) rotAngle += 180;
 
-                                // Posición del valor numérico: justo arriba de la línea con separación pequeña y consistente (1.8 mm)
-                                const midX = (x1 + x2) / 2;
-                                const midY = (y1 + y2) / 2;
-                                const textGap = 1.8; // mm en el PDF
-                                const textX = midX + upNx * textGap;
-                                const textY = midY + upNy * textGap;
-
                                 const val = el.value || "";
-                                doc.setFontSize(8.5);
-                                doc.setFont(undefined, 'bold');
-                                doc.setTextColor(30, 41, 59);
-                                doc.text(val, textX, textY, { align: 'center', angle: rotAngle });
+                                const isManual = !!el.isManual;
+                                const txtC = el.color || (isManual ? '#0284c7' : '#0f172a');
+                                const borderC = el.color || (isManual ? '#0284c7' : '#cbd5e1');
+                                drawRotatedPillText(val, cx, cy, rotAngle, 8.5, txtC, '#ffffff', borderC, 0.25);
                             }
                             if (el.type === 'cota') {
                                 const geom = Renderer.getCotaGeometry(el);
                                 const vs = Math.max(0.25, el.visualScale || 1.0);
+                                const cotaC = customColor || (el.isManual ? { r: 2, g: 132, b: 199 } : { r: 37, g: 99, b: 235 });
 
                                 // Líneas de testigo
                                 doc.setLineDash([1.5, 1.5]);
@@ -5932,12 +6667,12 @@
 
                                 // Línea de cota
                                 doc.setLineDash([]);
-                                doc.setDrawColor(37, 99, 235);
+                                doc.setDrawColor(cotaC.r, cotaC.g, cotaC.b);
                                 doc.setLineWidth(Math.max(0.25, 0.45 * Math.min(1.5, vs)));
                                 doc.line(toPdfX(geom.cotaLine.x1), toPdfY(geom.cotaLine.y1), toPdfX(geom.cotaLine.x2), toPdfY(geom.cotaLine.y2));
 
                                 // Flechas terminales triangulares en PDF
-                                doc.setFillColor(37, 99, 235);
+                                doc.setFillColor(cotaC.r, cotaC.g, cotaC.b);
                                 const a1x1 = toPdfX(geom.arrow1.tip.x), a1y1 = toPdfY(geom.arrow1.tip.y);
                                 const a1x2 = toPdfX(geom.arrow1.base1.x), a1y2 = toPdfY(geom.arrow1.base1.y);
                                 const a1x3 = toPdfX(geom.arrow1.base2.x), a1y3 = toPdfY(geom.arrow1.base2.y);
@@ -5948,24 +6683,27 @@
                                 const a2x3 = toPdfX(geom.arrow2.base2.x), a2y3 = toPdfY(geom.arrow2.base2.y);
                                 doc.triangle(a2x1, a2y1, a2x2, a2y2, a2x3, a2y3, 'F');
 
-                                // Medida en el centro (escalada visualmente)
+                                // Medida en el centro con alineación exacta y fondo blanco protector (Requerimiento 6)
                                 const mx = toPdfX(geom.mid.x);
                                 const my = toPdfY(geom.mid.y);
                                 const val = el.value || Utils.formatMeasure(geom.dist);
-                                doc.setFontSize(Math.max(4.5, Math.round(8 * Math.min(1.8, Math.max(0.4, vs)))));
-                                doc.setTextColor(30, 41, 59);
-                                doc.text(val, mx, my - 1, { align: 'center', angle: geom.rot });
+                                const fontSizePt = Math.max(5.5, Math.round(8.5 * Math.min(1.8, Math.max(0.4, vs))));
+                                const txtC = el.color || (el.isManual ? '#0284c7' : '#0f172a');
+                                const borderC = el.color || (el.isManual ? '#0284c7' : '#cbd5e1');
+                                drawRotatedPillText(val, mx, my, geom.rot, fontSizePt, txtC, '#ffffff', borderC, Math.max(0.2, 0.35 * vs), vs);
                             }
                             if (el.type === 'polyline' || el.type === 'pencil') {
                                 doc.setLineDash([]);
-                                doc.setDrawColor(20, 20, 20);
+                                const c = customColor || { r: 20, g: 20, b: 20 };
+                                doc.setDrawColor(c.r, c.g, c.b);
                                 for (let i = 0; i < el.points.length - 1; i++) {
                                     doc.line(toPdfX(el.points[i].x), toPdfY(el.points[i].y), toPdfX(el.points[i+1].x), toPdfY(el.points[i+1].y));
                                 }
                             }
                             if (el.type === 'rect' || el.type === 'square') {
                                 doc.setLineDash([]);
-                                doc.setDrawColor(20, 20, 20);
+                                const c = customColor || { r: 20, g: 20, b: 20 };
+                                doc.setDrawColor(c.r, c.g, c.b);
                                 const x = toPdfX(Math.min(el.start.x, el.end.x));
                                 const y = toPdfY(Math.min(el.start.y, el.end.y));
                                 const w = Math.abs(el.start.x - el.end.x) * scale;
@@ -5974,7 +6712,8 @@
                             }
                             if (el.type === 'circle') {
                                 doc.setLineDash([]);
-                                doc.setDrawColor(20, 20, 20);
+                                const c = customColor || { r: 20, g: 20, b: 20 };
+                                doc.setDrawColor(c.r, c.g, c.b);
                                 const cx = toPdfX(el.center.x);
                                 const cy = toPdfY(el.center.y);
                                 const r = el.radius * scale;
@@ -5985,9 +6724,63 @@
                                 doc.line(cx, cy - 1.5, cx, cy + 1.5);
                                 doc.setLineWidth(0.5);
                             }
-                            if (el.type === 'cooktop') {
+                            if (el.type === 'z_shape') {
+                                // Nuevo elemento Z en PDF (Requerimiento 2)
+                                const rw = Math.max(10, Math.abs(el.start.x - el.end.x)) * scale;
+                                const rh = Math.max(10, Math.abs(el.start.y - el.end.y)) * scale;
+                                const cx = toPdfX((el.start.x + el.end.x) / 2);
+                                const cy = toPdfY((el.start.y + el.end.y) / 2);
+                                const rad = ((el.angle || 0) * Math.PI) / 180;
+                                const cos = Math.cos(rad);
+                                const sin = Math.sin(rad);
+                                const rot = (dx, dy) => ({
+                                    x: cx + dx * cos - dy * sin,
+                                    y: cy + dx * sin + dy * cos
+                                });
+                                const c = customColor || { r: 51, g: 65, b: 85 };
                                 doc.setLineDash([]);
-                                doc.setDrawColor(30, 30, 30);
+                                doc.setDrawColor(c.r, c.g, c.b);
+                                doc.setLineWidth(0.65);
+                                const p1 = rot(-rw / 2, -rh / 2);
+                                const p2 = rot(rw / 2, -rh / 2);
+                                const p3 = rot(-rw / 2, rh / 2);
+                                const p4 = rot(rw / 2, rh / 2);
+                                doc.line(p1.x, p1.y, p2.x, p2.y);
+                                doc.line(p2.x, p2.y, p3.x, p3.y);
+                                doc.line(p3.x, p3.y, p4.x, p4.y);
+                            }
+                            if (el.type === 'lines_45') {
+                                // Nuevo elemento de líneas 45° en PDF (Requerimiento 2)
+                                const rw = Math.max(15, Math.abs(el.start.x - el.end.x)) * scale;
+                                const rh = Math.max(10, Math.abs(el.start.y - el.end.y)) * scale;
+                                const cx = toPdfX((el.start.x + el.end.x) / 2);
+                                const cy = toPdfY((el.start.y + el.end.y) / 2);
+                                const drop = Math.min(rh, rw * 0.45);
+                                const bottomLen = Math.max(8 * scale, rw * 0.45);
+                                const rad = ((el.angle || 0) * Math.PI) / 180;
+                                const cos = Math.cos(rad);
+                                const sin = Math.sin(rad);
+                                const rot = (dx, dy) => ({
+                                    x: cx + dx * cos - dy * sin,
+                                    y: cy + dx * sin + dy * cos
+                                });
+                                const c = customColor || { r: 51, g: 65, b: 85 };
+                                doc.setLineDash([]);
+                                doc.setDrawColor(c.r, c.g, c.b);
+                                doc.setLineWidth(0.65);
+                                const p0 = rot(-rw / 2, -rh / 2);
+                                const p1 = rot(rw / 2, -rh / 2);
+                                const p2 = rot(rw / 2 - drop, -rh / 2 + drop);
+                                const p3 = rot(rw / 2 - drop - bottomLen, -rh / 2 + drop);
+                                doc.line(p0.x, p0.y, p1.x, p1.y);
+                                doc.line(p1.x, p1.y, p2.x, p2.y);
+                                doc.line(p2.x, p2.y, p3.x, p3.y);
+                            }
+                            if (el.type === 'cooktop') {
+                                // Hornallas / Anafes (Requerimiento 5: sin texto "Anafe", con dimensiones limpias)
+                                doc.setLineDash([]);
+                                const c = customColor || { r: 30, g: 30, b: 30 };
+                                doc.setDrawColor(c.r, c.g, c.b);
                                 const x = toPdfX(Math.min(el.start.x, el.end.x));
                                 const y = toPdfY(Math.min(el.start.y, el.end.y));
                                 const w = Math.abs(el.start.x - el.end.x) * scale;
@@ -5998,7 +6791,7 @@
                                 if (w > 4 && h > 4) {
                                     doc.rect(x + 1.2, y + 1.2, w - 2.4, h - 2.4);
                                 }
-                                const fuegos = el.subtype || 4;
+                                const fuegos = el.subtype === '2_burners' ? 2 : (el.subtype === '5_burners' ? 5 : (parseInt(el.subtype) || 4));
                                 const cx = x + w / 2, cy = y + h / 2;
                                 const rBurner = Math.max(1, Math.min(w, h) * 0.12);
                                 if (fuegos === 2) {
@@ -6016,14 +6809,49 @@
                                     doc.circle(cx - w * 0.24, cy + h * 0.22, rBurner);
                                     doc.circle(cx + w * 0.24, cy + h * 0.22, rBurner);
                                 }
+
+                                const realW = Math.round(Math.abs(el.end.x - el.start.x));
+                                const realH = Math.round(Math.abs(el.end.y - el.start.y));
+                                const cotaC = customColor || { r: 234, g: 88, b: 12 };
+
+                                // Cotas exteriores técnicas limpias
+                                doc.setDrawColor(cotaC.r, cotaC.g, cotaC.b);
+                                doc.setLineWidth(0.25);
                                 doc.setFontSize(6.5);
-                                doc.setTextColor(80, 80, 80);
-                                doc.text(`ANAFE ${fuegos}F`, cx, y + h - 1.5, { align: 'center' });
+                                doc.setTextColor(cotaC.r, cotaC.g, cotaC.b);
+
+                                // Cota superior de ancho
+                                const topY = y - 2.5;
+                                doc.line(x, topY, x + w, topY);
+                                doc.line(x, topY - 1, x, topY + 1);
+                                doc.line(x + w, topY - 1, x + w, topY + 1);
+                                doc.text(`${realW} cm`, cx, topY - 0.7, { align: 'center' });
+
+                                // Cota izquierda de profundidad
+                                const leftX = x - 2.5;
+                                doc.line(leftX, y, leftX, y + h);
+                                doc.line(leftX - 1, y, leftX + 1, y);
+                                doc.line(leftX - 1, y + h, leftX + 1, y + h);
+                                doc.text(`${realH} cm`, leftX - 0.7, cy, { align: 'center', angle: 90 });
+
+                                // Placa de medidas limpia SIN texto "ANAFE" (Requerimiento 5)
+                                const bText = `${realW}×${realH} cm`;
+                                const badgeW = 20, badgeH = 3.8;
+                                doc.setFillColor(255, 255, 255);
+                                doc.setDrawColor(cotaC.r, cotaC.g, cotaC.b);
+                                doc.roundedRect(cx - badgeW / 2, y + h - badgeH - 0.8, badgeW, badgeH, 0.8, 0.8, 'FD');
+                                doc.setFontSize(6.2);
+                                doc.setFont(undefined, 'bold');
+                                doc.setTextColor(cotaC.r, cotaC.g, cotaC.b);
+                                doc.text(bText, cx, y + h - 1.8, { align: 'center' });
+
                                 doc.setLineWidth(0.5);
                             }
                             if (el.type === 'sink') {
+                                // Bachas (Requerimiento 5: sin texto "Bacha", con dimensiones limpias)
                                 doc.setLineDash([]);
-                                doc.setDrawColor(30, 30, 30);
+                                const c = customColor || { r: 30, g: 30, b: 30 };
+                                doc.setDrawColor(c.r, c.g, c.b);
                                 const x = toPdfX(Math.min(el.start.x, el.end.x));
                                 const y = toPdfY(Math.min(el.start.y, el.end.y));
                                 const w = Math.abs(el.start.x - el.end.x) * scale;
@@ -6032,20 +6860,19 @@
                                 doc.rect(x, y, w, h);
                                 doc.setLineWidth(0.3);
 
-                                const subtype = el.subtype || 'simple';
+                                const subtype = el.subtype || 'single';
                                 const cx = x + w / 2, cy = y + h / 2;
                                 const realW = Math.round(Math.abs(el.end.x - el.start.x));
                                 const realH = Math.round(Math.abs(el.end.y - el.start.y));
+                                const sinkCotaC = customColor || { r: 2, g: 132, b: 199 };
 
-                                // Cotas exteriores técnicas para el cliente en el PDF
-                                doc.setDrawColor(2, 132, 199);
+                                doc.setDrawColor(sinkCotaC.r, sinkCotaC.g, sinkCotaC.b);
                                 doc.setLineWidth(0.25);
                                 doc.setFontSize(6.5);
-                                doc.setTextColor(2, 132, 199);
+                                doc.setTextColor(sinkCotaC.r, sinkCotaC.g, sinkCotaC.b);
 
                                 if (subtype === 'round') {
                                     const diam = Math.round(Math.min(realW, realH));
-                                    // Línea de cota de diámetro superior
                                     const topY = y - 2.5;
                                     doc.line(x, topY, x + w, topY);
                                     doc.line(x, topY - 1, x, topY + 1);
@@ -6056,24 +6883,23 @@
                                     doc.circle(cx, cy, r);
                                     doc.circle(cx, cy, Math.max(0.5, r * 0.2));
 
-                                    // Cartel de medida de bacha
-                                    const bText = `BACHA Ø ${diam} cm`;
-                                    const badgeW = 28, badgeH = 4.2;
+                                    // Cartel de medida limpio SIN texto "BACHA" (Requerimiento 5)
+                                    const bText = `Ø ${diam} cm`;
+                                    const badgeW = 20, badgeH = 3.8;
                                     doc.setFillColor(255, 255, 255);
-                                    doc.setDrawColor(2, 132, 199);
-                                    doc.roundedRect(cx - badgeW/2, y + h - badgeH - 1, badgeW, badgeH, 1, 1, 'FD');
-                                    doc.setFontSize(6);
-                                    doc.setTextColor(3, 105, 161);
-                                    doc.text(bText, cx, y + h - 2.2, { align: 'center' });
+                                    doc.setDrawColor(sinkCotaC.r, sinkCotaC.g, sinkCotaC.b);
+                                    doc.roundedRect(cx - badgeW / 2, y + h - badgeH - 0.8, badgeW, badgeH, 0.8, 0.8, 'FD');
+                                    doc.setFontSize(6.2);
+                                    doc.setFont(undefined, 'bold');
+                                    doc.setTextColor(sinkCotaC.r, sinkCotaC.g, sinkCotaC.b);
+                                    doc.text(bText, cx, y + h - 1.8, { align: 'center' });
                                 } else {
-                                    // Cota superior (Ancho)
                                     const topY = y - 2.5;
                                     doc.line(x, topY, x + w, topY);
                                     doc.line(x, topY - 1, x, topY + 1);
                                     doc.line(x + w, topY - 1, x + w, topY + 1);
                                     doc.text(`${realW} cm`, cx, topY - 0.7, { align: 'center' });
 
-                                    // Cota izquierda (Profundidad)
                                     const leftX = x - 2.5;
                                     doc.line(leftX, y, leftX, y + h);
                                     doc.line(leftX - 1, y, leftX + 1, y);
@@ -6105,25 +6931,23 @@
                                         doc.circle(cx, cy, 1.2);
                                     }
 
-                                    // Cartel de medida de bacha
-                                    let bText = `BACHA ${realW}×${realH} cm`;
-                                    if (subtype === 'double') bText = `BACHA DOBLE ${realW}×${realH} cm`;
-                                    if (subtype === 'drainer') bText = `BACHA C/ ESC. ${realW}×${realH} cm`;
-
-                                    const badgeW = subtype === 'drainer' ? 36 : (subtype === 'double' ? 34 : 28);
-                                    const badgeH = 4.2;
+                                    // Cartel de medida limpio SIN texto "BACHA" (Requerimiento 5)
+                                    const bText = `${realW}×${realH} cm`;
+                                    const badgeW = 20, badgeH = 3.8;
                                     doc.setFillColor(255, 255, 255);
-                                    doc.setDrawColor(2, 132, 199);
-                                    doc.roundedRect(cx - badgeW/2, y + h - badgeH - 1, badgeW, badgeH, 1, 1, 'FD');
-                                    doc.setFontSize(6);
-                                    doc.setTextColor(3, 105, 161);
-                                    doc.text(bText, cx, y + h - 2.2, { align: 'center' });
+                                    doc.setDrawColor(sinkCotaC.r, sinkCotaC.g, sinkCotaC.b);
+                                    doc.roundedRect(cx - badgeW / 2, y + h - badgeH - 0.8, badgeW, badgeH, 0.8, 0.8, 'FD');
+                                    doc.setFontSize(6.2);
+                                    doc.setFont(undefined, 'bold');
+                                    doc.setTextColor(sinkCotaC.r, sinkCotaC.g, sinkCotaC.b);
+                                    doc.text(bText, cx, y + h - 1.8, { align: 'center' });
                                 }
                                 doc.setLineWidth(0.5);
                             }
                             if (el.type === 'triangle') {
                                 doc.setLineDash([]);
-                                doc.setDrawColor(20, 20, 20);
+                                const c = customColor || { r: 20, g: 20, b: 20 };
+                                doc.setDrawColor(c.r, c.g, c.b);
                                 const p0 = { x: toPdfX(el.points[0].x), y: toPdfY(el.points[0].y) };
                                 const p1 = { x: toPdfX(el.points[1].x), y: toPdfY(el.points[1].y) };
                                 const p2 = { x: toPdfX(el.points[2].x), y: toPdfY(el.points[2].y) };
@@ -6132,15 +6956,35 @@
                                 doc.line(p2.x, p2.y, p0.x, p0.y);
                             }
                             if (el.type === 'text') {
-                                doc.setTextColor(20, 20, 20);
-                                doc.setFontSize(10);
-                                doc.text(el.text, toPdfX(el.position.x), toPdfY(el.position.y));
+                                // Anotaciones con soporte de rotación libre y color (Requerimiento 1 y 4)
+                                const tAngle = el.angle || 0;
+                                const txtColor = customColor || { r: 30, g: 41, b: 59 };
+                                const textStr = el.text || "Anotación";
+                                const tagW = Math.max(68, textStr.length * 8 + 22);
+                                const cx = toPdfX(el.position.x + (tagW - 20) / 2);
+                                const cy = toPdfY(el.position.y);
+                                const lines = textStr.split('\n');
+                                const lineSpacingMm = 4.0;
+                                const totalH = (lines.length - 1) * lineSpacingMm;
+                                const startOffset = -totalH / 2;
+
+                                const rad = (tAngle * Math.PI) / 180;
+                                const cos = Math.cos(rad);
+                                const sin = Math.sin(rad);
+
+                                lines.forEach((line, idx) => {
+                                    if (!line.trim()) return;
+                                    const dyLocal = startOffset + idx * lineSpacingMm;
+                                    const lineCx = cx - dyLocal * sin;
+                                    const lineCy = cy + dyLocal * cos;
+                                    drawRotatedPillText(line, lineCx, lineCy, tAngle, 9.5, txtColor, null, null);
+                                });
                             }
                             if (el.type === 'terminacion') {
                                 const symbolDef = TerminacionSymbols[el.subtype] || TerminacionSymbols['x'];
                                 const x = toPdfX(el.position.x);
                                 const y = toPdfY(el.position.y);
-                                symbolDef.renderPDF(doc, x, y, el.angle || 0, scale, el.size || 18);
+                                symbolDef.renderPDF(doc, x, y, el.angle || 0, scale, el.size || 18, el.color);
                             }
                         });
                     }
@@ -6172,21 +7016,44 @@
                                 let upNx = -dy / len;
                                 let upNy = dx / len;
                                 if (upNy > 0 || (Math.abs(upNy) < 1e-6 && upNx > 0)) { upNx = -upNx; upNy = -upNy; }
-                                pts.push({ x: midX + upNx * 8, y: midY + upNy * 8 });
+                                pts.push({ x: midX + upNx * 16, y: midY + upNy * 16 });
                             }
                             if (el.type === 'cota') {
                                 pts.push(el.start, el.end);
                                 const geom = Renderer.getCotaGeometry(el);
-                                pts.push({ x: geom.cotaLine.x1, y: geom.cotaLine.y1 }, { x: geom.cotaLine.x2, y: geom.cotaLine.y2 });
+                                pts.push({ x: geom.cotaLine.x1, y: geom.cotaLine.y1 }, { x: geom.cotaLine.x2, y: geom.cotaLine.y2 }, { x: geom.mid.x, y: geom.mid.y });
                             }
                             if (el.type === 'polyline' || el.type === 'pencil') pts.push(...el.points);
                             if (el.type === 'rect' || el.type === 'square' || el.type === 'cooktop' || el.type === 'sink') pts.push(el.start, el.end);
+                            if (el.type === 'z_shape' || el.type === 'lines_45') {
+                                const minP = { x: Math.min(el.start.x, el.end.x), y: Math.min(el.start.y, el.end.y) };
+                                const maxP = { x: Math.max(el.start.x, el.end.x), y: Math.max(el.start.y, el.end.y) };
+                                const cx = (minP.x + maxP.x) / 2;
+                                const cy = (minP.y + maxP.y) / 2;
+                                const hw = (maxP.x - minP.x) / 2;
+                                const hh = (maxP.y - minP.y) / 2;
+                                const rad = ((el.angle || 0) * Math.PI) / 180;
+                                const cos = Math.cos(rad);
+                                const sin = Math.sin(rad);
+                                pts.push(
+                                    { x: cx + (-hw) * cos - (-hh) * sin, y: cy + (-hw) * sin + (-hh) * cos },
+                                    { x: cx + (hw) * cos - (-hh) * sin, y: cy + (hw) * sin + (-hh) * cos },
+                                    { x: cx + (hw) * cos - (hh) * sin, y: cy + (hw) * sin + (hh) * cos },
+                                    { x: cx + (-hw) * cos - (hh) * sin, y: cy + (-hw) * sin + (hh) * cos }
+                                );
+                            }
                             if (el.type === 'circle') {
                                 pts.push({ x: el.center.x - el.radius, y: el.center.y - el.radius });
                                 pts.push({ x: el.center.x + el.radius, y: el.center.y + el.radius });
                             }
                             if (el.type === 'triangle') pts.push(...el.points);
-                            if (el.type === 'text' || el.type === 'terminacion') pts.push(el.position);
+                            if (el.type === 'text') {
+                                const approxW = Math.max(35, (el.text || '').length * 8);
+                                const rad = ((el.angle || 0) * Math.PI) / 180;
+                                pts.push(el.position);
+                                pts.push({ x: el.position.x + approxW * Math.cos(rad), y: el.position.y + approxW * Math.sin(rad) });
+                            }
+                            if (el.type === 'terminacion') pts.push(el.position);
                             pts.forEach(p => {
                                 if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
                                 if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
@@ -6608,6 +7475,37 @@
                 }
             });
 
+            // Eventos de la modal de medidas de hornallas / anafes
+            const cooktopModalClose = document.getElementById('cooktop-modal-close');
+            if (cooktopModalClose) cooktopModalClose.addEventListener('click', () => CooktopDimensionModal.close());
+            const cooktopModalCancel = document.getElementById('cooktop-modal-cancel');
+            if (cooktopModalCancel) cooktopModalCancel.addEventListener('click', () => CooktopDimensionModal.close());
+            const cooktopModalApply = document.getElementById('cooktop-modal-apply');
+            if (cooktopModalApply) cooktopModalApply.addEventListener('click', () => CooktopDimensionModal.apply());
+            const cooktopModal = document.getElementById('cooktop-modal');
+            if (cooktopModal) {
+                cooktopModal.addEventListener('click', (e) => {
+                    if (e.target.id === 'cooktop-modal') CooktopDimensionModal.close();
+                });
+            }
+            document.querySelectorAll('#cooktop-model-picker .cooktop-model-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const m = btn.getAttribute('data-model');
+                    if (m) CooktopDimensionModal.setModel(m);
+                });
+            });
+            ['cooktop-input-w', 'cooktop-input-h'].forEach(id => {
+                const inp = document.getElementById(id);
+                if (inp) {
+                    inp.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            CooktopDimensionModal.apply();
+                        }
+                    });
+                }
+            });
+
 
             const authorInput = document.getElementById('export-author');
             if (authorInput) {
@@ -6951,7 +7849,9 @@
                         );
                     } else if (el.type === 'sink') {
                         SinkDimensionModal.open(el);
-                    } else if (el.type === 'cooktop' || el.type === 'rect' || el.type === 'square') {
+                    } else if (el.type === 'cooktop') {
+                        CooktopDimensionModal.open(el);
+                    } else if (el.type === 'rect' || el.type === 'square') {
                         const w = Math.round(Math.abs(el.end.x - el.start.x));
                         const h = Math.round(Math.abs(el.end.y - el.start.y));
                         const center = { x: (el.start.x + el.end.x) / 2, y: (el.start.y + el.end.y) / 2 };
@@ -7014,12 +7914,42 @@
                     e.stopPropagation();
                     if (!App.ui.selectedId) return;
                     const el = App.data.elements.find(x => x.id === App.ui.selectedId);
-                    if (!el || el.type !== 'terminacion') return;
-                    HistoryManager.pushState();
-                    el.angle = ((Math.round(el.angle || 0) + 45) % 360);
+                    if (!el) return;
+                    if (el.type === 'terminacion' || el.type === 'text' || el.type === 'z_shape' || el.type === 'lines_45') {
+                        HistoryManager.pushState();
+                        el.angle = ((Math.round(el.angle || 0) + 45) % 360);
+                        Renderer.renderAll();
+                        UI.updateSelectionBar();
+                        UI.showToast(`Giro: ${el.angle}°`);
+                    }
+                });
+            }
+
+            // Selector de Color libre para cualquier elemento del plano (Requerimiento 4)
+            const btnSelColor = document.getElementById('btn-sel-color');
+            const selColorInput = document.getElementById('sel-color-input');
+            const selColorPreview = document.getElementById('sel-color-preview');
+            if (btnSelColor && selColorInput) {
+                btnSelColor.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selColorInput.click();
+                });
+                const applyColor = (color) => {
+                    if (!App.ui.selectedId) return;
+                    const el = App.data.elements.find(x => x.id === App.ui.selectedId);
+                    if (!el) return;
+                    el.color = color;
+                    if (selColorPreview) selColorPreview.style.background = color;
                     Renderer.renderAll();
-                    UI.updateSelectionBar();
-                    UI.showToast(`Giro: ${el.angle}°`);
+                };
+                selColorInput.addEventListener('input', (e) => {
+                    applyColor(e.target.value);
+                });
+                selColorInput.addEventListener('change', (e) => {
+                    if (!App.ui.selectedId) return;
+                    HistoryManager.pushState();
+                    applyColor(e.target.value);
+                    UI.showToast("Color actualizado");
                 });
             }
 
