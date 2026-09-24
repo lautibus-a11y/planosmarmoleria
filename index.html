@@ -84,6 +84,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            white-space: nowrap;
         }
 
         .btn:hover:not(:disabled) { background: var(--c-active-bg); }
@@ -1299,8 +1300,8 @@
                 <button class="btn" id="btn-undo" title="Deshacer" disabled><span class="btn-symbol">↺</span><span class="btn-text"> Deshacer</span></button>
                 <button class="btn" id="btn-redo" title="Rehacer" disabled><span class="btn-symbol">↻</span><span class="btn-text"> Rehacer</span></button>
                 <div class="btn-divider"></div>
-                <button class="btn" id="btn-cloud-save" title="Guardar en la nube y generar enlace"><span class="btn-symbol">☁️</span><span class="btn-text"> Guardar</span></button>
-                <button class="btn" id="btn-cloud-list" title="Mis planos guardados en la nube"><span class="btn-symbol">📂</span><span class="btn-text"> Mis Planos</span></button>
+                <button class="btn" id="btn-cloud-save" title="Guardar plano en la nube"><span class="btn-symbol">☁️</span><span class="btn-text"> Guardar Plano</span></button>
+                <button class="btn" id="btn-cloud-list" title="Ver planos guardados en la nube"><span class="btn-symbol">📂</span><span class="btn-text"> Ver Planos Guardados</span></button>
                 <div class="btn-divider"></div>
                 <button class="btn" id="btn-clear" title="Nuevo plano"><span class="btn-symbol">＋</span><span class="btn-text"> Nuevo</span></button>
                 <button class="btn primary" id="btn-export" title="Exportar plano"><span class="btn-symbol">📤</span><span class="btn-text"> Exportar ▼</span></button>
@@ -1784,7 +1785,7 @@
                     <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px;">
                         <button type="button" class="btn" id="cloud-save-cancel">Cancelar</button>
                         <button type="button" class="btn primary" id="cloud-save-submit">
-                            <span id="cloud-save-btn-text">☁️ Subir a la Nube (R2)</span>
+                            <span id="cloud-save-btn-text">☁️ Guardar Plano en la Nube</span>
                         </button>
                     </div>
                 </div>
@@ -2367,7 +2368,7 @@
                             UI.showToast("❌ Error al guardar: " + (result.message || res.statusText));
                         }
                         submitBtn.disabled = false;
-                        btnText.textContent = "☁️ Subir a la Nube (R2)";
+                        btnText.textContent = "☁️ Guardar Plano en la Nube";
                         return;
                     }
 
@@ -2393,7 +2394,7 @@
                     UI.showToast("❌ Error de conexión al guardar");
                 } finally {
                     submitBtn.disabled = false;
-                    btnText.textContent = "☁️ Subir a la Nube (R2)";
+                    btnText.textContent = "☁️ Guardar Plano en la Nube";
                 }
             },
 
