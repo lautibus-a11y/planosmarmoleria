@@ -597,6 +597,7 @@
         .action-icon.pdf { background: #ffebee; color: #c62828; }
         .action-icon.word { background: #e3f2fd; color: #1565c0; }
         .action-icon.whatsapp { background: #e8f5e9; color: #2e7d32; }
+        .action-icon.cloud { background: #e0f2fe; color: #0284c7; }
         .action-text {
             flex: 1;
         }
@@ -628,6 +629,71 @@
             border-top: 1px solid var(--c-border);
             margin-top: 2px;
         }
+
+        /* Modales de Nube y R2 */
+        #cloud-save-modal, #cloud-list-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            padding: 16px;
+        }
+        #cloud-save-modal.active, #cloud-list-modal.active { display: flex; }
+        .cloud-plan-card {
+            background: #fff;
+            border: 1px solid var(--c-border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.15s ease;
+            gap: 12px;
+        }
+        .cloud-plan-card:hover {
+            border-color: #000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .cloud-plan-card.current-active {
+            border-color: #0284c7;
+            background: #f0f9ff;
+        }
+        .cloud-plan-info { flex: 1; min-width: 0; }
+        .cloud-plan-title {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .cloud-plan-tag {
+            font-size: 10.5px;
+            font-weight: 500;
+            background: #f0f0f0;
+            color: #444;
+            padding: 2px 7px;
+            border-radius: 12px;
+        }
+        .cloud-plan-meta {
+            font-size: 12px;
+            color: var(--c-text-muted);
+            margin-top: 4px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .cloud-plan-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 6px; cursor: pointer; }
+        .btn.danger { color: #c62828; }
+        .btn.danger:hover { background: #ffebee; }
 
         /* Barra de ayuda flotante para cortar/terminar línea (iPad, touch y desktop) */
         .drawing-helper-bar {
@@ -1233,6 +1299,9 @@
                 <button class="btn" id="btn-undo" title="Deshacer" disabled><span class="btn-symbol">↺</span><span class="btn-text"> Deshacer</span></button>
                 <button class="btn" id="btn-redo" title="Rehacer" disabled><span class="btn-symbol">↻</span><span class="btn-text"> Rehacer</span></button>
                 <div class="btn-divider"></div>
+                <button class="btn" id="btn-cloud-save" title="Guardar en la nube y generar enlace"><span class="btn-symbol">☁️</span><span class="btn-text"> Guardar</span></button>
+                <button class="btn" id="btn-cloud-list" title="Mis planos guardados en la nube"><span class="btn-symbol">📂</span><span class="btn-text"> Mis Planos</span></button>
+                <div class="btn-divider"></div>
                 <button class="btn" id="btn-clear" title="Nuevo plano"><span class="btn-symbol">＋</span><span class="btn-text"> Nuevo</span></button>
                 <button class="btn primary" id="btn-export" title="Exportar plano"><span class="btn-symbol">📤</span><span class="btn-text"> Exportar ▼</span></button>
             </div>
@@ -1651,12 +1720,119 @@
                         </div>
                         <span class="action-arrow">→</span>
                     </button>
+
+                    <!-- Opción 4: Guardar en la Nube -->
+                    <button type="button" class="export-action-btn" id="btn-modal-cloud">
+                        <div class="action-icon cloud">☁️</div>
+                        <div class="action-text">
+                            <div class="title">Guardar en la Nube y Crear Enlace</div>
+                            <div class="desc">Guarda en Cloudflare R2 y genera un link interactivo para celular o tablet</div>
+                        </div>
+                        <span class="action-arrow">→</span>
+                    </button>
                 </div>
 
                 <div class="export-footer">
                     <button type="button" class="btn" id="btn-modal-json" style="font-size: 12px; color: var(--c-text-muted);">💾 Respaldo JSON</button>
                     <button type="button" class="btn" id="export-modal-cancel">Cancelar</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Guardar en la Nube (R2) -->
+    <div id="cloud-save-modal">
+        <div class="export-card">
+            <div class="export-header">
+                <h2><span>☁️</span> Guardar Plano en la Nube</h2>
+                <button class="export-close-btn" id="cloud-save-close" title="Cerrar">&times;</button>
+            </div>
+            <div class="export-body">
+                <!-- Paso 1: Formulario de datos -->
+                <div id="cloud-save-form-step">
+                    <div class="form-group">
+                        <label for="cloud-author">
+                            <span>👤 ¿Quién hizo el plano? <strong style="color: #c62828;">*</strong></span>
+                            <span id="cloud-author-error" style="color: #c62828; font-size: 11px; display: none;">Completá este campo</span>
+                        </label>
+                        <input type="text" id="cloud-author" placeholder="Nombre del técnico o marmolero">
+                    </div>
+                    <div class="form-group">
+                        <label for="cloud-client"><span>👥 Nombre del Cliente</span></label>
+                        <input type="text" id="cloud-client" placeholder="Ej: Familia Rossi / Arq. Roberto Gómez">
+                    </div>
+                    <div class="form-group">
+                        <label for="cloud-sector"><span>🏠 Sector de la Casa</span></label>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="cloud-sector-preset" style="max-width: 150px; flex-shrink: 0;">
+                                <option value="Cocina">Cocina</option>
+                                <option value="Baño Principal">Baño Principal</option>
+                                <option value="Toilette">Toilette</option>
+                                <option value="Lavadero">Lavadero</option>
+                                <option value="Quincho / Parrilla">Quincho</option>
+                                <option value="Isla / Barra">Isla / Barra</option>
+                                <option value="Otro">Otro...</option>
+                            </select>
+                            <input type="text" id="cloud-sector" placeholder="Sector (ej: Cocina)" value="Cocina" style="flex: 1;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="cloud-project-name"><span>📋 Proyecto / Detalle de Pieza</span></label>
+                        <input type="text" id="cloud-project-name" placeholder="Ej: Mesada principal y regrueso">
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px;">
+                        <button type="button" class="btn" id="cloud-save-cancel">Cancelar</button>
+                        <button type="button" class="btn primary" id="cloud-save-submit">
+                            <span id="cloud-save-btn-text">☁️ Subir a la Nube (R2)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Paso 2: Éxito y Enlace generado -->
+                <div id="cloud-save-success-step" style="display: none; padding: 10px 0;">
+                    <div style="text-align: center; margin-bottom: 16px;">
+                        <div style="font-size: 40px; margin-bottom: 6px;">🎉</div>
+                        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">¡Plano guardado con éxito!</h3>
+                        <p style="font-size: 12.5px; color: var(--c-text-muted); line-height: 1.4;">
+                            Ya está alojado en Cloudflare R2. Podés abrirlo en cualquier teléfono, tablet o compartirlo con el cliente:
+                        </p>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <input type="text" id="cloud-share-url" readonly style="font-family: monospace; font-size: 12px; background: #f8f9fa; border: 1.5px solid #0284c7; padding: 10px 12px; border-radius: 8px; width: 100%; color: #0369a1; font-weight: 600;" onfocus="this.select()">
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button type="button" class="btn primary" id="cloud-btn-copy-link" style="justify-content: center; padding: 10px; font-size: 13.5px;">
+                            📋 Copiar Enlace
+                        </button>
+                        <button type="button" class="btn" id="cloud-btn-share-whatsapp" style="justify-content: center; padding: 10px; background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; font-weight: 600;">
+                            💬 Compartir por WhatsApp
+                        </button>
+                        <button type="button" class="btn" id="cloud-save-done" style="justify-content: center; margin-top: 4px;">
+                            ✓ Finalizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Mis Planos en la Nube -->
+    <div id="cloud-list-modal">
+        <div class="export-card" style="max-width: 600px; max-height: 85vh;">
+            <div class="export-header">
+                <h2><span>📂</span> Mis Planos en la Nube</h2>
+                <button class="export-close-btn" id="cloud-list-close" title="Cerrar">&times;</button>
+            </div>
+            <div style="padding: 14px 20px 8px 20px; background: #fafafa; border-bottom: 1px solid var(--c-border);">
+                <input type="text" id="cloud-search-input" placeholder="🔍 Buscar por cliente, proyecto, sector o técnico..." style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--c-border); font-size: 13px;">
+            </div>
+            <div class="export-body" id="cloud-plans-container" style="overflow-y: auto; max-height: 52vh; padding: 16px 20px;">
+                <!-- Lista dinámica generada por CloudStorageManager -->
+            </div>
+            <div class="export-footer" style="padding: 12px 20px; background: #fafafa;">
+                <button type="button" class="btn" id="cloud-refresh-btn" style="font-size: 12px;">🔄 Actualizar lista</button>
+                <button type="button" class="btn" id="cloud-list-done">Cerrar</button>
             </div>
         </div>
     </div>
@@ -2054,6 +2230,391 @@
                 } catch (e) { console.error("Error loading", e); }
             }
         };
+
+        // --- 1.4 GESTOR DE PERSISTENCIA EN LA NUBE (CLOUDFLARE R2) ---
+        const CloudStorageManager = {
+            currentPlanId: null,
+            _cachedList: [],
+
+            getApiUrl(path = '') {
+                const base = window.location.protocol.startsWith('http') ? '' : 'https://planosmarmoleria.pages.dev';
+                return `${base}/api/planos${path}`;
+            },
+
+            init() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const planId = urlParams.get('p') || urlParams.get('id');
+                if (planId) {
+                    this.currentPlanId = planId;
+                    this.loadPlan(planId, false);
+                }
+            },
+
+            openSaveModal() {
+                const modal = document.getElementById('cloud-save-modal');
+                const authorInput = document.getElementById('cloud-author');
+                const clientInput = document.getElementById('cloud-client');
+                const sectorInput = document.getElementById('cloud-sector');
+                const sectorPreset = document.getElementById('cloud-sector-preset');
+                const projectInput = document.getElementById('cloud-project-name');
+                const errorSpan = document.getElementById('cloud-author-error');
+                const formStep = document.getElementById('cloud-save-form-step');
+                const successStep = document.getElementById('cloud-save-success-step');
+
+                formStep.style.display = 'block';
+                successStep.style.display = 'none';
+
+                const savedAuthor = localStorage.getItem('marmoleria_author') || (App.data.project && App.data.project.author) || '';
+                const savedClient = localStorage.getItem('marmoleria_client') || (App.data.project && App.data.project.client) || '';
+                const savedSector = localStorage.getItem('marmoleria_sector') || (App.data.project && App.data.project.sector) || 'Cocina';
+
+                authorInput.value = savedAuthor;
+                clientInput.value = savedClient;
+                sectorInput.value = savedSector;
+                if (sectorPreset) {
+                    if (['Cocina', 'Baño Principal', 'Toilette', 'Lavadero', 'Quincho / Parrilla', 'Isla / Barra'].includes(savedSector)) {
+                        sectorPreset.value = savedSector;
+                    } else if (savedSector) {
+                        sectorPreset.value = 'Otro';
+                    }
+                }
+                projectInput.value = (App.data.project && App.data.project.name) || 'Mesada';
+
+                authorInput.classList.remove('input-error');
+                if (errorSpan) errorSpan.style.display = 'none';
+
+                modal.classList.add('active');
+                if (!savedAuthor) {
+                    authorInput.focus();
+                } else if (!savedClient) {
+                    clientInput.focus();
+                } else {
+                    projectInput.focus();
+                }
+            },
+
+            closeSaveModal() {
+                const modal = document.getElementById('cloud-save-modal');
+                modal.classList.remove('active');
+            },
+
+            async save() {
+                const authorInput = document.getElementById('cloud-author');
+                const clientInput = document.getElementById('cloud-client');
+                const sectorInput = document.getElementById('cloud-sector');
+                const projectInput = document.getElementById('cloud-project-name');
+                const errorSpan = document.getElementById('cloud-author-error');
+                const submitBtn = document.getElementById('cloud-save-submit');
+                const btnText = document.getElementById('cloud-save-btn-text');
+
+                const author = authorInput.value.trim();
+                const client = clientInput.value.trim();
+                const sector = sectorInput.value.trim() || 'Cocina';
+                const projectName = projectInput.value.trim() || 'Plano de Marmolería';
+
+                if (!author) {
+                    authorInput.classList.add('input-error');
+                    if (errorSpan) errorSpan.style.display = 'inline';
+                    authorInput.focus();
+                    UI.showToast("⚠️ Indicá quién hizo el plano");
+                    return;
+                }
+
+                authorInput.classList.remove('input-error');
+                if (errorSpan) errorSpan.style.display = 'none';
+
+                // Guardar preferencias en localStorage
+                localStorage.setItem('marmoleria_author', author);
+                if (client) localStorage.setItem('marmoleria_client', client);
+                if (sector) localStorage.setItem('marmoleria_sector', sector);
+
+                if (!App.data.project) App.data.project = {};
+                App.data.project.author = author;
+                App.data.project.client = client;
+                App.data.project.sector = sector;
+                App.data.project.name = projectName;
+
+                submitBtn.disabled = true;
+                btnText.textContent = "⏳ Guardando en R2...";
+
+                try {
+                    const payload = {
+                        id: this.currentPlanId || App.data.id || null,
+                        project: {
+                            name: projectName,
+                            author: author,
+                            client: client,
+                            sector: sector,
+                            date: App.data.project.date || new Date().toISOString()
+                        },
+                        elements: App.data.elements,
+                        settings: App.settings,
+                        viewport: App.viewport
+                    };
+
+                    const res = await fetch(this.getApiUrl(), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await res.json();
+
+                    if (!res.ok || !result.success) {
+                        if (result.error === 'R2_NOT_CONFIGURED') {
+                            alert(result.message);
+                        } else {
+                            UI.showToast("❌ Error al guardar: " + (result.message || res.statusText));
+                        }
+                        submitBtn.disabled = false;
+                        btnText.textContent = "☁️ Subir a la Nube (R2)";
+                        return;
+                    }
+
+                    this.currentPlanId = result.id;
+                    App.data.id = result.id;
+                    StorageManager.save();
+
+                    const shareUrl = window.location.protocol.startsWith('http')
+                        ? `${window.location.origin}${window.location.pathname}?p=${result.id}`
+                        : `https://planosmarmoleria.pages.dev/?p=${result.id}`;
+
+                    if (window.location.protocol.startsWith('http')) {
+                        window.history.replaceState(null, '', `?p=${result.id}`);
+                    }
+
+                    document.getElementById('cloud-save-form-step').style.display = 'none';
+                    document.getElementById('cloud-save-success-step').style.display = 'block';
+                    document.getElementById('cloud-share-url').value = shareUrl;
+
+                    UI.showToast("✅ Plano guardado en Cloudflare R2");
+                } catch (err) {
+                    console.error('Error guardando en R2:', err);
+                    UI.showToast("❌ Error de conexión al guardar");
+                } finally {
+                    submitBtn.disabled = false;
+                    btnText.textContent = "☁️ Subir a la Nube (R2)";
+                }
+            },
+
+            async openListModal() {
+                const modal = document.getElementById('cloud-list-modal');
+                const container = document.getElementById('cloud-plans-container');
+                const searchInput = document.getElementById('cloud-search-input');
+                if (searchInput) searchInput.value = '';
+                modal.classList.add('active');
+                container.innerHTML = '<div style="text-align: center; padding: 30px; color: var(--c-text-muted);">⏳ Consultando Cloudflare R2...</div>';
+                await this.refreshList();
+            },
+
+            closeListModal() {
+                const modal = document.getElementById('cloud-list-modal');
+                modal.classList.remove('active');
+            },
+
+            async refreshList() {
+                const container = document.getElementById('cloud-plans-container');
+                try {
+                    const res = await fetch(this.getApiUrl());
+                    const data = await res.json();
+
+                    if (!res.ok) {
+                        if (data.error === 'R2_NOT_CONFIGURED') {
+                            container.innerHTML = `
+                                <div style="background: #fff3cd; color: #856404; padding: 16px; border-radius: 8px; font-size: 13px; line-height: 1.5; border: 1px solid #ffeeba;">
+                                    <strong>⚙️ Vinculación requerida en Cloudflare:</strong><br>
+                                    En tu panel de Cloudflare ve a <strong>Pages &gt; planosmarmoleria &gt; Settings &gt; Functions &gt; R2 bucket bindings</strong> y agrega:<br>
+                                    • Variable name: <code>PLANOS_BUCKET</code><br>
+                                    • R2 bucket: <code>planos-marmoleria</code> (o el nombre de tu bucket).
+                                </div>
+                            `;
+                            return;
+                        }
+                        container.innerHTML = `<div style="color: #c62828; text-align: center; padding: 20px;">Error al cargar lista: ${data.message || res.statusText}</div>`;
+                        return;
+                    }
+
+                    this._cachedList = Array.isArray(data) ? data : [];
+                    this.renderList(this._cachedList);
+                } catch (err) {
+                    console.error('Error cargando lista de R2:', err);
+                    container.innerHTML = '<div style="color: #c62828; text-align: center; padding: 20px;">Error de red al consultar la nube.</div>';
+                }
+            },
+
+            renderList(planos) {
+                const container = document.getElementById('cloud-plans-container');
+                if (!planos || planos.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px 20px; color: var(--c-text-muted);">
+                            <div style="font-size: 36px; margin-bottom: 8px;">📭</div>
+                            <div style="font-weight: 600; font-size: 14px; color: var(--c-text);">No hay planos guardados en la nube todavía</div>
+                            <div style="font-size: 12px; margin-top: 4px;">Diseñá un plano y tocalo con el botón "☁️ Guardar" para subirlo.</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                planos.forEach(p => {
+                    const dateStr = new Date(p.updatedAt).toLocaleDateString('es-AR', {
+                        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                    });
+                    const isCurrent = this.currentPlanId === p.id;
+                    const safeName = (p.projectName || 'Mesada').replace(/'/g, "\\'");
+                    html += `
+                        <div class="cloud-plan-card ${isCurrent ? 'current-active' : ''}" data-id="${p.id}">
+                            <div class="cloud-plan-info">
+                                <div class="cloud-plan-title">
+                                    ${p.projectName || 'Mesada'}
+                                    <span class="cloud-plan-tag">${p.sector || 'Cocina'}</span>
+                                    ${isCurrent ? '<span style="background: #e0f2fe; color: #0284c7; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700;">ACTUAL</span>' : ''}
+                                </div>
+                                <div class="cloud-plan-meta">
+                                    <span>👤 ${p.client && p.client !== '-' ? p.client : 'Cliente sin esp.'}</span>
+                                    <span>✍️ ${p.author || 'Técnico'}</span>
+                                    <span>📐 ${p.elementCount || 0} piezas</span>
+                                    <span>📅 ${dateStr}</span>
+                                </div>
+                            </div>
+                            <div class="cloud-plan-actions">
+                                <button type="button" class="btn primary btn-sm" onclick="window.CloudStorageManager.loadPlan('${p.id}', true)" title="Abrir este plano">
+                                    Abrir
+                                </button>
+                                <button type="button" class="btn btn-sm" onclick="window.CloudStorageManager.copyShareLink('${p.id}')" title="Copiar enlace directo">
+                                    🔗
+                                </button>
+                                <button type="button" class="btn btn-sm danger" onclick="window.CloudStorageManager.deletePlan('${p.id}', '${safeName}')" title="Eliminar de la nube">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            },
+
+            filterList(query) {
+                if (!this._cachedList) return;
+                const q = query.trim().toLowerCase();
+                if (!q) {
+                    this.renderList(this._cachedList);
+                    return;
+                }
+                const filtered = this._cachedList.filter(p => {
+                    return (p.projectName && p.projectName.toLowerCase().includes(q)) ||
+                           (p.client && p.client.toLowerCase().includes(q)) ||
+                           (p.author && p.author.toLowerCase().includes(q)) ||
+                           (p.sector && p.sector.toLowerCase().includes(q)) ||
+                           (p.id && p.id.toLowerCase().includes(q));
+                });
+                this.renderList(filtered);
+            },
+
+            async loadPlan(id, fromUserClick = false) {
+                if (fromUserClick && App.data.elements.length > 0) {
+                    const conf = confirm("¿Deseas abrir este plano? Cualquier cambio no guardado en el plano actual se reemplazará.");
+                    if (!conf) return;
+                }
+
+                UI.showToast("⏳ Descargando plano de R2...");
+                try {
+                    const res = await fetch(this.getApiUrl(`/${id}`));
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        UI.showToast("❌ " + (err.message || "No se pudo cargar el plano"));
+                        return;
+                    }
+
+                    const data = await res.json();
+                    this.currentPlanId = id;
+
+                    App.data = {
+                        id: data.id || id,
+                        project: data.project || { name: 'Plano', date: new Date().toISOString() },
+                        elements: data.elements || []
+                    };
+
+                    if (data.settings) App.settings = { ...App.settings, ...data.settings };
+                    if (data.viewport) App.viewport = { ...App.viewport, ...data.viewport };
+
+                    StorageManager.save();
+
+                    if (window.location.protocol.startsWith('http')) {
+                        window.history.replaceState(null, '', `?p=${id}`);
+                    }
+
+                    ViewportManager.updateTransform();
+                    Renderer.renderAll();
+                    HistoryManager.pushState();
+
+                    if (fromUserClick) this.closeListModal();
+
+                    const pName = App.data.project.name || 'Plano';
+                    const client = App.data.project.client ? ` - ${App.data.project.client}` : '';
+                    document.title = `${pName}${client} | Marmolería Benjamín`;
+
+                    UI.showToast(`✅ Plano "${pName}" cargado`);
+                } catch (err) {
+                    console.error('Error cargando plano:', err);
+                    UI.showToast("❌ Error de conexión al abrir el plano");
+                }
+            },
+
+            async deletePlan(id, name) {
+                const conf = confirm(`¿Estás seguro de que deseas eliminar permanentemente el plano "${name || id}" de la nube?`);
+                if (!conf) return;
+
+                try {
+                    const res = await fetch(this.getApiUrl(`/${id}`), { method: 'DELETE' });
+                    if (res.ok) {
+                        UI.showToast("🗑️ Plano eliminado de la nube");
+                        if (this.currentPlanId === id) {
+                            this.currentPlanId = null;
+                            if (window.location.protocol.startsWith('http')) {
+                                window.history.replaceState(null, '', window.location.pathname);
+                            }
+                        }
+                        await this.refreshList();
+                    } else {
+                        UI.showToast("❌ No se pudo eliminar");
+                    }
+                } catch (err) {
+                    UI.showToast("❌ Error al eliminar");
+                }
+            },
+
+            copyShareLink(id) {
+                const planId = id || this.currentPlanId;
+                if (!planId) {
+                    UI.showToast("⚠️ Primero guarda el plano en la nube");
+                    return;
+                }
+                const url = window.location.protocol.startsWith('http')
+                    ? `${window.location.origin}${window.location.pathname}?p=${planId}`
+                    : `https://planosmarmoleria.pages.dev/?p=${planId}`;
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(url).then(() => {
+                        UI.showToast("📋 Enlace copiado al portapapeles");
+                    }).catch(() => {
+                        prompt("Copia este enlace para compartir:", url);
+                    });
+                } else {
+                    prompt("Copia este enlace para compartir:", url);
+                }
+            },
+
+            shareWhatsApp() {
+                const shareUrl = document.getElementById('cloud-share-url').value;
+                const proj = (App.data.project && App.data.project.name) || 'Plano de Marmolería';
+                const client = (App.data.project && App.data.project.client) ? ` para ${App.data.project.client}` : '';
+                const msg = encodeURIComponent(`Hola! Te comparto el plano técnico interactivo de Marmolería Benjamín (${proj}${client}):\n\n${shareUrl}\n\nPodés abrirlo en cualquier dispositivo para ver medidas y detalles.`);
+                window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
+            }
+        };
+
+        window.CloudStorageManager = CloudStorageManager;
 
         const HistoryManager = {
             pushState() {
@@ -7416,13 +7977,22 @@
             // Botones Superiores
             document.getElementById('btn-undo').addEventListener('click', () => HistoryManager.undo());
             document.getElementById('btn-redo').addEventListener('click', () => HistoryManager.redo());
+            document.getElementById('btn-cloud-save').addEventListener('click', () => CloudStorageManager.openSaveModal());
+            document.getElementById('btn-cloud-list').addEventListener('click', () => CloudStorageManager.openListModal());
             document.getElementById('btn-clear').addEventListener('click', () => {
                 if(confirm("¿Comenzar un plano nuevo? (Se perderá lo no guardado)")) {
                     App.data.elements = [];
+                    App.data.id = null;
+                    App.data.project = { name: "Mesada", date: new Date().toISOString() };
+                    CloudStorageManager.currentPlanId = null;
+                    if (window.location.protocol.startsWith('http')) {
+                        window.history.replaceState(null, '', window.location.pathname);
+                    }
                     HistoryManager.clear();
                     Renderer.renderAll();
                     App.viewport = {x:0, y:0, scale:1};
                     ViewportManager.updateTransform();
+                    document.title = "Marmolería Benjamín";
                 }
             });
             document.getElementById('btn-grid').addEventListener('click', (e) => {
@@ -7556,6 +8126,44 @@
                 ExportManager.exportJSON();
                 ExportManager.closeModal();
             });
+
+            document.getElementById('btn-modal-cloud').addEventListener('click', () => {
+                ExportManager.closeModal();
+                CloudStorageManager.openSaveModal();
+            });
+
+            // Eventos del modal Guardar en la Nube
+            document.getElementById('cloud-save-close').addEventListener('click', () => CloudStorageManager.closeSaveModal());
+            document.getElementById('cloud-save-cancel').addEventListener('click', () => CloudStorageManager.closeSaveModal());
+            document.getElementById('cloud-save-done').addEventListener('click', () => CloudStorageManager.closeSaveModal());
+            document.getElementById('cloud-save-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'cloud-save-modal') CloudStorageManager.closeSaveModal();
+            });
+            document.getElementById('cloud-save-submit').addEventListener('click', () => CloudStorageManager.save());
+            document.getElementById('cloud-btn-copy-link').addEventListener('click', () => CloudStorageManager.copyShareLink());
+            document.getElementById('cloud-btn-share-whatsapp').addEventListener('click', () => CloudStorageManager.shareWhatsApp());
+
+            const cloudSectorPreset = document.getElementById('cloud-sector-preset');
+            const cloudSectorInput = document.getElementById('cloud-sector');
+            if (cloudSectorPreset && cloudSectorInput) {
+                cloudSectorPreset.addEventListener('change', () => {
+                    if (cloudSectorPreset.value && cloudSectorPreset.value !== 'Otro') {
+                        cloudSectorInput.value = cloudSectorPreset.value;
+                    } else if (cloudSectorPreset.value === 'Otro') {
+                        cloudSectorInput.value = '';
+                        cloudSectorInput.focus();
+                    }
+                });
+            }
+
+            // Eventos del modal Mis Planos en la Nube
+            document.getElementById('cloud-list-close').addEventListener('click', () => CloudStorageManager.closeListModal());
+            document.getElementById('cloud-list-done').addEventListener('click', () => CloudStorageManager.closeListModal());
+            document.getElementById('cloud-list-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'cloud-list-modal') CloudStorageManager.closeListModal();
+            });
+            document.getElementById('cloud-refresh-btn').addEventListener('click', () => CloudStorageManager.refreshList());
+            document.getElementById('cloud-search-input').addEventListener('input', (e) => CloudStorageManager.filterList(e.target.value));
 
             // Clic derecho para cortar y finalizar trazado de líneas o figuras (Desktop y Trackpad)
             window.addEventListener('contextmenu', (e) => {
@@ -8049,6 +8657,7 @@
             StorageManager.load();
             ViewportManager.updateTransform();
             UI.setTool('draw'); // Herramienta por defecto
+            CloudStorageManager.init(); // Verificar enlace compartido en URL (?p=xxx)
         }
 
         window.onload = init;

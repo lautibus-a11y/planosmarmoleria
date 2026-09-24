@@ -29,7 +29,11 @@ Diseñada para funcionar tanto en PC de escritorio como en tablets y iPads para 
 
 ### 3. Historial y Persistencia
 - Deshacer (`Undo`) y Rehacer (`Redo`) completo.
-- Autoguardado continuo en el navegador (`LocalStorage`).
+- Autoguardado continuo en el navegador (`LocalStorage`) para resiliencia offline en obra.
+- **☁️ Persistencia Real en la Nube (Cloudflare R2 + Pages Functions)**:
+  - Guardado de proyectos en la nube con ID único corto (ej: `?p=p-k8x2f`).
+  - Panel "📂 Mis Planos" con buscador en tiempo real, fecha, cliente y piezas.
+  - Enlaces directos para abrir o enviar por WhatsApp a clientes y colocadores.
 
 ### 4. Opciones de Exportación
 - **📄 Exportar a PDF**: Genera una lámina vectorial técnica **A4 apaisada** calibrada para taller con membrete oficial (empresa, proyecto, fecha y responsable).
@@ -39,6 +43,17 @@ Diseñada para funcionar tanto en PC de escritorio como en tablets y iPads para 
 
 ---
 
+## ☁️ Configuración de Cloudflare R2 en Cloudflare Pages
+
+1. En el panel de **Cloudflare**, ve a **R2 Object Storage** y crea un bucket llamado `planos-marmoleria`.
+2. Ve a **Workers & Pages** > Selecciona tu proyecto **`planosmarmoleria`** > **Settings** > **Functions**.
+3. En la sección **R2 bucket bindings**, presiona **Add binding**:
+   - **Variable name:** `PLANOS_BUCKET`
+   - **R2 bucket:** `planos-marmoleria`
+4. Guarda los cambios. ¡Listo! La persistencia en la nube queda activa de inmediato sin costo.
+
+---
+
 ## 🌐 Cómo usar
 
-Abrí el archivo `index.html` en cualquier navegador moderno (Chrome, Safari, Edge, Firefox) o publicalo directamente con **GitHub Pages**.
+Abrí el archivo `index.html` en cualquier navegador moderno (Chrome, Safari, Edge, Firefox) o visitalo directamente en **[planosmarmoleria.pages.dev](https://planosmarmoleria.pages.dev/)**.
