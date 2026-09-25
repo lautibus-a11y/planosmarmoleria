@@ -3558,10 +3558,12 @@
                     }
                     case 'text': {
                         const textStr = elData.text || "Anotación";
-                        const tagW = Math.max(68, textStr.length * 8 + 22);
-                        const tagH = 26;
+                        const vs = (typeof elData.visualScale === 'number') ? elData.visualScale : 1.0;
+                        const baseTagW = Math.max(68, textStr.length * 8 + 22);
+                        const tagW = baseTagW * vs;
+                        const tagH = 26 * vs;
                         const tAngle = elData.angle || 0;
-                        const cx = elData.position.x + (tagW - 20) / 2;
+                        const cx = elData.position.x + (tagW - 20 * vs) / 2;
                         const cy = elData.position.y;
                         const customColor = elData.color || null;
 
@@ -3571,14 +3573,14 @@
 
                         // Fondo tipo etiqueta con sombra y cursor grab para arrastrar fácilmente
                         const tBg = this.createSVG('rect', {
-                            x: elData.position.x - 10,
-                            y: elData.position.y - 13,
+                            x: elData.position.x - 10 * vs,
+                            y: elData.position.y - 13 * vs,
                             width: tagW,
                             height: tagH,
-                            rx: 6,
+                            rx: 6 * vs,
                             fill: isSelected ? 'rgba(37, 99, 235, 0.15)' : (customColor ? Utils.hexToRgba(customColor, 0.08) : 'var(--c-surface)'),
                             stroke: isSelected ? 'var(--c-select)' : (customColor || 'var(--c-border)'),
-                            'stroke-width': isSelected ? '2' : '1.2',
+                            'stroke-width': isSelected ? `${2 * vs}` : `${1.2 * vs}`,
                             style: 'cursor: grab; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));'
                         });
 
@@ -3589,6 +3591,7 @@
                             'text-anchor': 'middle',
                             'dominant-baseline': 'middle',
                             fill: customColor || undefined,
+                            'font-size': `${14 * vs}px`,
                             style: `cursor: grab; pointer-events: none; font-weight: 500; ${customColor ? 'fill:' + customColor : ''}`
                         });
                         el.textContent = textStr;
@@ -3967,8 +3970,10 @@
                     elData.points.forEach((p, i) => pts.push({ id: `p${i}`, x: p.x, y: p.y }));
                 } else if (elData.type === 'text') {
                     const textStr = elData.text || "Anotación";
-                    const tagW = Math.max(68, textStr.length * 8 + 22);
-                    const cx = elData.position.x + (tagW - 20) / 2;
+                    const vs = (typeof elData.visualScale === 'number') ? elData.visualScale : 1.0;
+                    const baseTagW = Math.max(68, textStr.length * 8 + 22);
+                    const tagW = baseTagW * vs;
+                    const cx = elData.position.x + (tagW - 20 * vs) / 2;
                     const cy = elData.position.y;
                     pts.push({ id: 'pos', x: cx, y: cy });
 
@@ -4773,8 +4778,10 @@
                         this._activeEl.position = finalP;
                     } else if (this._activeEl.type === 'text' && this._activeCtrl === 'rotate_text') {
                         const textStr = this._activeEl.text || "Anotación";
-                        const tagW = Math.max(68, textStr.length * 8 + 22);
-                        const cx = this._activeEl.position.x + (tagW - 20) / 2;
+                        const vs = (typeof this._activeEl.visualScale === 'number') ? this._activeEl.visualScale : 1.0;
+                        const baseTagW = Math.max(68, textStr.length * 8 + 22);
+                        const tagW = baseTagW * vs;
+                        const cx = this._activeEl.position.x + (tagW - 20 * vs) / 2;
                         const cy = this._activeEl.position.y;
                         let deg = Math.atan2(wp.y - cy, wp.x - cx) * 180 / Math.PI + 90;
                         if (e && e.shiftKey) deg = Math.round(deg / 15) * 15;
@@ -5981,8 +5988,10 @@
                         
                         if (this._isRotating) {
                             const textStr = this._activeNote.text || "Anotación";
-                            const tagW = Math.max(68, textStr.length * 8 + 22);
-                            const cx = this._activeNote.position.x + (tagW - 20) / 2;
+                            const vs = (typeof this._activeNote.visualScale === 'number') ? this._activeNote.visualScale : 1.0;
+                            const baseTagW = Math.max(68, textStr.length * 8 + 22);
+                            const tagW = baseTagW * vs;
+                            const cx = this._activeNote.position.x + (tagW - 20 * vs) / 2;
                             const cy = this._activeNote.position.y;
                             let deg = Math.atan2(wp.y - cy, wp.x - cx) * 180 / Math.PI + 90;
                             if (e && e.shiftKey) deg = Math.round(deg / 15) * 15;
@@ -6838,6 +6847,14 @@
                     const pct = Math.round(newScale * 100);
                     const mVal = el.value || '0 cm';
                     desc = `Tamaño visual cota: ${pct}% (Medida real: ${mVal})`;
+                } else if (el.type === 'text') {
+                    const currentScale = typeof el.visualScale === 'number' ? el.visualScale : 1.0;
+                    const stepDelta = deltaCm > 0 ? 0.15 : -0.15;
+                    const newScale = Math.max(0.25, Math.min(5.0, Math.round((currentScale + stepDelta) * 100) / 100));
+                    el.visualScale = newScale;
+                    changed = true;
+                    const pct = Math.round(newScale * 100);
+                    desc = `Tamaño texto: ${pct}%`;
                 } else if (el.type === 'terminacion') {
                     const currentSize = (typeof el.size === 'number' && el.size > 0) ? el.size : 18;
                     const stepDelta = deltaCm > 0 ? 3 : -3;
@@ -7940,13 +7957,15 @@
                             }
                             if (el.type === 'text' && el.position) {
                                 const tAngle = el.angle || 0;
+                                const vs = (typeof el.visualScale === 'number') ? el.visualScale : 1.0;
                                 const txtColor = customColor || { r: 30, g: 41, b: 59 };
                                 const textStr = el.text || "Anotación";
-                                const tagW = Math.max(68, textStr.length * 8 + 22);
-                                const cx = toPdfX(el.position.x + (tagW - 20) / 2);
+                                const baseTagW = Math.max(68, textStr.length * 8 + 22);
+                                const tagW = baseTagW * vs;
+                                const cx = toPdfX(el.position.x + (tagW - 20 * vs) / 2);
                                 const cy = toPdfY(el.position.y);
                                 const lines = textStr.split('\n');
-                                const lineSpacingMm = 4.0;
+                                const lineSpacingMm = 4.0 * vs;
                                 const totalH = (lines.length - 1) * lineSpacingMm;
                                 const startOffset = -totalH / 2;
 
@@ -7959,7 +7978,7 @@
                                     const dyLocal = startOffset + idx * lineSpacingMm;
                                     const lineCx = cx - dyLocal * sin;
                                     const lineCy = cy + dyLocal * cos;
-                                    drawRotatedPillText(line, lineCx, lineCy, tAngle, 9.5, txtColor, null, null);
+                                    drawRotatedPillText(line, lineCx, lineCy, tAngle, 9.5 * vs, txtColor, null, null);
                                 });
                             }
                             if (el.type === 'terminacion' && el.position) {
