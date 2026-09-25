@@ -3702,8 +3702,20 @@
                         const pillH = Math.max(14 * vs, fontSize + 8 * vs);
                         const pillRx = Math.max(3, 6 * vs);
 
+                        // Calcular posición de la burbuja con desplazamiento paralelo opcional
+                        const cotaLabelOffPar = (typeof elData.cotaLabelOffsetPar === 'number' && !isNaN(elData.cotaLabelOffsetPar)) ? elData.cotaLabelOffsetPar : 0;
+                        // Vector unitario a lo largo de la línea de cota
+                        const cldx = geom.cotaLine.x2 - geom.cotaLine.x1;
+                        const cldy = geom.cotaLine.y2 - geom.cotaLine.y1;
+                        const clLen = Math.hypot(cldx, cldy) || 1;
+                        const clUx = cldx / clLen;
+                        const clUy = cldy / clLen;
+                        const bubbleMidX = geom.mid.x + clUx * cotaLabelOffPar;
+                        const bubbleMidY = geom.mid.y + clUy * cotaLabelOffPar;
+
                         const bubbleGroup = this.createSVG('g', {
-                            transform: `translate(${geom.mid.x}, ${geom.mid.y}) rotate(${geom.rot})`,
+                            transform: `translate(${bubbleMidX}, ${bubbleMidY}) rotate(${geom.rot})`,
+                            'data-cota-label-id': elData.id,
                             class: 'cota-bubble-group',
                             style: 'cursor: grab; pointer-events: all;'
                         });
@@ -3714,6 +3726,7 @@
                             stroke: isSelected ? 'var(--c-select)' : (customColor || (isManual ? '#0284c7' : '#cbd5e1')),
                             'stroke-width': isSelected ? `${Math.max(1.5, 2 * vs)}` : (isManual ? `${Math.max(1.2, 1.5 * vs)}` : `${Math.max(0.8, 1 * vs)}`),
                             class: 'measure-bubble',
+                            'data-cota-label-id': elData.id,
                             style: 'filter: drop-shadow(0 2px 5px rgba(0,0,0,0.12)); cursor: grab; pointer-events: all;'
                         }));
 
@@ -4576,6 +4589,24 @@
                         }
                     }
 
+                    // Detectar click en la BURBUJA de una cota (data-cota-label-id) ANTES que data-id
+                    const cotaLabelNode = target.closest ? target.closest('[data-cota-label-id]') : null;
+                    const cotaLabelId = cotaLabelNode ? cotaLabelNode.getAttribute('data-cota-label-id') : null;
+                    if (cotaLabelId) {
+                        const el = App.data.elements.find(x => x.id === cotaLabelId);
+                        if (el && el.type === 'cota') {
+                            App.ui.selectedId = el.id;
+                            this._activeEl = el;
+                            this._activeCtrl = 'cota_label';
+                            this._dragPrevPoint = wp;
+                            this._cotaLabelDragStartPoint = wp;
+                            this._cotaLabelDragStartOffsetPar = (typeof el.cotaLabelOffsetPar === 'number' && !isNaN(el.cotaLabelOffsetPar)) ? el.cotaLabelOffsetPar : 0;
+                            Renderer.renderAll();
+                            UI.updateSelectionBar();
+                            return;
+                        }
+                    }
+
                     // Click en elemento (buscar grupo padre si tocamos hijos)
                     const elNode = target.closest ? target.closest('[data-id]') : null;
                     const id = elNode ? elNode.getAttribute('data-id') : null;
@@ -4610,7 +4641,7 @@
                     Renderer.drawSnap(snap);
                     this._hasModified = true;
 
-                    // 0. Mover solo el label de una medida (sin mover la línea)
+                    // 0a. Mover solo el label de una medida (sin mover la línea)
                     if (this._activeEl.type === 'measure' && this._activeCtrl === 'label') {
                         {
                             const el = this._activeEl;
@@ -4626,6 +4657,24 @@
                             const totalDy = wp.y - this._labelDragStartPoint.y;
                             el.labelOffset    = this._labelDragStartLabelOffset    + (totalDx * upNx + totalDy * upNy);
                             el.labelOffsetPar = this._labelDragStartLabelOffsetPar + (totalDx * ux    + totalDy * uy);
+                        }
+                        Renderer.renderAll();
+                        return;
+                    }
+
+                    // 0b. Mover solo la burbuja de una cota (desplazamiento paralelo a la línea de cota)
+                    if (this._activeEl.type === 'cota' && this._activeCtrl === 'cota_label') {
+                        {
+                            const el = this._activeEl;
+                            const geom = Renderer.getCotaGeometry(el);
+                            const cldx = geom.cotaLine.x2 - geom.cotaLine.x1;
+                            const cldy = geom.cotaLine.y2 - geom.cotaLine.y1;
+                            const clLen = Math.hypot(cldx, cldy) || 1;
+                            const clUx = cldx / clLen;
+                            const clUy = cldy / clLen;
+                            const totalDx = wp.x - this._cotaLabelDragStartPoint.x;
+                            const totalDy = wp.y - this._cotaLabelDragStartPoint.y;
+                            el.cotaLabelOffsetPar = this._cotaLabelDragStartOffsetPar + (totalDx * clUx + totalDy * clUy);
                         }
                         Renderer.renderAll();
                         return;
@@ -4827,6 +4876,8 @@
                     this._labelDragStartPoint = null;
                     this._labelDragStartLabelOffset = 0;
                     this._labelDragStartLabelOffsetPar = 0;
+                    this._cotaLabelDragStartPoint = null;
+                    this._cotaLabelDragStartOffsetPar = 0;
                     Renderer.drawSnap(null);
                 },
                 dblclick(wp, e) {
@@ -5660,11 +5711,32 @@
                         return;
                     }
 
-                    // 2. Si no teníamos un punto inicial y tocó una cota existente o su control: seleccionarla o arrastrarla
+                    // 2. Si no teníamos un punto inicial, verificar si tocó la BURBUJA de la cota
+                    if (!this._firstPoint) {
+                        const cotaLabelNodeC = target.closest ? target.closest('[data-cota-label-id]') : null;
+                        const cotaLabelIdC = cotaLabelNodeC ? cotaLabelNodeC.getAttribute('data-cota-label-id') : null;
+                        if (cotaLabelIdC) {
+                            const el = App.data.elements.find(x => x.id === cotaLabelIdC);
+                            if (el && el.type === 'cota') {
+                                this._activeCota = null; // no mover la línea completa
+                                this._activeCotaLabel = el;
+                                this._cotaLabelDragStartPoint = wp;
+                                this._cotaLabelDragStartOffsetPar = (typeof el.cotaLabelOffsetPar === 'number' && !isNaN(el.cotaLabelOffsetPar)) ? el.cotaLabelOffsetPar : 0;
+                                this._hasMoved = false;
+                                App.ui.selectedId = el.id;
+                                Renderer.renderAll();
+                                UI.updateSelectionBar();
+                                return;
+                            }
+                        }
+                    }
+
+                    // 2b. Tocó la línea/área de la cota: arrastrar la línea completa
                     if (!this._firstPoint && id && id !== 'bg-rect' && id !== 'viewport-transform' && id !== 'scene' && id !== 'canvas') {
                         const el = App.data.elements.find(x => x.id === id);
                         if (el && el.type === 'cota') {
                             this._activeCota = el;
+                            this._activeCotaLabel = null;
                             this._dragPrevPoint = wp;
                             this._hasMoved = false;
                             this._cotaDragStartOffset = (typeof el.offset === 'number' && !isNaN(el.offset)) ? el.offset : 0;
@@ -5731,6 +5803,23 @@
                 },
 
                 move(wp) {
+                    // Si estamos arrastrando solo la burbuja de la cota (desplazamiento paralelo)
+                    if (this._activeCotaLabel) {
+                        this._hasMoved = true;
+                        const el = this._activeCotaLabel;
+                        const geom = Renderer.getCotaGeometry(el);
+                        const cldx = geom.cotaLine.x2 - geom.cotaLine.x1;
+                        const cldy = geom.cotaLine.y2 - geom.cotaLine.y1;
+                        const clLen = Math.hypot(cldx, cldy) || 1;
+                        const clUx = cldx / clLen;
+                        const clUy = cldy / clLen;
+                        const totalDx = wp.x - this._cotaLabelDragStartPoint.x;
+                        const totalDy = wp.y - this._cotaLabelDragStartPoint.y;
+                        el.cotaLabelOffsetPar = this._cotaLabelDragStartOffsetPar + (totalDx * clUx + totalDy * clUy);
+                        Renderer.renderAll();
+                        return;
+                    }
+
                     // Si estamos arrastrando una cota existente: puntos de medición FIJOS, solo offset continuo
                     if (this._activeCota) {
                         this._hasMoved = true;
@@ -5776,6 +5865,20 @@
                 },
 
                 up() {
+                    // Si soltamos el drag de burbuja de cota
+                    if (this._activeCotaLabel) {
+                        const wasMoved = this._hasMoved;
+                        this._activeCotaLabel = null;
+                        this._cotaLabelDragStartPoint = null;
+                        this._cotaLabelDragStartOffsetPar = 0;
+                        this._hasMoved = false;
+                        if (wasMoved) {
+                            HistoryManager.pushState();
+                            StorageManager.save();
+                        }
+                        return;
+                    }
+
                     // Si soltamos cota existente arrastrada
                     if (this._activeCota) {
                         const wasMoved = this._hasMoved;
@@ -7528,9 +7631,17 @@
                                         doc.triangle(a2x1, a2y1, a2x2, a2y2, a2x3, a2y3, 'F');
                                     }
 
-                                    // Medida en el centro con alineación exacta y fondo blanco protector
-                                    const mx = toPdfX(geom.mid.x);
-                                    const my = toPdfY(geom.mid.y);
+                                    // Medida con offset paralelo (burbuja desplazada por el usuario)
+                                    const cotaLabelOffParPdf = (typeof el.cotaLabelOffsetPar === 'number' && !isNaN(el.cotaLabelOffsetPar)) ? el.cotaLabelOffsetPar : 0;
+                                    const clDxPdf = geom.cotaLine.x2 - geom.cotaLine.x1;
+                                    const clDyPdf = geom.cotaLine.y2 - geom.cotaLine.y1;
+                                    const clLenPdf = Math.hypot(clDxPdf, clDyPdf) || 1;
+                                    const clUxPdf = clDxPdf / clLenPdf;
+                                    const clUyPdf = clDyPdf / clLenPdf;
+                                    const bubbleMidXWorld = geom.mid.x + clUxPdf * cotaLabelOffParPdf;
+                                    const bubbleMidYWorld = geom.mid.y + clUyPdf * cotaLabelOffParPdf;
+                                    const mx = toPdfX(bubbleMidXWorld);
+                                    const my = toPdfY(bubbleMidYWorld);
                                     const val = el.value || Utils.formatMeasure(geom.dist);
                                     const fontSizePt = Math.max(5.5, Math.round(8.5 * Math.min(1.8, Math.max(0.4, vs))));
                                     const txtC = el.color || (el.isManual ? '#0284c7' : '#0f172a');
