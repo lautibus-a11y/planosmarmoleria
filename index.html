@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Marmolería Benjamín</title>
-    <!-- jsPDF para exportar a PDF -->
+    <!-- jsPDF para exportar a PDF (Copia local y CDN de respaldo) -->
+    <script src="libs/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
@@ -92,6 +93,21 @@
         .btn:disabled { color: var(--c-border); cursor: not-allowed; }
         .btn.primary { background: var(--c-active); color: white; }
         .btn.primary:hover { background: #333; }
+        .btn.btn-whatsapp {
+            background: #25D366;
+            color: #ffffff;
+            font-weight: 600;
+            border: 1px solid #1eb956;
+            box-shadow: 0 1px 4px rgba(37, 211, 102, 0.35);
+        }
+        .btn.btn-whatsapp:hover:not(:disabled) {
+            background: #1eb956;
+            color: #ffffff;
+            box-shadow: 0 2px 7px rgba(37, 211, 102, 0.5);
+        }
+        .btn.btn-whatsapp:active:not(:disabled) {
+            background: #189e49;
+        }
 
         #main-container {
             display: flex;
@@ -339,8 +355,8 @@
             background: white;
         }
 
-        /* Modal de Exportación Avanzado */
-        #export-modal {
+        /* Modal de Exportación Avanzado y Guía de WhatsApp */
+        #export-modal, #wpp-guide-modal {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.6);
@@ -351,7 +367,7 @@
             backdrop-filter: blur(4px);
             padding: 16px;
         }
-        #export-modal.active { display: flex; }
+        #export-modal.active, #wpp-guide-modal.active { display: flex; }
         .export-card {
             background: var(--c-surface);
             border: 1px solid var(--c-border);
@@ -1185,6 +1201,11 @@
             .btn .btn-text {
                 display: none;
             }
+            .btn.btn-whatsapp .btn-text {
+                display: inline;
+                font-size: 11px;
+                font-weight: 700;
+            }
             .btn-symbol {
                 font-size: 15px;
             }
@@ -1304,6 +1325,7 @@
                 <button class="btn" id="btn-cloud-list" title="Ver planos guardados en la nube"><span class="btn-symbol">📂</span><span class="btn-text"> Ver Planos Guardados</span></button>
                 <div class="btn-divider"></div>
                 <button class="btn" id="btn-clear" title="Nuevo plano"><span class="btn-symbol">＋</span><span class="btn-text"> Nuevo</span></button>
+                <button class="btn btn-whatsapp" id="btn-export-wpp" title="Exportar plano en PDF y compartir por WhatsApp"><span class="btn-symbol">💬</span><span class="btn-text"> Exportar a WPP</span></button>
                 <button class="btn primary" id="btn-export" title="Exportar plano"><span class="btn-symbol">📤</span><span class="btn-text"> Exportar ▼</span></button>
             </div>
         </header>
@@ -1712,12 +1734,12 @@
                         <span class="action-arrow">→</span>
                     </button>
 
-                    <!-- Opción 3: Enviar por WhatsApp -->
+                    <!-- Opción 3: Exportar a WPP -->
                     <button type="button" class="export-action-btn" id="btn-modal-whatsapp">
                         <div class="action-icon whatsapp">💬</div>
                         <div class="action-text">
-                            <div class="title">Enviar por WhatsApp</div>
-                            <div class="desc">Abre chat con resumen del plano y descarga el PDF para adjuntarlo</div>
+                            <div class="title" style="color: #1e7e34; font-weight: 700;">Exportar a WPP</div>
+                            <div class="desc">Genera el archivo PDF técnico y lo comparte por WhatsApp con medidas y cotas</div>
                         </div>
                         <span class="action-arrow">→</span>
                     </button>
@@ -1737,6 +1759,44 @@
                     <button type="button" class="btn" id="btn-modal-json" style="font-size: 12px; color: var(--c-text-muted);">💾 Respaldo JSON</button>
                     <button type="button" class="btn" id="export-modal-cancel">Cancelar</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Guía de Descarga y WhatsApp -->
+    <div id="wpp-guide-modal">
+        <div class="export-card" style="max-width: 440px;">
+            <div class="export-header" style="background: #e8f5e9; border-bottom: 1px solid #c8e6c9;">
+                <h2 style="color: #2e7d32;"><span style="font-size: 20px;">💬</span> Plano listo para WhatsApp</h2>
+                <button class="export-close-btn" id="wpp-guide-close" title="Cerrar">&times;</button>
+            </div>
+            <div class="export-body" style="padding: 18px 20px; font-size: 13.5px; line-height: 1.5; color: #1f2937;">
+                <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; background: #f9fafb; padding: 10px 12px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <span style="font-size: 28px; line-height: 1;">📄</span>
+                    <div style="flex: 1; min-width: 0;">
+                        <strong style="color: #111827; display: block; font-size: 13.5px; word-break: break-all;" id="wpp-guide-filename">Plano_Mesada.pdf</strong>
+                        <span style="color: #059669; font-weight: 600; font-size: 12px;">✓ PDF técnico generado y descargado</span>
+                    </div>
+                </div>
+
+                <p style="margin-bottom: 14px; color: #374151;">
+                    Se abrió WhatsApp con el resumen de la mesada y sus medidas. <strong>Adjuntá el archivo PDF recién descargado</strong> en el chat.
+                </p>
+
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+                    <button type="button" class="btn" id="wpp-guide-btn-open-wa" style="justify-content: center; padding: 10px; background: #25D366; color: white; border: none; font-weight: 600; border-radius: 6px; box-shadow: 0 1px 3px rgba(37,211,102,0.35);">
+                        💬 Abrir WhatsApp nuevamente
+                    </button>
+                    <button type="button" class="btn" id="wpp-guide-btn-redownload" style="justify-content: center; padding: 8px; background: #f3f4f6; color: #1f2937; border: 1px solid #d1d5db; font-size: 12.5px; border-radius: 6px;">
+                        📥 Volver a descargar PDF
+                    </button>
+                    <button type="button" class="btn" id="wpp-guide-btn-copy" style="justify-content: center; padding: 8px; background: #f3f4f6; color: #1f2937; border: 1px solid #d1d5db; font-size: 12.5px; border-radius: 6px;">
+                        📋 Copiar texto del resumen
+                    </button>
+                </div>
+            </div>
+            <div class="export-footer" style="padding: 12px 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end;">
+                <button type="button" class="btn primary" id="wpp-guide-btn-done">¡Entendido!</button>
             </div>
         </div>
     </div>
@@ -1864,6 +1924,10 @@
             },
             parseColor: (colorStr, defaultColor = { r: 15, g: 23, b: 42 }) => {
                 if (!colorStr) return defaultColor;
+                if (typeof colorStr === 'object' && colorStr !== null && typeof colorStr.r === 'number' && typeof colorStr.g === 'number' && typeof colorStr.b === 'number') {
+                    return colorStr;
+                }
+                if (typeof colorStr !== 'string') return defaultColor;
                 if (colorStr.startsWith('#')) {
                     let hex = colorStr.slice(1);
                     if (hex.length === 3) {
@@ -1872,6 +1936,12 @@
                     if (hex.length === 6) {
                         const num = parseInt(hex, 16);
                         return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+                    }
+                }
+                if (colorStr.startsWith('rgb')) {
+                    const matches = colorStr.match(/\d+/g);
+                    if (matches && matches.length >= 3) {
+                        return { r: parseInt(matches[0]), g: parseInt(matches[1]), b: parseInt(matches[2]) };
                     }
                 }
                 return defaultColor;
@@ -2767,10 +2837,12 @@
                         minX = Math.min(minX, el.position.x - 20); maxX = Math.max(maxX, el.position.x + 80);
                         minY = Math.min(minY, el.position.y - 20); maxY = Math.max(maxY, el.position.y + 20);
                     }
-                    if (el.points) {
+                    if (Array.isArray(el.points)) {
                         el.points.forEach(p => {
-                            minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
-                            minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+                            if (p && typeof p.x === 'number' && typeof p.y === 'number') {
+                                minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+                                minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+                            }
                         });
                     }
                 });
@@ -6910,36 +6982,74 @@
                 const sectorInput = document.getElementById('export-sector');
                 const projectInput = document.getElementById('export-project-name');
                 const phoneInput = document.getElementById('export-phone');
-                const orientSelect = document.getElementById('export-orientation');
-                const marginSelect = document.getElementById('export-margins');
+                const orientSelect = document.getElementById('export-pdf-orientation') || document.getElementById('export-orientation');
+                const marginSelect = document.getElementById('export-pdf-margins') || document.getElementById('export-margins');
                 const errorSpan = document.getElementById('author-error');
 
-                const author = authorInput.value.trim();
-                const client = clientInput ? clientInput.value.trim() : '';
-                const sector = sectorInput ? sectorInput.value.trim() : 'Cocina';
-                const projectName = projectInput.value.trim() || 'Plano de Marmolería';
-                const phone = phoneInput ? phoneInput.value.trim() : '';
-                const orientation = orientSelect ? orientSelect.value : 'landscape';
-                const margin = marginSelect ? parseFloat(marginSelect.value) || 15 : 15;
-
+                let author = authorInput ? authorInput.value.trim() : '';
                 if (!author) {
-                    authorInput.classList.add('input-error');
-                    if (errorSpan) errorSpan.style.display = 'inline';
-                    authorInput.focus();
-                    UI.showToast("⚠️ Indicá quién hizo el plano");
-                    return null;
+                    author = localStorage.getItem('marmoleria_author') || 'Personal técnico';
+                } else {
+                    localStorage.setItem('marmoleria_author', author);
                 }
 
-                authorInput.classList.remove('input-error');
+                if (authorInput) authorInput.classList.remove('input-error');
                 if (errorSpan) errorSpan.style.display = 'none';
 
-                // Guardar en memoria y localStorage
-                localStorage.setItem('marmoleria_author', author);
+                const client = clientInput ? clientInput.value.trim() : '';
+                const sector = sectorInput ? sectorInput.value.trim() : 'Cocina';
+                const projectName = (projectInput && projectInput.value.trim()) ? projectInput.value.trim() : (App.data.project.name || 'Plano de Marmolería');
+                const phone = phoneInput ? phoneInput.value.trim() : '';
+                const orientation = orientSelect ? orientSelect.value : 'landscape';
+                const margin = marginSelect ? (parseFloat(marginSelect.value) || 15) : 15;
+
                 if (client) localStorage.setItem('marmoleria_client', client);
                 if (sector) localStorage.setItem('marmoleria_sector', sector);
                 App.data.project.name = projectName;
 
                 return { author, client, sector, projectName, phone, orientation, margin };
+            },
+
+            resolveInfo(infoOrAuthor, projectName, phone) {
+                if (typeof infoOrAuthor === 'object' && infoOrAuthor !== null) {
+                    return {
+                        author: infoOrAuthor.author || localStorage.getItem('marmoleria_author') || 'Personal técnico',
+                        projectName: infoOrAuthor.projectName || projectName || App.data.project.name || 'Plano de Marmolería',
+                        client: infoOrAuthor.client || localStorage.getItem('marmoleria_client') || '',
+                        sector: infoOrAuthor.sector || localStorage.getItem('marmoleria_sector') || 'Cocina',
+                        phone: infoOrAuthor.phone || phone || '',
+                        orientation: infoOrAuthor.orientation || 'landscape',
+                        margin: typeof infoOrAuthor.margin === 'number' ? infoOrAuthor.margin : 15
+                    };
+                }
+                return {
+                    author: infoOrAuthor || localStorage.getItem('marmoleria_author') || 'Personal técnico',
+                    projectName: projectName || App.data.project.name || 'Plano de Marmolería',
+                    client: localStorage.getItem('marmoleria_client') || '',
+                    sector: localStorage.getItem('marmoleria_sector') || 'Cocina',
+                    phone: phone || '',
+                    orientation: 'landscape',
+                    margin: 15
+                };
+            },
+
+            downloadBlob(blob, filename) {
+                try {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => {
+                        if (document.body.contains(a)) document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 1500);
+                } catch (e) {
+                    console.warn("Fallo al descargar blob:", e);
+                    throw e;
+                }
             },
 
             exportJSON() {
@@ -6952,21 +7062,49 @@
                 UI.showToast("Respaldo JSON descargado");
             },
 
-            exportPDF(infoOrAuthor, projectName) {
+            getJsPDFClass() {
+                if (typeof window !== 'undefined') {
+                    if (window.jspdf && typeof window.jspdf.jsPDF === 'function') return window.jspdf.jsPDF;
+                    if (window.jspdf && typeof window.jspdf.default === 'function') return window.jspdf.default;
+                    if (typeof window.jspdf === 'function') return window.jspdf;
+                    if (typeof window.jsPDF === 'function') return window.jsPDF;
+                }
+                if (typeof jsPDF === 'function') return jsPDF;
+                return null;
+            },
+
+            async ensureJsPDF() {
+                let jsPDFClass = this.getJsPDFClass();
+                if (jsPDFClass) return jsPDFClass;
+
+                // Intento dinámico de cargar desde local y CDNs reconocidos
+                const sources = [
+                    'libs/jspdf.umd.min.js',
+                    './libs/jspdf.umd.min.js',
+                    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+                    'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'
+                ];
+
+                for (const src of sources) {
+                    try {
+                        await new Promise((resolve, reject) => {
+                            const s = document.createElement('script');
+                            s.src = src;
+                            s.onload = () => resolve();
+                            s.onerror = () => reject();
+                            document.head.appendChild(s);
+                        });
+                        jsPDFClass = this.getJsPDFClass();
+                        if (jsPDFClass) return jsPDFClass;
+                    } catch (_) {}
+                }
+
+                throw new Error("Librería jsPDF no disponible. Verifique que exista 'libs/jspdf.umd.min.js' o su conexión a internet.");
+            },
+
+            async generatePDF(infoOrAuthor, projectName) {
                 try {
-                    let info = {};
-                    if (typeof infoOrAuthor === 'object' && infoOrAuthor !== null) {
-                        info = infoOrAuthor;
-                    } else {
-                        info = {
-                            author: infoOrAuthor || localStorage.getItem('marmoleria_author') || 'Personal técnico',
-                            projectName: projectName || App.data.project.name || 'Plano Marmolería',
-                            client: localStorage.getItem('marmoleria_client') || '',
-                            sector: localStorage.getItem('marmoleria_sector') || 'Cocina',
-                            orientation: 'landscape',
-                            margin: 15
-                        };
-                    }
+                    const info = this.resolveInfo(infoOrAuthor, projectName);
 
                     const orientation = info.orientation || 'landscape';
                     const margin = typeof info.margin === 'number' ? info.margin : 15;
@@ -6976,8 +7114,8 @@
                     const sector = info.sector || 'Cocina';
                     const fechaStr = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF({ orientation: orientation, unit: 'mm', format: 'a4' });
+                    const jsPDFClass = await this.ensureJsPDF();
+                    const doc = new jsPDFClass({ orientation: orientation, unit: 'mm', format: 'a4' });
                     
                     const pageW = orientation === 'landscape' ? 297 : 210;
                     const pageH = orientation === 'landscape' ? 210 : 297;
@@ -7021,16 +7159,17 @@
                     doc.setTextColor(130, 130, 130);
                     doc.text(`Marmolería Benjamín • Documento emitido para fabricación • ${proj} • Cliente: ${client} • Sector: ${sector} • Responsable: ${auth}`, margin, footerY);
 
-                    // Helper técnico para dibujar textos rotados con fondo tipo pastilla/cota sin desfases espaciales (lo que se ve = lo que se imprime)
+                    // Helper técnico para dibujar textos rotados con fondo tipo pastilla/cota sin desfases espaciales
                     const drawRotatedPillText = (text, cx, cy, svgAngleDeg, fontSizePt, textColor, bgColor, borderColor, borderWidth = 0.25, vs = 1.0) => {
-                        if (!text) return;
-                        let normAngle = svgAngleDeg;
+                        if (text === undefined || text === null || text === '') return;
+                        const strText = String(text);
+                        let normAngle = svgAngleDeg || 0;
                         while (normAngle > 90) normAngle -= 180;
                         while (normAngle <= -90) normAngle += 180;
 
                         doc.setFontSize(fontSizePt);
                         doc.setFont(undefined, 'bold');
-                        const textW = doc.getTextWidth(text);
+                        const textW = doc.getTextWidth(strText);
                         const fontMm = fontSizePt * 0.3528;
                         const pillW = textW + Math.max(2.5, 4.0 * Math.min(1.5, vs));
                         const pillH = Math.max(3.6, fontMm + 1.8);
@@ -7071,71 +7210,100 @@
                         const localStartX = -textW / 2;
                         const localStartY = fontMm * 0.35;
                         const textStartPt = rotPt(localStartX, localStartY);
-                        doc.text(text, textStartPt.x, textStartPt.y, { angle: -normAngle });
+                        doc.text(strText, textStartPt.x, textStartPt.y, { angle: -normAngle });
                     };
 
                     // Bounding Box para encuadre y centrado exacto
                     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                    const elements = (App.data && Array.isArray(App.data.elements)) ? App.data.elements : [];
                     
-                    App.data.elements.forEach(el => {
-                        const pts = [];
-                        if (el.type === 'line') pts.push(el.start, el.end);
-                        if (el.type === 'measure') {
-                            pts.push(el.start, el.end);
-                            const midX = (el.start.x + el.end.x) / 2;
-                            const midY = (el.start.y + el.end.y) / 2;
-                            const dx = el.end.x - el.start.x;
-                            const dy = el.end.y - el.start.y;
-                            const len = Math.hypot(dx, dy) || 1;
-                            let upNx = -dy / len;
-                            let upNy = dx / len;
-                            if (upNy > 0 || (Math.abs(upNy) < 1e-6 && upNx > 0)) { upNx = -upNx; upNy = -upNy; }
-                            pts.push({ x: midX + upNx * 16, y: midY + upNy * 16 });
+                    elements.forEach(el => {
+                        if (!el) return;
+                        try {
+                            const pts = [];
+                            if (el.type === 'line') {
+                                if (el.start) pts.push(el.start);
+                                if (el.end) pts.push(el.end);
+                            }
+                            if (el.type === 'measure') {
+                                if (el.start) pts.push(el.start);
+                                if (el.end) pts.push(el.end);
+                                if (el.start && el.end) {
+                                    const midX = (el.start.x + el.end.x) / 2;
+                                    const midY = (el.start.y + el.end.y) / 2;
+                                    const dx = el.end.x - el.start.x;
+                                    const dy = el.end.y - el.start.y;
+                                    const len = Math.hypot(dx, dy) || 1;
+                                    let upNx = -dy / len;
+                                    let upNy = dx / len;
+                                    if (upNy > 0 || (Math.abs(upNy) < 1e-6 && upNx > 0)) { upNx = -upNx; upNy = -upNy; }
+                                    pts.push({ x: midX + upNx * 16, y: midY + upNy * 16 });
+                                }
+                            }
+                            if (el.type === 'cota') {
+                                if (el.start) pts.push(el.start);
+                                if (el.end) pts.push(el.end);
+                                if (el.start && el.end) {
+                                    const geom = Renderer.getCotaGeometry(el);
+                                    if (geom && geom.cotaLine) {
+                                        pts.push({ x: geom.cotaLine.x1, y: geom.cotaLine.y1 }, { x: geom.cotaLine.x2, y: geom.cotaLine.y2 });
+                                    }
+                                    if (geom && geom.mid) pts.push({ x: geom.mid.x, y: geom.mid.y });
+                                }
+                            }
+                            if ((el.type === 'polyline' || el.type === 'pencil') && Array.isArray(el.points)) {
+                                pts.push(...el.points);
+                            }
+                            if ((el.type === 'rect' || el.type === 'square' || el.type === 'cooktop' || el.type === 'sink')) {
+                                if (el.start) pts.push(el.start);
+                                if (el.end) pts.push(el.end);
+                            }
+                            if ((el.type === 'z_shape' || el.type === 'lines_45') && el.start && el.end) {
+                                const minP = { x: Math.min(el.start.x, el.end.x), y: Math.min(el.start.y, el.end.y) };
+                                const maxP = { x: Math.max(el.start.x, el.end.x), y: Math.max(el.start.y, el.end.y) };
+                                const cx = (minP.x + maxP.x) / 2;
+                                const cy = (minP.y + maxP.y) / 2;
+                                const hw = (maxP.x - minP.x) / 2;
+                                const hh = (maxP.y - minP.y) / 2;
+                                const rad = ((el.angle || 0) * Math.PI) / 180;
+                                const cos = Math.cos(rad);
+                                const sin = Math.sin(rad);
+                                pts.push(
+                                    { x: cx + (-hw) * cos - (-hh) * sin, y: cy + (-hw) * sin + (-hh) * cos },
+                                    { x: cx + (hw) * cos - (-hh) * sin, y: cy + (hw) * sin + (-hh) * cos },
+                                    { x: cx + (hw) * cos - (hh) * sin, y: cy + (hw) * sin + (hh) * cos },
+                                    { x: cx + (-hw) * cos - (hh) * sin, y: cy + (-hw) * sin + (hh) * cos }
+                                );
+                            }
+                            if (el.type === 'circle' && el.center && typeof el.radius === 'number') {
+                                pts.push({ x: el.center.x - el.radius, y: el.center.y - el.radius });
+                                pts.push({ x: el.center.x + el.radius, y: el.center.y + el.radius });
+                            }
+                            if (el.type === 'triangle' && Array.isArray(el.points)) {
+                                pts.push(...el.points);
+                            }
+                            if (el.type === 'text' && el.position) {
+                                const approxW = Math.max(35, (el.text || '').length * 8);
+                                const rad = ((el.angle || 0) * Math.PI) / 180;
+                                pts.push(el.position);
+                                pts.push({ x: el.position.x + approxW * Math.cos(rad), y: el.position.y + approxW * Math.sin(rad) });
+                            }
+                            if (el.type === 'terminacion' && el.position) pts.push(el.position);
+                            
+                            pts.forEach(p => {
+                                if (p && typeof p.x === 'number' && !isNaN(p.x) && typeof p.y === 'number' && !isNaN(p.y)) {
+                                    if (p.x < minX) minX = p.x;
+                                    if (p.x > maxX) maxX = p.x;
+                                    if (p.y < minY) minY = p.y;
+                                    if (p.y > maxY) maxY = p.y;
+                                }
+                            });
+                        } catch (boxErr) {
+                            console.warn("Error evaluando bbox elemento:", el, boxErr);
                         }
-                        if (el.type === 'cota') {
-                            pts.push(el.start, el.end);
-                            const geom = Renderer.getCotaGeometry(el);
-                            pts.push({ x: geom.cotaLine.x1, y: geom.cotaLine.y1 }, { x: geom.cotaLine.x2, y: geom.cotaLine.y2 }, { x: geom.mid.x, y: geom.mid.y });
-                        }
-                        if (el.type === 'polyline' || el.type === 'pencil') pts.push(...el.points);
-                        if (el.type === 'rect' || el.type === 'square' || el.type === 'cooktop' || el.type === 'sink') pts.push(el.start, el.end);
-                        if (el.type === 'z_shape' || el.type === 'lines_45') {
-                            const minP = { x: Math.min(el.start.x, el.end.x), y: Math.min(el.start.y, el.end.y) };
-                            const maxP = { x: Math.max(el.start.x, el.end.x), y: Math.max(el.start.y, el.end.y) };
-                            const cx = (minP.x + maxP.x) / 2;
-                            const cy = (minP.y + maxP.y) / 2;
-                            const hw = (maxP.x - minP.x) / 2;
-                            const hh = (maxP.y - minP.y) / 2;
-                            const rad = ((el.angle || 0) * Math.PI) / 180;
-                            const cos = Math.cos(rad);
-                            const sin = Math.sin(rad);
-                            pts.push(
-                                { x: cx + (-hw) * cos - (-hh) * sin, y: cy + (-hw) * sin + (-hh) * cos },
-                                { x: cx + (hw) * cos - (-hh) * sin, y: cy + (hw) * sin + (-hh) * cos },
-                                { x: cx + (hw) * cos - (hh) * sin, y: cy + (hw) * sin + (hh) * cos },
-                                { x: cx + (-hw) * cos - (hh) * sin, y: cy + (-hw) * sin + (hh) * cos }
-                            );
-                        }
-                        if (el.type === 'circle') {
-                            pts.push({ x: el.center.x - el.radius, y: el.center.y - el.radius });
-                            pts.push({ x: el.center.x + el.radius, y: el.center.y + el.radius });
-                        }
-                        if (el.type === 'triangle') pts.push(...el.points);
-                        if (el.type === 'text') {
-                            const approxW = Math.max(35, (el.text || '').length * 8);
-                            const rad = ((el.angle || 0) * Math.PI) / 180;
-                            pts.push(el.position);
-                            pts.push({ x: el.position.x + approxW * Math.cos(rad), y: el.position.y + approxW * Math.sin(rad) });
-                        }
-                        if (el.type === 'terminacion') pts.push(el.position);
-                        
-                        pts.forEach(p => {
-                            if(p.x < minX) minX = p.x; if(p.x > maxX) maxX = p.x;
-                            if(p.y < minY) minY = p.y; if(p.y > maxY) maxY = p.y;
-                        });
                     });
 
-                    if (minX !== Infinity && App.data.elements.length > 0) {
+                    if (minX !== Infinity && elements.length > 0) {
                         // Margen de resguardo para que cotas y textos no se corten
                         const padWorld = 20; // 20cm de holgura
                         const geomMinX = minX - padWorld;
@@ -7157,17 +7325,18 @@
 
                         doc.setLineWidth(0.5);
 
-                        App.data.elements.forEach(el => {
-                            const customColor = el.color ? Utils.parseColor(el.color) : null;
+                        elements.forEach(el => {
+                            if (!el) return;
+                            try {
+                                const customColor = el.color ? Utils.parseColor(el.color) : null;
 
-                            if (el.type === 'line') {
+                            if (el.type === 'line' && el.start && el.end) {
                                 doc.setLineDash([]);
                                 const c = customColor || { r: 20, g: 20, b: 20 };
                                 doc.setDrawColor(c.r, c.g, c.b);
                                 doc.line(toPdfX(el.start.x), toPdfY(el.start.y), toPdfX(el.end.x), toPdfY(el.end.y));
                             }
-                            if (el.type === 'measure') {
-                                // Línea de medición continua/sólida en PDF (Requerimiento 3)
+                            if (el.type === 'measure' && el.start && el.end) {
                                 doc.setLineDash([]);
                                 const mColor = customColor || { r: 40, g: 40, b: 40 };
                                 doc.setDrawColor(mColor.r, mColor.g, mColor.b);
@@ -7176,7 +7345,6 @@
                                 const x2 = toPdfX(el.end.x), y2 = toPdfY(el.end.y);
                                 doc.line(x1, y1, x2, y2);
 
-                                // Ticks perpendiculares estilo CAD en extremos
                                 const pdx = x2 - x1;
                                 const pdy = y2 - y1;
                                 const pLen = Math.hypot(pdx, pdy) || 1;
@@ -7189,7 +7357,6 @@
                                 doc.line(x1 - perpX * tickLen, y1 - perpY * tickLen, x1 + perpX * tickLen, y1 + perpY * tickLen);
                                 doc.line(x2 - perpX * tickLen, y2 - perpY * tickLen, x2 + perpX * tickLen, y2 + perpY * tickLen);
 
-                                // Posición exacta de la etiqueta idéntica al editor (Requerimiento 6: lo que se ve en el editor = lo que aparece en el PDF)
                                 const offsetDist = 15;
                                 const dx = el.end.x - el.start.x;
                                 const dy = el.end.y - el.start.y;
@@ -7215,54 +7382,63 @@
                                 const borderC = el.color || (isManual ? '#0284c7' : '#cbd5e1');
                                 drawRotatedPillText(val, cx, cy, rotAngle, 8.5, txtC, '#ffffff', borderC, 0.25);
                             }
-                            if (el.type === 'cota') {
+                            if (el.type === 'cota' && el.start && el.end) {
                                 const geom = Renderer.getCotaGeometry(el);
-                                const vs = Math.max(0.25, el.visualScale || 1.0);
-                                const cotaC = customColor || (el.isManual ? { r: 2, g: 132, b: 199 } : { r: 37, g: 99, b: 235 });
+                                if (geom && geom.cotaLine && geom.witness1 && geom.witness2 && geom.arrow1 && geom.arrow2 && geom.mid) {
+                                    const vs = Math.max(0.25, el.visualScale || 1.0);
+                                    const cotaC = customColor || (el.isManual ? { r: 2, g: 132, b: 199 } : { r: 37, g: 99, b: 235 });
 
-                                // Líneas de testigo
-                                doc.setLineDash([1.5, 1.5]);
-                                doc.setDrawColor(120, 120, 120);
-                                doc.setLineWidth(Math.max(0.18, 0.3 * Math.min(1.5, vs)));
-                                doc.line(toPdfX(geom.witness1.x1), toPdfY(geom.witness1.y1), toPdfX(geom.witness1.x2), toPdfY(geom.witness1.y2));
-                                doc.line(toPdfX(geom.witness2.x1), toPdfY(geom.witness2.y1), toPdfX(geom.witness2.x2), toPdfY(geom.witness2.y2));
+                                    // Líneas de testigo
+                                    doc.setLineDash([1.5, 1.5]);
+                                    doc.setDrawColor(120, 120, 120);
+                                    doc.setLineWidth(Math.max(0.18, 0.3 * Math.min(1.5, vs)));
+                                    doc.line(toPdfX(geom.witness1.x1), toPdfY(geom.witness1.y1), toPdfX(geom.witness1.x2), toPdfY(geom.witness1.y2));
+                                    doc.line(toPdfX(geom.witness2.x1), toPdfY(geom.witness2.y1), toPdfX(geom.witness2.x2), toPdfY(geom.witness2.y2));
 
-                                // Línea de cota
-                                doc.setLineDash([]);
-                                doc.setDrawColor(cotaC.r, cotaC.g, cotaC.b);
-                                doc.setLineWidth(Math.max(0.25, 0.45 * Math.min(1.5, vs)));
-                                doc.line(toPdfX(geom.cotaLine.x1), toPdfY(geom.cotaLine.y1), toPdfX(geom.cotaLine.x2), toPdfY(geom.cotaLine.y2));
+                                    // Línea de cota
+                                    doc.setLineDash([]);
+                                    doc.setDrawColor(cotaC.r, cotaC.g, cotaC.b);
+                                    doc.setLineWidth(Math.max(0.25, 0.45 * Math.min(1.5, vs)));
+                                    doc.line(toPdfX(geom.cotaLine.x1), toPdfY(geom.cotaLine.y1), toPdfX(geom.cotaLine.x2), toPdfY(geom.cotaLine.y2));
 
-                                // Flechas terminales triangulares en PDF
-                                doc.setFillColor(cotaC.r, cotaC.g, cotaC.b);
-                                const a1x1 = toPdfX(geom.arrow1.tip.x), a1y1 = toPdfY(geom.arrow1.tip.y);
-                                const a1x2 = toPdfX(geom.arrow1.base1.x), a1y2 = toPdfY(geom.arrow1.base1.y);
-                                const a1x3 = toPdfX(geom.arrow1.base2.x), a1y3 = toPdfY(geom.arrow1.base2.y);
-                                doc.triangle(a1x1, a1y1, a1x2, a1y2, a1x3, a1y3, 'F');
+                                    // Flechas terminales triangulares en PDF
+                                    doc.setFillColor(cotaC.r, cotaC.g, cotaC.b);
+                                    if (geom.arrow1 && geom.arrow1.tip && geom.arrow1.base1 && geom.arrow1.base2) {
+                                        const a1x1 = toPdfX(geom.arrow1.tip.x), a1y1 = toPdfY(geom.arrow1.tip.y);
+                                        const a1x2 = toPdfX(geom.arrow1.base1.x), a1y2 = toPdfY(geom.arrow1.base1.y);
+                                        const a1x3 = toPdfX(geom.arrow1.base2.x), a1y3 = toPdfY(geom.arrow1.base2.y);
+                                        doc.triangle(a1x1, a1y1, a1x2, a1y2, a1x3, a1y3, 'F');
+                                    }
 
-                                const a2x1 = toPdfX(geom.arrow2.tip.x), a2y1 = toPdfY(geom.arrow2.tip.y);
-                                const a2x2 = toPdfX(geom.arrow2.base1.x), a2y2 = toPdfY(geom.arrow2.base1.y);
-                                const a2x3 = toPdfX(geom.arrow2.base2.x), a2y3 = toPdfY(geom.arrow2.base2.y);
-                                doc.triangle(a2x1, a2y1, a2x2, a2y2, a2x3, a2y3, 'F');
+                                    if (geom.arrow2 && geom.arrow2.tip && geom.arrow2.base1 && geom.arrow2.base2) {
+                                        const a2x1 = toPdfX(geom.arrow2.tip.x), a2y1 = toPdfY(geom.arrow2.tip.y);
+                                        const a2x2 = toPdfX(geom.arrow2.base1.x), a2y2 = toPdfY(geom.arrow2.base1.y);
+                                        const a2x3 = toPdfX(geom.arrow2.base2.x), a2y3 = toPdfY(geom.arrow2.base2.y);
+                                        doc.triangle(a2x1, a2y1, a2x2, a2y2, a2x3, a2y3, 'F');
+                                    }
 
-                                // Medida en el centro con alineación exacta y fondo blanco protector (Requerimiento 6)
-                                const mx = toPdfX(geom.mid.x);
-                                const my = toPdfY(geom.mid.y);
-                                const val = el.value || Utils.formatMeasure(geom.dist);
-                                const fontSizePt = Math.max(5.5, Math.round(8.5 * Math.min(1.8, Math.max(0.4, vs))));
-                                const txtC = el.color || (el.isManual ? '#0284c7' : '#0f172a');
-                                const borderC = el.color || (el.isManual ? '#0284c7' : '#cbd5e1');
-                                drawRotatedPillText(val, mx, my, geom.rot, fontSizePt, txtC, '#ffffff', borderC, Math.max(0.2, 0.35 * vs), vs);
+                                    // Medida en el centro con alineación exacta y fondo blanco protector
+                                    const mx = toPdfX(geom.mid.x);
+                                    const my = toPdfY(geom.mid.y);
+                                    const val = el.value || Utils.formatMeasure(geom.dist);
+                                    const fontSizePt = Math.max(5.5, Math.round(8.5 * Math.min(1.8, Math.max(0.4, vs))));
+                                    const txtC = el.color || (el.isManual ? '#0284c7' : '#0f172a');
+                                    const borderC = el.color || (el.isManual ? '#0284c7' : '#cbd5e1');
+                                    drawRotatedPillText(val, mx, my, geom.rot, fontSizePt, txtC, '#ffffff', borderC, Math.max(0.2, 0.35 * vs), vs);
+                                }
                             }
-                            if (el.type === 'polyline' || el.type === 'pencil') {
+                            if ((el.type === 'polyline' || el.type === 'pencil') && Array.isArray(el.points) && el.points.length > 1) {
                                 doc.setLineDash([]);
                                 const c = customColor || { r: 20, g: 20, b: 20 };
                                 doc.setDrawColor(c.r, c.g, c.b);
                                 for (let i = 0; i < el.points.length - 1; i++) {
-                                    doc.line(toPdfX(el.points[i].x), toPdfY(el.points[i].y), toPdfX(el.points[i+1].x), toPdfY(el.points[i+1].y));
+                                    const pA = el.points[i], pB = el.points[i + 1];
+                                    if (pA && pB && typeof pA.x === 'number' && typeof pB.x === 'number') {
+                                        doc.line(toPdfX(pA.x), toPdfY(pA.y), toPdfX(pB.x), toPdfY(pB.y));
+                                    }
                                 }
                             }
-                            if (el.type === 'rect' || el.type === 'square') {
+                            if ((el.type === 'rect' || el.type === 'square') && el.start && el.end) {
                                 doc.setLineDash([]);
                                 const c = customColor || { r: 20, g: 20, b: 20 };
                                 doc.setDrawColor(c.r, c.g, c.b);
@@ -7272,7 +7448,7 @@
                                 const h = Math.abs(el.start.y - el.end.y) * scale;
                                 doc.rect(x, y, w, h);
                             }
-                            if (el.type === 'circle') {
+                            if (el.type === 'circle' && el.center && typeof el.radius === 'number') {
                                 doc.setLineDash([]);
                                 const c = customColor || { r: 20, g: 20, b: 20 };
                                 doc.setDrawColor(c.r, c.g, c.b);
@@ -7283,11 +7459,10 @@
                                 // Cruz de centro
                                 doc.setLineWidth(0.2);
                                 doc.line(cx - 1.5, cy, cx + 1.5, cy);
-                                doc.line(cx, cy - 1.5, cx, cy + 1.5);
+                                doc.line(cx, cy - 1.5, cx + 1.5, cy);
                                 doc.setLineWidth(0.5);
                             }
-                            if (el.type === 'z_shape') {
-                                // Nuevo elemento Z en PDF (Requerimiento 2)
+                            if (el.type === 'z_shape' && el.start && el.end) {
                                 const rw = Math.max(10, Math.abs(el.start.x - el.end.x)) * scale;
                                 const rh = Math.max(10, Math.abs(el.start.y - el.end.y)) * scale;
                                 const cx = toPdfX((el.start.x + el.end.x) / 2);
@@ -7311,8 +7486,7 @@
                                 doc.line(p2.x, p2.y, p3.x, p3.y);
                                 doc.line(p3.x, p3.y, p4.x, p4.y);
                             }
-                            if (el.type === 'lines_45') {
-                                // Nuevo elemento de líneas 45° en PDF (Requerimiento 2)
+                            if (el.type === 'lines_45' && el.start && el.end) {
                                 const rw = Math.max(15, Math.abs(el.start.x - el.end.x)) * scale;
                                 const rh = Math.max(10, Math.abs(el.start.y - el.end.y)) * scale;
                                 const cx = toPdfX((el.start.x + el.end.x) / 2);
@@ -7338,8 +7512,7 @@
                                 doc.line(p1.x, p1.y, p2.x, p2.y);
                                 doc.line(p2.x, p2.y, p3.x, p3.y);
                             }
-                            if (el.type === 'cooktop') {
-                                // Hornallas / Anafes (Requerimiento 5: sin texto "Anafe", con dimensiones limpias)
+                            if (el.type === 'cooktop' && el.start && el.end) {
                                 doc.setLineDash([]);
                                 const c = customColor || { r: 30, g: 30, b: 30 };
                                 doc.setDrawColor(c.r, c.g, c.b);
@@ -7376,27 +7549,23 @@
                                 const realH = Math.round(Math.abs(el.end.y - el.start.y));
                                 const cotaC = customColor || { r: 234, g: 88, b: 12 };
 
-                                // Cotas exteriores técnicas limpias
                                 doc.setDrawColor(cotaC.r, cotaC.g, cotaC.b);
                                 doc.setLineWidth(0.25);
                                 doc.setFontSize(6.5);
                                 doc.setTextColor(cotaC.r, cotaC.g, cotaC.b);
 
-                                // Cota superior de ancho
                                 const topY = y - 2.5;
                                 doc.line(x, topY, x + w, topY);
                                 doc.line(x, topY - 1, x, topY + 1);
                                 doc.line(x + w, topY - 1, x + w, topY + 1);
                                 doc.text(`${realW} cm`, cx, topY - 0.7, { align: 'center' });
 
-                                // Cota izquierda de profundidad
                                 const leftX = x - 2.5;
                                 doc.line(leftX, y, leftX, y + h);
                                 doc.line(leftX - 1, y, leftX + 1, y);
                                 doc.line(leftX - 1, y + h, leftX + 1, y + h);
                                 doc.text(`${realH} cm`, leftX - 0.7, cy, { align: 'center', angle: 90 });
 
-                                // Placa de medidas limpia SIN texto "ANAFE" (Requerimiento 5)
                                 const bText = `${realW}×${realH} cm`;
                                 const badgeW = 20, badgeH = 3.8;
                                 doc.setFillColor(255, 255, 255);
@@ -7409,8 +7578,7 @@
 
                                 doc.setLineWidth(0.5);
                             }
-                            if (el.type === 'sink') {
-                                // Bachas (Requerimiento 5: sin texto "Bacha", con dimensiones limpias)
+                            if (el.type === 'sink' && el.start && el.end) {
                                 doc.setLineDash([]);
                                 const c = customColor || { r: 30, g: 30, b: 30 };
                                 doc.setDrawColor(c.r, c.g, c.b);
@@ -7445,7 +7613,6 @@
                                     doc.circle(cx, cy, r);
                                     doc.circle(cx, cy, Math.max(0.5, r * 0.2));
 
-                                    // Cartel de medida limpio SIN texto "BACHA" (Requerimiento 5)
                                     const bText = `Ø ${diam} cm`;
                                     const badgeW = 20, badgeH = 3.8;
                                     doc.setFillColor(255, 255, 255);
@@ -7493,7 +7660,6 @@
                                         doc.circle(cx, cy, 1.2);
                                     }
 
-                                    // Cartel de medida limpio SIN texto "BACHA" (Requerimiento 5)
                                     const bText = `${realW}×${realH} cm`;
                                     const badgeW = 20, badgeH = 3.8;
                                     doc.setFillColor(255, 255, 255);
@@ -7506,7 +7672,7 @@
                                 }
                                 doc.setLineWidth(0.5);
                             }
-                            if (el.type === 'triangle') {
+                            if (el.type === 'triangle' && Array.isArray(el.points) && el.points.length >= 3 && el.points[0] && el.points[1] && el.points[2]) {
                                 doc.setLineDash([]);
                                 const c = customColor || { r: 20, g: 20, b: 20 };
                                 doc.setDrawColor(c.r, c.g, c.b);
@@ -7517,8 +7683,7 @@
                                 doc.line(p1.x, p1.y, p2.x, p2.y);
                                 doc.line(p2.x, p2.y, p0.x, p0.y);
                             }
-                            if (el.type === 'text') {
-                                // Anotaciones con soporte de rotación libre y color (Requerimiento 1 y 4)
+                            if (el.type === 'text' && el.position) {
                                 const tAngle = el.angle || 0;
                                 const txtColor = customColor || { r: 30, g: 41, b: 59 };
                                 const textStr = el.text || "Anotación";
@@ -7542,22 +7707,49 @@
                                     drawRotatedPillText(line, lineCx, lineCy, tAngle, 9.5, txtColor, null, null);
                                 });
                             }
-                            if (el.type === 'terminacion') {
-                                const symbolDef = TerminacionSymbols[el.subtype] || TerminacionSymbols['x'];
+                            if (el.type === 'terminacion' && el.position) {
+                                const symbolDef = (typeof TerminacionSymbols !== 'undefined' && TerminacionSymbols[el.subtype]) || (typeof TerminacionSymbols !== 'undefined' && TerminacionSymbols['x']);
                                 const x = toPdfX(el.position.x);
                                 const y = toPdfY(el.position.y);
-                                symbolDef.renderPDF(doc, x, y, el.angle || 0, scale, el.size || 18, el.color);
+                                if (symbolDef && typeof symbolDef.renderPDF === 'function') {
+                                    symbolDef.renderPDF(doc, x, y, el.angle || 0, scale, el.size || 18, el.color);
+                                }
                             }
-                        });
-                    }
+                        } catch (elErr) {
+                            console.warn("Elemento no se pudo dibujar en PDF:", el, elErr);
+                        }
+                    });
+                }
 
                     const safeClient = (client && client !== '-') ? `${client.replace(/[^a-zA-Z0-9_-]/g, '_')}_` : '';
                     const safeName = (proj).replace(/[^a-zA-Z0-9_-]/g, '_');
-                    doc.save(`Plano_${safeClient}${safeName}.pdf`);
+                    const filename = `Plano_${safeClient}${safeName}.pdf`;
+                    const blob = doc.output('blob');
+
+                    return { doc, blob, filename };
+                } catch (e) {
+                    console.error("Error al generar PDF:", e);
+                    throw e;
+                }
+            },
+
+            async exportPDF(infoOrAuthor, projectName) {
+                try {
+                    const info = this.resolveInfo(infoOrAuthor, projectName);
+                    UI.showToast("⏳ Generando PDF...");
+                    const { doc, blob, filename } = await this.generatePDF(info);
+                    
+                    try {
+                        this.downloadBlob(blob, filename);
+                    } catch (dlErr) {
+                        doc.save(filename);
+                    }
                     UI.showToast("📄 PDF exportado con éxito");
+                    return { doc, blob, filename };
                 } catch (e) {
                     console.error("Error al exportar PDF:", e);
-                    UI.showToast("Error al exportar PDF. Verifique conexión.");
+                    UI.showToast("⚠️ Error al exportar PDF: " + (e.message || "Verifique conexión"));
+                    return null;
                 }
             },
 
@@ -7565,64 +7757,88 @@
                 return new Promise((resolve) => {
                     try {
                         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-                        App.data.elements.forEach(el => {
-                            const pts = [];
-                            if (el.type === 'line') pts.push(el.start, el.end);
-                            if (el.type === 'measure') {
-                                pts.push(el.start, el.end);
-                                const midX = (el.start.x + el.end.x) / 2;
-                                const midY = (el.start.y + el.end.y) / 2;
-                                const dx = el.end.x - el.start.x;
-                                const dy = el.end.y - el.start.y;
-                                const len = Math.hypot(dx, dy) || 1;
-                                let upNx = -dy / len;
-                                let upNy = dx / len;
-                                if (upNy > 0 || (Math.abs(upNy) < 1e-6 && upNx > 0)) { upNx = -upNx; upNy = -upNy; }
-                                pts.push({ x: midX + upNx * 16, y: midY + upNy * 16 });
+                        (App.data.elements || []).forEach(el => {
+                            if (!el) return;
+                            try {
+                                const pts = [];
+                                if (el.type === 'line') {
+                                    if (el.start) pts.push(el.start);
+                                    if (el.end) pts.push(el.end);
+                                }
+                                if (el.type === 'measure') {
+                                    if (el.start) pts.push(el.start);
+                                    if (el.end) pts.push(el.end);
+                                    if (el.start && el.end) {
+                                        const midX = (el.start.x + el.end.x) / 2;
+                                        const midY = (el.start.y + el.end.y) / 2;
+                                        const dx = el.end.x - el.start.x;
+                                        const dy = el.end.y - el.start.y;
+                                        const len = Math.hypot(dx, dy) || 1;
+                                        let upNx = -dy / len;
+                                        let upNy = dx / len;
+                                        if (upNy > 0 || (Math.abs(upNy) < 1e-6 && upNx > 0)) { upNx = -upNx; upNy = -upNy; }
+                                        pts.push({ x: midX + upNx * 16, y: midY + upNy * 16 });
+                                    }
+                                }
+                                if (el.type === 'cota') {
+                                    if (el.start) pts.push(el.start);
+                                    if (el.end) pts.push(el.end);
+                                    if (el.start && el.end) {
+                                        const geom = Renderer.getCotaGeometry(el);
+                                        if (geom && geom.cotaLine) pts.push({ x: geom.cotaLine.x1, y: geom.cotaLine.y1 }, { x: geom.cotaLine.x2, y: geom.cotaLine.y2 });
+                                        if (geom && geom.mid) pts.push({ x: geom.mid.x, y: geom.mid.y });
+                                    }
+                                }
+                                if ((el.type === 'polyline' || el.type === 'pencil') && Array.isArray(el.points)) {
+                                    pts.push(...el.points);
+                                }
+                                if (el.type === 'rect' || el.type === 'square' || el.type === 'cooktop' || el.type === 'sink') {
+                                    if (el.start) pts.push(el.start);
+                                    if (el.end) pts.push(el.end);
+                                }
+                                if ((el.type === 'z_shape' || el.type === 'lines_45') && el.start && el.end) {
+                                    const minP = { x: Math.min(el.start.x, el.end.x), y: Math.min(el.start.y, el.end.y) };
+                                    const maxP = { x: Math.max(el.start.x, el.end.x), y: Math.max(el.start.y, el.end.y) };
+                                    const cx = (minP.x + maxP.x) / 2;
+                                    const cy = (minP.y + maxP.y) / 2;
+                                    const hw = (maxP.x - minP.x) / 2;
+                                    const hh = (maxP.y - minP.y) / 2;
+                                    const rad = ((el.angle || 0) * Math.PI) / 180;
+                                    const cos = Math.cos(rad);
+                                    const sin = Math.sin(rad);
+                                    pts.push(
+                                        { x: cx + (-hw) * cos - (-hh) * sin, y: cy + (-hw) * sin + (-hh) * cos },
+                                        { x: cx + (hw) * cos - (-hh) * sin, y: cy + (hw) * sin + (-hh) * cos },
+                                        { x: cx + (hw) * cos - (hh) * sin, y: cy + (hw) * sin + (hh) * cos },
+                                        { x: cx + (-hw) * cos - (hh) * sin, y: cy + (-hw) * sin + (hh) * cos }
+                                    );
+                                }
+                                if (el.type === 'circle' && el.center && typeof el.radius === 'number') {
+                                    pts.push({ x: el.center.x - el.radius, y: el.center.y - el.radius });
+                                    pts.push({ x: el.center.x + el.radius, y: el.center.y + el.radius });
+                                }
+                                if (el.type === 'triangle' && Array.isArray(el.points)) {
+                                    pts.push(...el.points);
+                                }
+                                if (el.type === 'text' && el.position) {
+                                    const approxW = Math.max(35, (el.text || '').length * 8);
+                                    const rad = ((el.angle || 0) * Math.PI) / 180;
+                                    pts.push(el.position);
+                                    pts.push({ x: el.position.x + approxW * Math.cos(rad), y: el.position.y + approxW * Math.sin(rad) });
+                                }
+                                if (el.type === 'terminacion' && el.position) pts.push(el.position);
+                                pts.forEach(p => {
+                                    if (p && typeof p.x === 'number' && !isNaN(p.x) && typeof p.y === 'number' && !isNaN(p.y)) {
+                                        if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
+                                        if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
+                                    }
+                                });
+                            } catch (e) {
+                                console.warn("Error evaluando elemento para imagen:", el, e);
                             }
-                            if (el.type === 'cota') {
-                                pts.push(el.start, el.end);
-                                const geom = Renderer.getCotaGeometry(el);
-                                pts.push({ x: geom.cotaLine.x1, y: geom.cotaLine.y1 }, { x: geom.cotaLine.x2, y: geom.cotaLine.y2 }, { x: geom.mid.x, y: geom.mid.y });
-                            }
-                            if (el.type === 'polyline' || el.type === 'pencil') pts.push(...el.points);
-                            if (el.type === 'rect' || el.type === 'square' || el.type === 'cooktop' || el.type === 'sink') pts.push(el.start, el.end);
-                            if (el.type === 'z_shape' || el.type === 'lines_45') {
-                                const minP = { x: Math.min(el.start.x, el.end.x), y: Math.min(el.start.y, el.end.y) };
-                                const maxP = { x: Math.max(el.start.x, el.end.x), y: Math.max(el.start.y, el.end.y) };
-                                const cx = (minP.x + maxP.x) / 2;
-                                const cy = (minP.y + maxP.y) / 2;
-                                const hw = (maxP.x - minP.x) / 2;
-                                const hh = (maxP.y - minP.y) / 2;
-                                const rad = ((el.angle || 0) * Math.PI) / 180;
-                                const cos = Math.cos(rad);
-                                const sin = Math.sin(rad);
-                                pts.push(
-                                    { x: cx + (-hw) * cos - (-hh) * sin, y: cy + (-hw) * sin + (-hh) * cos },
-                                    { x: cx + (hw) * cos - (-hh) * sin, y: cy + (hw) * sin + (-hh) * cos },
-                                    { x: cx + (hw) * cos - (hh) * sin, y: cy + (hw) * sin + (hh) * cos },
-                                    { x: cx + (-hw) * cos - (hh) * sin, y: cy + (-hw) * sin + (hh) * cos }
-                                );
-                            }
-                            if (el.type === 'circle') {
-                                pts.push({ x: el.center.x - el.radius, y: el.center.y - el.radius });
-                                pts.push({ x: el.center.x + el.radius, y: el.center.y + el.radius });
-                            }
-                            if (el.type === 'triangle') pts.push(...el.points);
-                            if (el.type === 'text') {
-                                const approxW = Math.max(35, (el.text || '').length * 8);
-                                const rad = ((el.angle || 0) * Math.PI) / 180;
-                                pts.push(el.position);
-                                pts.push({ x: el.position.x + approxW * Math.cos(rad), y: el.position.y + approxW * Math.sin(rad) });
-                            }
-                            if (el.type === 'terminacion') pts.push(el.position);
-                            pts.forEach(p => {
-                                if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
-                                if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
-                            });
                         });
 
-                        if (minX === Infinity || App.data.elements.length === 0) {
+                        if (minX === Infinity || !App.data.elements || App.data.elements.length === 0) {
                             resolve(null);
                             return;
                         }
@@ -7702,11 +7918,12 @@
                     const imgDataUrl = await this.generateBlueprintImage();
 
                     // Medidas y cotas
-                    const measures = App.data.elements.filter(e => e.type === 'measure' || e.type === 'cota');
-                    const texts = App.data.elements.filter(e => e.type === 'text');
-                    const cooktops = App.data.elements.filter(e => e.type === 'cooktop');
-                    const sinks = App.data.elements.filter(e => e.type === 'sink');
-                    const geometriesCount = App.data.elements.filter(e => e.type !== 'measure' && e.type !== 'cota' && e.type !== 'text').length;
+                    const allEls = (App.data && Array.isArray(App.data.elements)) ? App.data.elements : [];
+                    const measures = allEls.filter(e => e && (e.type === 'measure' || e.type === 'cota'));
+                    const texts = allEls.filter(e => e && e.type === 'text' && e.text);
+                    const cooktops = allEls.filter(e => e && e.type === 'cooktop' && e.start && e.end);
+                    const sinks = allEls.filter(e => e && e.type === 'sink' && e.start && e.end);
+                    const geometriesCount = allEls.filter(e => e && e.type !== 'measure' && e.type !== 'cota' && e.type !== 'text').length;
 
                     let measuresHtml = '';
                     if (measures.length > 0) {
@@ -7724,12 +7941,14 @@
                     let equipHtml = '';
                     if (cooktops.length > 0 || sinks.length > 0) {
                         const items = [];
-                        cooktops.forEach((c, i) => {
+                        cooktops.forEach((c) => {
+                            if (!c || !c.start || !c.end) return;
                             const w = Math.round(Math.abs(c.end.x - c.start.x));
                             const h = Math.round(Math.abs(c.end.y - c.start.y));
                             items.push(`<tr><td style="padding: 6px 10px; border: 1px solid #ccc; text-align: center;">${items.length + 1}</td><td style="padding: 6px 10px; border: 1px solid #ccc;">Anafe (${c.subtype || 4} fuegos)</td><td style="padding: 6px 10px; border: 1px solid #ccc; font-weight: bold;">${w} × ${h} cm</td></tr>`);
                         });
-                        sinks.forEach((s, i) => {
+                        sinks.forEach((s) => {
+                            if (!s || !s.start || !s.end) return;
                             const w = Math.round(Math.abs(s.end.x - s.start.x));
                             const h = Math.round(Math.abs(s.end.y - s.start.y));
                             items.push(`<tr><td style="padding: 6px 10px; border: 1px solid #ccc; text-align: center;">${items.length + 1}</td><td style="padding: 6px 10px; border: 1px solid #ccc;">Bacha (${s.subtype || 'simple'})</td><td style="padding: 6px 10px; border: 1px solid #ccc; font-weight: bold;">${w} × ${h} cm</td></tr>`);
@@ -7864,36 +8083,18 @@
                 }
             },
 
-            exportWhatsApp(infoOrAuthor, projectName, phone) {
-                let info = {};
-                if (typeof infoOrAuthor === 'object' && infoOrAuthor !== null) {
-                    info = infoOrAuthor;
-                } else {
-                    info = {
-                        author: infoOrAuthor || localStorage.getItem('marmoleria_author') || 'Personal técnico',
-                        projectName: projectName || App.data.project.name || 'Plano Marmolería',
-                        phone: phone || '',
-                        client: localStorage.getItem('marmoleria_client') || '-',
-                        sector: localStorage.getItem('marmoleria_sector') || 'Cocina',
-                        orientation: 'landscape',
-                        margin: 15
-                    };
-                }
-
+            buildWhatsAppMessage(info) {
                 const proj = info.projectName || App.data.project.name || 'Plano Marmolería';
                 const auth = info.author || localStorage.getItem('marmoleria_author') || 'Personal técnico';
                 const client = info.client || '-';
                 const sector = info.sector || 'Cocina';
                 const fechaStr = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
-                // Descargar el PDF con todos los parámetros
-                this.exportPDF(info);
-
-                // Construir mensaje enriquecido
-                const measures = App.data.elements.filter(e => e.type === 'measure' || e.type === 'cota');
-                const texts = App.data.elements.filter(e => e.type === 'text');
-                const cooktops = App.data.elements.filter(e => e.type === 'cooktop');
-                const sinks = App.data.elements.filter(e => e.type === 'sink');
+                const allEls = (App.data && Array.isArray(App.data.elements)) ? App.data.elements : [];
+                const measures = allEls.filter(e => e && (e.type === 'measure' || e.type === 'cota'));
+                const texts = allEls.filter(e => e && e.type === 'text' && e.text);
+                const cooktops = allEls.filter(e => e && e.type === 'cooktop' && e.start && e.end);
+                const sinks = allEls.filter(e => e && e.type === 'sink' && e.start && e.end);
 
                 let msg = `*MARMOLERÍA BENJAMÍN*\n`;
                 msg += `📐 *Plano Técnico de Fabricación*\n`;
@@ -7907,11 +8108,13 @@
                 if (cooktops.length > 0 || sinks.length > 0) {
                     msg += `\n🍳 *Equipamiento colocado:*\n`;
                     cooktops.forEach(c => {
+                        if (!c || !c.start || !c.end) return;
                         const w = Math.round(Math.abs(c.end.x - c.start.x));
                         const h = Math.round(Math.abs(c.end.y - c.start.y));
                         msg += `  • Anafe ${c.subtype || 4} fuegos: *${w}×${h} cm*\n`;
                     });
                     sinks.forEach(s => {
+                        if (!s || !s.start || !s.end) return;
                         const w = Math.round(Math.abs(s.end.x - s.start.x));
                         const h = Math.round(Math.abs(s.end.y - s.start.y));
                         msg += `  • Bacha (${s.subtype || 'simple'}): *${w}×${h} cm*\n`;
@@ -7921,6 +8124,7 @@
                 if (measures.length > 0) {
                     msg += `\n📏 *Medidas y Cotas registradas:*\n`;
                     measures.forEach((m, idx) => {
+                        if (!m) return;
                         msg += `  • Medida ${idx + 1}: *${m.value || 'Sin valor'}*\n`;
                     });
                 }
@@ -7928,20 +8132,92 @@
                 if (texts.length > 0) {
                     msg += `\n📝 *Anotaciones de obra:*\n`;
                     texts.forEach((t, idx) => {
+                        if (!t || !t.text) return;
                         msg += `  • Nota ${idx + 1}: _${t.text}_\n`;
                     });
                 }
 
                 msg += `─────────────────────────\n`;
-                msg += `📎 *(Descargué el archivo PDF del plano en mi dispositivo para adjuntarlo a este chat)*`;
+                msg += `📎 *Plano técnico oficial adjunto en PDF*`;
+                return msg;
+            },
 
-                const cleanPhone = (info.phone || '').replace(/[^0-9]/g, '');
-                let waUrl = cleanPhone
-                    ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`
-                    : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+            async exportWhatsApp(infoOrAuthor, projectName, phone) {
+                try {
+                    const info = this.resolveInfo(infoOrAuthor, projectName, phone);
+                    UI.showToast("⏳ Generando PDF para WhatsApp...");
 
-                window.open(waUrl, '_blank');
-                UI.showToast("💬 Abriendo WhatsApp y descargando PDF...");
+                    const { doc, blob, filename } = await this.generatePDF(info);
+                    const msg = this.buildWhatsAppMessage(info);
+
+                    this._lastPdfBlob = blob;
+                    this._lastFilename = filename;
+                    this._lastWppMsg = msg;
+
+                    const cleanPhone = (info.phone || '').replace(/[^0-9]/g, '');
+                    const waUrl = cleanPhone
+                        ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`
+                        : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+                    this._lastWppUrl = waUrl;
+
+                    // 1. En móviles/tablets con Web Share API que soporte archivos:
+                    const isMobileOrTablet = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+                    if (isMobileOrTablet && navigator.canShare && typeof File !== 'undefined') {
+                        try {
+                            const pdfFile = new File([blob], filename, { type: 'application/pdf' });
+                            if (navigator.canShare({ files: [pdfFile] })) {
+                                await navigator.share({
+                                    title: info.projectName || 'Plano Técnico Marmolería',
+                                    text: msg,
+                                    files: [pdfFile]
+                                });
+                                UI.showToast("✅ ¡Plano y PDF compartidos por WhatsApp!");
+                                return;
+                            }
+                        } catch (shareErr) {
+                            if (shareErr.name === 'AbortError') {
+                                UI.showToast("Envío cancelado");
+                                return;
+                            }
+                            console.warn("navigator.share no completado, usando fallback:", shareErr);
+                        }
+                    }
+
+                    // 2. Fallback universal (Desktop / Navegadores de escritorio):
+                    try {
+                        this.downloadBlob(blob, filename);
+                    } catch (dlErr) {
+                        doc.save(filename);
+                    }
+
+                    // Abrir WhatsApp en nueva pestaña
+                    window.open(waUrl, '_blank');
+
+                    // Mostrar modal interactivo con instrucciones de adjuntado
+                    this.showWppGuideModal(filename, waUrl, msg);
+                    UI.showToast("💬 WhatsApp abierto y PDF descargado para adjuntar");
+
+                } catch (e) {
+                    console.error("Error al exportar a WhatsApp:", e);
+                    UI.showToast("⚠️ Error al exportar a WhatsApp: " + (e.message || e));
+                }
+            },
+
+            async quickExportWhatsApp() {
+                const info = this.validateAndGetInfo();
+                await this.exportWhatsApp(info);
+            },
+
+            showWppGuideModal(filename, waUrl, msg) {
+                const modal = document.getElementById('wpp-guide-modal');
+                const fnEl = document.getElementById('wpp-guide-filename');
+                if (fnEl) fnEl.textContent = filename || 'Plano_Mesada.pdf';
+                if (modal) modal.classList.add('active');
+            },
+
+            closeWppGuideModal() {
+                const modal = document.getElementById('wpp-guide-modal');
+                if (modal) modal.classList.remove('active');
             }
         };
 
@@ -8102,25 +8378,76 @@
                 });
             }
 
-            document.getElementById('btn-modal-pdf').addEventListener('click', () => {
+            // Botón directo en la barra superior: Exportar a WPP
+            const btnExportWpp = document.getElementById('btn-export-wpp');
+            if (btnExportWpp) {
+                btnExportWpp.addEventListener('click', () => {
+                    ExportManager.quickExportWhatsApp();
+                });
+            }
+
+            // Eventos del modal guía de WhatsApp
+            const wppGuideClose = document.getElementById('wpp-guide-close');
+            if (wppGuideClose) wppGuideClose.addEventListener('click', () => ExportManager.closeWppGuideModal());
+            const wppGuideDone = document.getElementById('wpp-guide-btn-done');
+            if (wppGuideDone) wppGuideDone.addEventListener('click', () => ExportManager.closeWppGuideModal());
+            const wppGuideModal = document.getElementById('wpp-guide-modal');
+            if (wppGuideModal) {
+                wppGuideModal.addEventListener('click', (e) => {
+                    if (e.target.id === 'wpp-guide-modal') ExportManager.closeWppGuideModal();
+                });
+            }
+            const wppGuideOpenWa = document.getElementById('wpp-guide-btn-open-wa');
+            if (wppGuideOpenWa) {
+                wppGuideOpenWa.addEventListener('click', () => {
+                    if (ExportManager._lastWppUrl) window.open(ExportManager._lastWppUrl, '_blank');
+                });
+            }
+            const wppGuideRedownload = document.getElementById('wpp-guide-btn-redownload');
+            if (wppGuideRedownload) {
+                wppGuideRedownload.addEventListener('click', () => {
+                    if (ExportManager._lastPdfBlob && ExportManager._lastFilename) {
+                        ExportManager.downloadBlob(ExportManager._lastPdfBlob, ExportManager._lastFilename);
+                        UI.showToast("📥 PDF descargado nuevamente");
+                    }
+                });
+            }
+            const wppGuideCopy = document.getElementById('wpp-guide-btn-copy');
+            if (wppGuideCopy) {
+                wppGuideCopy.addEventListener('click', () => {
+                    if (ExportManager._lastWppMsg) {
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(ExportManager._lastWppMsg).then(() => {
+                                UI.showToast("📋 Resumen copiado al portapapeles");
+                            }).catch(() => {
+                                UI.showToast("Resumen listo para WhatsApp");
+                            });
+                        } else {
+                            UI.showToast("Resumen listo para WhatsApp");
+                        }
+                    }
+                });
+            }
+
+            document.getElementById('btn-modal-pdf').addEventListener('click', async () => {
                 const info = ExportManager.validateAndGetInfo();
                 if (!info) return;
-                ExportManager.exportPDF(info);
                 ExportManager.closeModal();
+                await ExportManager.exportPDF(info);
             });
 
-            document.getElementById('btn-modal-word').addEventListener('click', () => {
+            document.getElementById('btn-modal-word').addEventListener('click', async () => {
                 const info = ExportManager.validateAndGetInfo();
                 if (!info) return;
-                ExportManager.exportWord(info);
                 ExportManager.closeModal();
+                await ExportManager.exportWord(info);
             });
 
-            document.getElementById('btn-modal-whatsapp').addEventListener('click', () => {
+            document.getElementById('btn-modal-whatsapp').addEventListener('click', async () => {
                 const info = ExportManager.validateAndGetInfo();
                 if (!info) return;
-                ExportManager.exportWhatsApp(info);
                 ExportManager.closeModal();
+                await ExportManager.exportWhatsApp(info);
             });
 
             document.getElementById('btn-modal-json').addEventListener('click', () => {
