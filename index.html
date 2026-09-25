@@ -5915,8 +5915,26 @@
                 _activeNote: null,
                 _dragPrevPoint: null,
                 _hasMoved: false,
+                _isRotating: false,
                 down(wp, e) {
                     const target = e.target;
+                    
+                    // Soporte para control de rotación si la nota ya está seleccionada
+                    if (target.classList && target.classList.contains('control-point')) {
+                        const ctrlId = target.getAttribute('data-ctrl-id');
+                        const elId = target.getAttribute('data-el-id');
+                        if (ctrlId === 'rotate_text') {
+                            const el = App.data.elements.find(x => x.id === elId);
+                            if (el && el.type === 'text') {
+                                this._activeNote = el;
+                                this._isRotating = true;
+                                this._dragPrevPoint = wp;
+                                this._hasMoved = false;
+                                return;
+                            }
+                        }
+                    }
+
                     const elNode = target.closest ? target.closest('[data-id]') : null;
                     const id = elNode ? elNode.getAttribute('data-id') : null;
 
@@ -5926,6 +5944,7 @@
                             this._activeNote = el;
                             this._dragPrevPoint = wp;
                             this._hasMoved = false;
+                            this._isRotating = false;
                             App.ui.selectedId = el.id;
                             Renderer.renderAll();
                             return;
@@ -5956,16 +5975,27 @@
                         { select: false, tip: "Presioná Enter ↵ para guardar o tocá afuera" }
                     );
                 },
-                move(wp) {
+                move(wp, e) {
                     if (this._activeNote) {
                         this._hasMoved = true;
-                        if (!this._dragPrevPoint) this._dragPrevPoint = wp;
-                        const dx = wp.x - this._dragPrevPoint.x;
-                        const dy = wp.y - this._dragPrevPoint.y;
+                        
+                        if (this._isRotating) {
+                            const textStr = this._activeNote.text || "Anotación";
+                            const tagW = Math.max(68, textStr.length * 8 + 22);
+                            const cx = this._activeNote.position.x + (tagW - 20) / 2;
+                            const cy = this._activeNote.position.y;
+                            let deg = Math.atan2(wp.y - cy, wp.x - cx) * 180 / Math.PI + 90;
+                            if (e && e.shiftKey) deg = Math.round(deg / 15) * 15;
+                            this._activeNote.angle = Math.round(deg);
+                        } else {
+                            if (!this._dragPrevPoint) this._dragPrevPoint = wp;
+                            const dx = wp.x - this._dragPrevPoint.x;
+                            const dy = wp.y - this._dragPrevPoint.y;
+                            this._activeNote.position.x += dx;
+                            this._activeNote.position.y += dy;
+                        }
+                        
                         this._dragPrevPoint = wp;
-
-                        this._activeNote.position.x += dx;
-                        this._activeNote.position.y += dy;
                         Renderer.renderAll();
                     }
                 },
@@ -5973,14 +6003,17 @@
                     if (this._activeNote) {
                         const note = this._activeNote;
                         const wasMoved = this._hasMoved;
+                        const wasRotating = this._isRotating;
+                        
                         this._activeNote = null;
                         this._dragPrevPoint = null;
                         this._hasMoved = false;
+                        this._isRotating = false;
 
                         if (wasMoved) {
                             HistoryManager.pushState();
                             StorageManager.save();
-                        } else {
+                        } else if (!wasRotating) {
                             // Fue un tap/click simple en la nota: abrir editor inline para editarla
                             CanvasInlineEditor.open(
                                 note.position,
