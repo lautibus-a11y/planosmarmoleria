@@ -4709,6 +4709,12 @@
                     if (this._activeEl.type === 'line' || this._activeEl.type === 'measure') {
                         if (this._activeCtrl === 'start') this._activeEl.start = finalP;
                         if (this._activeCtrl === 'end') this._activeEl.end = finalP;
+                        // Al mover un extremo de la medida, la dirección del vector cambia,
+                        // por lo que el labelOffset anterior ya no es válido -> reset
+                        if (this._activeEl.type === 'measure' && (this._activeCtrl === 'start' || this._activeCtrl === 'end')) {
+                            this._activeEl.labelOffset = 0;
+                            this._activeEl.labelOffsetPar = 0;
+                        }
                     } else if (this._activeEl.type === 'polyline') {
                         if (this._activeCtrl.startsWith('p')) {
                             const idx = parseInt(this._activeCtrl.substring(1));
@@ -4817,6 +4823,10 @@
                     this._activeCtrl = null;
                     this._activeEl = null;
                     this._dragPrevPoint = null;
+                    // Limpiar estado de label drag para evitar estado inconsistente
+                    this._labelDragStartPoint = null;
+                    this._labelDragStartLabelOffset = 0;
+                    this._labelDragStartLabelOffsetPar = 0;
                     Renderer.drawSnap(null);
                 },
                 dblclick(wp, e) {

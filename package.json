@@ -1,0 +1,10 @@
+{
+  "name": "planos-marmoleria",
+  "version": "1.0.0",
+  "description": "Planos de Marmolería Benjamín",
+  "scripts": {
+    "check": "node -e \"const fs=require('fs');const re=/<script(?![^>]*src)[^>]*>([\\s\\S]*?)<\\/script>/gi;let m,js='';const c=fs.readFileSync('index.html','utf8');while((m=re.exec(c))!==null)js+=m[1];try{new Function(js);console.log('✅ Sintaxis JS OK')}catch(e){console.error('❌ Error de sintaxis:',e.message);process.exit(1)}\"",
+    "deploy": "wrangler pages deploy ."
+  },
+  "private": true
+}
