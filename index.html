@@ -4612,19 +4612,21 @@
 
                     // 0. Mover solo el label de una medida (sin mover la línea)
                     if (this._activeEl.type === 'measure' && this._activeCtrl === 'label') {
-                        const el = this._activeEl;
-                        const edx = el.end.x - el.start.x;
-                        const edy = el.end.y - el.start.y;
-                        const elen = Math.hypot(edx, edy) || 1;
-                        const ux = edx / elen;
-                        const uy = edy / elen;
-                        let upNx = -uy;
-                        let upNy = ux;
-                        if (upNy > 0 || (Math.abs(upNy) < 1e-6 && upNx > 0)) { upNx = -upNx; upNy = -upNy; }
-                        const totalDx = wp.x - this._labelDragStartPoint.x;
-                        const totalDy = wp.y - this._labelDragStartPoint.y;
-                        el.labelOffset    = this._labelDragStartLabelOffset    + (totalDx * upNx + totalDy * upNy);
-                        el.labelOffsetPar = this._labelDragStartLabelOffsetPar + (totalDx * ux    + totalDy * uy);
+                        {
+                            const el = this._activeEl;
+                            const edx = el.end.x - el.start.x;
+                            const edy = el.end.y - el.start.y;
+                            const elen = Math.hypot(edx, edy) || 1;
+                            const ux = edx / elen;
+                            const uy = edy / elen;
+                            let upNx = -uy;
+                            let upNy = ux;
+                            if (upNy > 0 || (Math.abs(upNy) < 1e-6 && upNx > 0)) { upNx = -upNx; upNy = -upNy; }
+                            const totalDx = wp.x - this._labelDragStartPoint.x;
+                            const totalDy = wp.y - this._labelDragStartPoint.y;
+                            el.labelOffset    = this._labelDragStartLabelOffset    + (totalDx * upNx + totalDy * upNy);
+                            el.labelOffsetPar = this._labelDragStartLabelOffsetPar + (totalDx * ux    + totalDy * uy);
+                        }
                         Renderer.renderAll();
                         return;
                     }
