@@ -7182,29 +7182,7 @@
                             y: cy + dx * sin + dy * cos
                         });
 
-                        if (bgColor) {
-                            const bg = Utils.parseColor(bgColor, { r: 255, g: 255, b: 255 });
-                            const bd = borderColor ? Utils.parseColor(borderColor, { r: 203, g: 213, b: 225 }) : null;
-                            doc.setFillColor(bg.r, bg.g, bg.b);
-                            if (bd) {
-                                doc.setDrawColor(bd.r, bd.g, bd.b);
-                                doc.setLineWidth(borderWidth);
-                            }
-                            const p1 = rotPt(-pillW / 2, -pillH / 2);
-                            const p2 = rotPt(pillW / 2, -pillH / 2);
-                            const p3 = rotPt(pillW / 2, pillH / 2);
-                            const p4 = rotPt(-pillW / 2, pillH / 2);
-
-                            doc.triangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, bd ? 'FD' : 'F');
-                            doc.triangle(p1.x, p1.y, p3.x, p3.y, p4.x, p4.y, bd ? 'FD' : 'F');
-                            if (bd) {
-                                doc.line(p1.x, p1.y, p2.x, p2.y);
-                                doc.line(p2.x, p2.y, p3.x, p3.y);
-                                doc.line(p3.x, p3.y, p4.x, p4.y);
-                                doc.line(p4.x, p4.y, p1.x, p1.y);
-                            }
-                        }
-
+                        // Sin fondo ni borde: solo el texto de la medida
                         const tc = textColor ? Utils.parseColor(textColor, { r: 15, g: 23, b: 42 }) : { r: 15, g: 23, b: 42 };
                         doc.setTextColor(tc.r, tc.g, tc.b);
                         const localStartX = -textW / 2;
