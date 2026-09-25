@@ -7441,10 +7441,10 @@
                                 const pdx = x2 - x1;
                                 const pdy = y2 - y1;
                                 const pLen = Math.hypot(pdx, pdy) || 1;
-                                const ux = pdx / pLen;
-                                const uy = pdy / pLen;
-                                const perpX = -uy;
-                                const perpY = ux;
+                                const tickUx = pdx / pLen;
+                                const tickUy = pdy / pLen;
+                                const perpX = -tickUy;
+                                const perpY = tickUx;
                                 const tickLen = 2.0; // mm
                                 doc.setLineWidth(0.4);
                                 doc.line(x1 - perpX * tickLen, y1 - perpY * tickLen, x1 + perpX * tickLen, y1 + perpY * tickLen);
