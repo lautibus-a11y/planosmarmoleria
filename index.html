@@ -4734,6 +4734,63 @@
                         const dy = wp.y - this._dragPrevPoint.y;
                         this._dragPrevPoint = wp;
 
+                        
+                        if (this._activeEl.type === 'text') {
+                            let guides = [];
+                            let snappedX = wp.x;
+                            let snappedY = wp.y;
+                            const targetsX = new Set();
+                            const targetsY = new Set();
+                            
+                            App.data.elements.forEach(el => {
+                                if (el.id === this._activeEl.id) return;
+                                let cx = null, cy = null;
+                                if (el.start && el.end) {
+                                    cx = (el.start.x + el.end.x) / 2; cy = (el.start.y + el.end.y) / 2;
+                                    targetsX.add(el.start.x); targetsX.add(el.end.x); targetsX.add(cx);
+                                    targetsY.add(el.start.y); targetsY.add(el.end.y); targetsY.add(cy);
+                                } else if (el.center) {
+                                    targetsX.add(el.center.x); targetsY.add(el.center.y);
+                                } else if (el.position) {
+                                    targetsX.add(el.position.x); targetsY.add(el.position.y);
+                                }
+                            });
+
+                            const textStr = this._activeEl.text || "Anotación";
+                            const vs = (typeof this._activeEl.visualScale === 'number') ? this._activeEl.visualScale : 1.0;
+                            const tagW = Math.max(68, textStr.length * 8 + 22) * vs;
+                            const tCx = wp.x + (tagW - 20 * vs) / 2;
+                            const tCy = wp.y;
+
+                            const snapThreshold = 10 / (App.viewport.scale || 1);
+                            let minDx = snapThreshold, minDy = snapThreshold;
+
+                            targetsX.forEach(tx => {
+                                if (Math.abs(tCx - tx) < minDx) {
+                                    minDx = Math.abs(tCx - tx);
+                                    snappedX = tx - (tagW - 20 * vs) / 2;
+                                    guides = guides.filter(g => g.type !== 'v');
+                                    guides.push({ type: 'v', x: tx });
+                                }
+                            });
+
+                            targetsY.forEach(ty => {
+                                if (Math.abs(tCy - ty) < minDy) {
+                                    minDy = Math.abs(tCy - ty);
+                                    snappedY = ty;
+                                    guides = guides.filter(g => g.type !== 'h');
+                                    guides.push({ type: 'h', y: ty });
+                                }
+                            });
+
+                            this._activeEl.position = { x: snappedX, y: snappedY };
+                            Renderer.drawSnap(null, guides);
+                            
+                            // Prevent the default movement logic below from running for text
+                            Renderer.renderAll();
+                            return;
+                        }
+
                         if (this._activeEl.type === 'terminacion') {
                             // Movimiento 100% libre y directo donde el usuario arrastra (sin saltos bruscos)
                             this._activeEl.position.x += dx;
@@ -4793,59 +4850,6 @@
                             const idx = parseInt(this._activeCtrl.substring(1));
                             this._activeEl.points[idx] = finalP;
                         }
-                    } else if (this._activeEl.type === 'text' && this._activeCtrl === 'pos') {
-                        let guides = [];
-                        let snappedX = wp.x;
-                        let snappedY = wp.y;
-                        const targetsX = new Set();
-                        const targetsY = new Set();
-                        let pMinX = Infinity, pMaxX = -Infinity;
-                        let pMinY = Infinity, pMaxY = -Infinity;
-                        
-                        App.data.elements.forEach(el => {
-                            if (el.id === this._activeEl.id || el.id === 'bg-rect' || el.type === 'text') return;
-                            let cx = null, cy = null;
-                            if (el.start && el.end) {
-                                cx = (el.start.x + el.end.x) / 2; cy = (el.start.y + el.end.y) / 2;
-                                pMinX = Math.min(pMinX, el.start.x, el.end.x); pMaxX = Math.max(pMaxX, el.start.x, el.end.x);
-                                pMinY = Math.min(pMinY, el.start.y, el.end.y); pMaxY = Math.max(pMaxY, el.start.y, el.end.y);
-                            } else if (el.center) {
-                                cx = el.center.x; cy = el.center.y;
-                            }
-                            if (cx !== null) targetsX.add(cx);
-                            if (cy !== null) targetsY.add(cy);
-                        });
-                        if (pMinX !== Infinity) {
-                            targetsX.add((pMinX + pMaxX) / 2);
-                            targetsY.add((pMinY + pMaxY) / 2);
-                        }
-                        
-                        const textStr = this._activeEl.text || "Anotación";
-                        const vs = (typeof this._activeEl.visualScale === 'number') ? this._activeEl.visualScale : 1.0;
-                        const tagW = Math.max(68, textStr.length * 8 + 22) * vs;
-                        const tCx = wp.x + (tagW - 20 * vs) / 2;
-                        const tCy = wp.y;
-                        const snapThresh = 8 / App.viewport.scale;
-                        
-                        for (let tx of targetsX) {
-                            if (Math.abs(tCx - tx) < snapThresh) {
-                                snappedX = tx - (tagW - 20 * vs) / 2;
-                                guides.push({ axis: 'x', coord: tx, bounds: { min: pMinY === Infinity ? tx - 200 : pMinY - 50, max: pMaxY === -Infinity ? tx + 200 : pMaxY + 50 } });
-                                break;
-                            }
-                        }
-                        for (let ty of targetsY) {
-                            if (Math.abs(tCy - ty) < snapThresh) {
-                                snappedY = ty;
-                                guides.push({ axis: 'y', coord: ty, bounds: { min: pMinX === Infinity ? ty - 200 : pMinX - 50, max: pMaxX === -Infinity ? ty + 200 : pMaxX + 50 } });
-                                break;
-                            }
-                        }
-                        
-                        this._activeEl.position = { x: snappedX, y: snappedY };
-                        Renderer.drawSnap(null, guides);
-                        Renderer.renderAll();
-                        return;
                     } else if (this._activeEl.type === 'text' && this._activeCtrl === 'rotate_text') {
                         const textStr = this._activeEl.text || "Anotación";
                         const vs = (typeof this._activeEl.visualScale === 'number') ? this._activeEl.visualScale : 1.0;
