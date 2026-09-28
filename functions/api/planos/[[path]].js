@@ -57,7 +57,8 @@ export async function onRequest(context) {
         if (method === 'GET' && !id) {
             const listed = await env.PLANOS_BUCKET.list({
                 prefix: 'planos/',
-                limit: 100
+                limit: 100,
+                include: ['customMetadata']
             });
 
             const planos = listed.objects.map(obj => {
@@ -69,7 +70,7 @@ export async function onRequest(context) {
                 let author = '-';
                 let sector = 'Cocina';
 
-                try { if (meta.projectname) projName = decodeURIComponent(meta.projectname); } catch(e) {}
+                try { if (meta.projectName || meta.projectname) projName = decodeURIComponent(meta.projectName || meta.projectname); } catch(e) {}
                 try { if (meta.client) client = decodeURIComponent(meta.client); } catch(e) {}
                 try { if (meta.author) author = decodeURIComponent(meta.author); } catch(e) {}
                 try { if (meta.sector) sector = decodeURIComponent(meta.sector); } catch(e) {}
@@ -80,8 +81,8 @@ export async function onRequest(context) {
                     client: client,
                     author: author,
                     sector: sector,
-                    elementCount: parseInt(meta.elementcount || '0', 10),
-                    updatedAt: meta.updatedat || obj.uploaded.toISOString(),
+                    elementCount: parseInt(meta.elementCount || meta.elementcount || '0', 10),
+                    updatedAt: meta.updatedAt || meta.updatedat || obj.uploaded.toISOString(),
                     sizeBytes: obj.size
                 };
             });
