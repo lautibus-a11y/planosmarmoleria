@@ -1920,7 +1920,7 @@
             formatMeasure: (pxDist) => {
                 // En planos de marmolería la unidad estándar comercial es cm (1px = 1cm)
                 const cm = Math.round(pxDist);
-                return cm + " cm";
+                return String(cm);
             },
             parseColor: (colorStr, defaultColor = { r: 15, g: 23, b: 42 }) => {
                 if (!colorStr) return defaultColor;
@@ -3252,7 +3252,7 @@
                             'text-anchor': 'middle', 'font-size': `${Math.max(7.5, Math.min(10, Math.min(rw, rh) * 0.16))}px`, 'font-weight': '700',
                             fill: cotaColor, 'font-family': 'system-ui, sans-serif'
                         });
-                        cotaWText.textContent = `↔ ${numW} cm`;
+                        cotaWText.textContent = `↔ ${numW}`;
                         group.appendChild(cotaWText);
 
                         const cotaX = rx - 7;
@@ -3274,11 +3274,11 @@
                             fill: cotaColor, 'font-family': 'system-ui, sans-serif',
                             transform: `rotate(-90, ${cotaX - 3}, ${ry + rh / 2})`
                         });
-                        cotaHText.textContent = `↕ ${numH} cm`;
+                        cotaHText.textContent = `↕ ${numH}`;
                         group.appendChild(cotaHText);
 
                         // Etiqueta de medida limpia y contenida: solo dimensiones (SIN "Anafe")
-                        const tagText = `${numW}×${numH} cm`;
+                        const tagText = `${numW}×${numH}`;
                         const tagFontSize = Math.max(7, Math.min(9.5, Math.min(rw * 0.12, rh * 0.22)));
                         const tagCharW = tagFontSize * 0.62;
                         const pillW = Math.min(rw - 2, tagText.length * tagCharW + 10);
@@ -3369,12 +3369,12 @@
                                 'text-anchor': 'middle', 'font-size': `${Math.max(7.5, Math.min(10, diam * 0.16))}px`, 'font-weight': '700',
                                 fill: cotaColor, 'font-family': 'system-ui, sans-serif'
                             });
-                            cotaText.textContent = `Ø ${diam} cm`;
+                            cotaText.textContent = `Ø ${diam}`;
                             group.appendChild(cotaText);
 
                             // Cartel de Medida Central Adaptativo (SIN texto "Bacha")
                             const badgeFontSize = Math.max(7, Math.min(9.5, diam * 0.14));
-                            const badgeText = `Ø ${diam} cm`;
+                            const badgeText = `Ø ${diam}`;
                             const charW = badgeFontSize * 0.62;
                             const badgeW = Math.min(diam - 2, badgeText.length * charW + 10);
                             const badgeH = badgeFontSize + 6;
@@ -3506,7 +3506,7 @@
                                 'text-anchor': 'middle', 'font-size': `${Math.max(7.5, Math.min(10, Math.min(rw, rh) * 0.16))}px`, 'font-weight': '700',
                                 fill: cotaColor, 'font-family': 'system-ui, sans-serif'
                             });
-                            cotaWText.textContent = `↔ ${numW} cm`;
+                            cotaWText.textContent = `↔ ${numW}`;
                             group.appendChild(cotaWText);
 
                             const cotaX = rx - 7;
@@ -3528,11 +3528,11 @@
                                 fill: cotaColor, 'font-family': 'system-ui, sans-serif',
                                 transform: `rotate(-90, ${cotaX - 3}, ${ry + rh / 2})`
                             });
-                            cotaHText.textContent = `↕ ${numH} cm`;
+                            cotaHText.textContent = `↕ ${numH}`;
                             group.appendChild(cotaHText);
 
                             // Cartel de Medida Central Adaptativo (SIN texto "Bacha")
-                            const badgeText = `${numW}×${numH} cm`;
+                            const badgeText = `${numW}×${numH}`;
                             const badgeFontSize = Math.max(7, Math.min(9.5, Math.min(rw * 0.12, rh * 0.22)));
                             const charW = badgeFontSize * 0.62;
                             const badgeW = Math.min(rw - 2, badgeText.length * charW + 10);
@@ -3641,7 +3641,8 @@
                     }
                     case 'cota': {
                         const geom = this.getCotaGeometry(elData);
-                        const mVal = elData.isManual ? (elData.value || "0 cm") : Utils.formatMeasure(geom.dist);
+                        let mVal = elData.isManual ? (elData.value || "0") : Utils.formatMeasure(geom.dist);
+                        mVal = String(mVal).replace(/\s*cm/gi, "").trim();
                         const isManual = !!elData.isManual;
                         const vs = Math.max(0.25, elData.visualScale || 1.0);
                         const customColor = elData.color || null;
@@ -3748,7 +3749,8 @@
                     case 'measure': {
                         const midX = (elData.start.x + elData.end.x) / 2;
                         const midY = (elData.start.y + elData.end.y) / 2;
-                        const mVal = elData.value || "0.00 m";
+                        let mVal = elData.value || "0.00 m";
+                        mVal = String(mVal).replace(/\s*cm/gi, "").trim();
                         const mWidth = Math.max(54, mVal.length * 7.5 + 18);
                         const customColor = elData.color || null;
                         
@@ -4182,13 +4184,30 @@
                     App.DOM.uiLayer.appendChild(upText);
                 }
             },
-            drawSnap(p) {
+            drawSnap(p, guides = []) {
                 App.DOM.uiLayer.innerHTML = ''; // Clear prev snap
-                if(!p) return;
-                const c = this.createSVG('circle', {
-                    cx: p.x, cy: p.y, r: 5, class: 'snap-point'
+                if(p) {
+                    const c = this.createSVG('circle', {
+                        cx: p.x, cy: p.y, r: 5, class: 'snap-point'
+                    });
+                    App.DOM.uiLayer.appendChild(c);
+                }
+                
+                guides.forEach(g => {
+                    if (g.axis === 'x') {
+                        const line = this.createSVG('line', {
+                            x1: g.coord, y1: g.bounds.min, x2: g.coord, y2: g.bounds.max,
+                            stroke: '#eab308', 'stroke-width': 1.5, 'stroke-dasharray': '4 4'
+                        });
+                        App.DOM.uiLayer.appendChild(line);
+                    } else if (g.axis === 'y') {
+                        const line = this.createSVG('line', {
+                            x1: g.bounds.min, y1: g.coord, x2: g.bounds.max, y2: g.coord,
+                            stroke: '#eab308', 'stroke-width': 1.5, 'stroke-dasharray': '4 4'
+                        });
+                        App.DOM.uiLayer.appendChild(line);
+                    }
                 });
-                App.DOM.uiLayer.appendChild(c);
             }
         };
 
@@ -4511,7 +4530,7 @@
 
                 const finalNum = parsed.num || '0';
                 const finalUnit = selectUnit ? selectUnit.value : (parsed.unit || 'cm');
-                const finalString = `${finalNum} ${finalUnit}`;
+                const finalString = finalUnit === 'cm' ? finalNum : `${finalNum} ${finalUnit}`;
 
                 HistoryManager.pushState();
                 el.value = finalString;
@@ -4775,7 +4794,58 @@
                             this._activeEl.points[idx] = finalP;
                         }
                     } else if (this._activeEl.type === 'text' && this._activeCtrl === 'pos') {
-                        this._activeEl.position = finalP;
+                        let guides = [];
+                        let snappedX = wp.x;
+                        let snappedY = wp.y;
+                        const targetsX = new Set();
+                        const targetsY = new Set();
+                        let pMinX = Infinity, pMaxX = -Infinity;
+                        let pMinY = Infinity, pMaxY = -Infinity;
+                        
+                        App.data.elements.forEach(el => {
+                            if (el.id === this._activeEl.id || el.id === 'bg-rect' || el.type === 'text') return;
+                            let cx = null, cy = null;
+                            if (el.start && el.end) {
+                                cx = (el.start.x + el.end.x) / 2; cy = (el.start.y + el.end.y) / 2;
+                                pMinX = Math.min(pMinX, el.start.x, el.end.x); pMaxX = Math.max(pMaxX, el.start.x, el.end.x);
+                                pMinY = Math.min(pMinY, el.start.y, el.end.y); pMaxY = Math.max(pMaxY, el.start.y, el.end.y);
+                            } else if (el.center) {
+                                cx = el.center.x; cy = el.center.y;
+                            }
+                            if (cx !== null) targetsX.add(cx);
+                            if (cy !== null) targetsY.add(cy);
+                        });
+                        if (pMinX !== Infinity) {
+                            targetsX.add((pMinX + pMaxX) / 2);
+                            targetsY.add((pMinY + pMaxY) / 2);
+                        }
+                        
+                        const textStr = this._activeEl.text || "Anotación";
+                        const vs = (typeof this._activeEl.visualScale === 'number') ? this._activeEl.visualScale : 1.0;
+                        const tagW = Math.max(68, textStr.length * 8 + 22) * vs;
+                        const tCx = wp.x + (tagW - 20 * vs) / 2;
+                        const tCy = wp.y;
+                        const snapThresh = 8 / App.viewport.scale;
+                        
+                        for (let tx of targetsX) {
+                            if (Math.abs(tCx - tx) < snapThresh) {
+                                snappedX = tx - (tagW - 20 * vs) / 2;
+                                guides.push({ axis: 'x', coord: tx, bounds: { min: pMinY === Infinity ? tx - 200 : pMinY - 50, max: pMaxY === -Infinity ? tx + 200 : pMaxY + 50 } });
+                                break;
+                            }
+                        }
+                        for (let ty of targetsY) {
+                            if (Math.abs(tCy - ty) < snapThresh) {
+                                snappedY = ty;
+                                guides.push({ axis: 'y', coord: ty, bounds: { min: pMinX === Infinity ? ty - 200 : pMinX - 50, max: pMaxX === -Infinity ? ty + 200 : pMaxX + 50 } });
+                                break;
+                            }
+                        }
+                        
+                        this._activeEl.position = { x: snappedX, y: snappedY };
+                        Renderer.drawSnap(null, guides);
+                        Renderer.renderAll();
+                        return;
                     } else if (this._activeEl.type === 'text' && this._activeCtrl === 'rotate_text') {
                         const textStr = this._activeEl.text || "Anotación";
                         const vs = (typeof this._activeEl.visualScale === 'number') ? this._activeEl.visualScale : 1.0;
@@ -4917,8 +4987,8 @@
                             const dCm = (el.radius * 2).toFixed(1).replace('.0', '');
                             CanvasInlineEditor.open(
                                 el.center,
-                                `${dCm} cm`,
-                                "Diámetro en cm (ej: 3.5 o 35)",
+                                `${dCm}`,
+                                "Diámetro (ej: 3.5 o 35)",
                                 (newVal) => {
                                     if (newVal) {
                                         const num = parseFloat(newVal.replace(',', '.').replace(/[^0-9.]/g, ''));
@@ -4942,8 +5012,8 @@
                             const center = { x: (el.start.x + el.end.x) / 2, y: (el.start.y + el.end.y) / 2 };
                             CanvasInlineEditor.open(
                                 center,
-                                `${w} x ${h} cm`,
-                                "Ancho x Largo en cm (ej: 60 x 50)",
+                                `${w} x ${h}`,
+                                "Ancho x Largo (ej: 60 x 50)",
                                 (newVal) => {
                                     if (newVal) {
                                         const nums = (newVal.match(/[0-9]+([.,][0-9]+)?/g) || []).map(n => parseFloat(n.replace(',', '.')));
@@ -6484,7 +6554,7 @@
                 let label = typeLabels[el.type] || 'Elemento';
                 if (el.type === 'circle') {
                     const d = (el.radius * 2).toFixed(1).replace('.0', '');
-                    label = `⭕ Círculo (Ø ${d} cm)`;
+                    label = `⭕ Círculo (Ø ${d})`;
                     if (editBtn) editBtn.innerHTML = '✏️ Editar';
                 } else if (el.type === 'sink') {
                     const w = Math.round(Math.abs(el.end.x - el.start.x));
@@ -6492,8 +6562,8 @@
                     const sub = el.subtype || 'single';
                     if (sub === 'round') {
                         const diam = Math.round(Math.min(w, h));
-                        label = `🚰 Bacha Redonda (Ø ${diam} cm)`;
-                        if (editBtn) editBtn.innerHTML = `✏️ Medidas (Ø ${diam} cm)`;
+                        label = `🚰 Bacha Redonda (Ø ${diam})`;
+                        if (editBtn) editBtn.innerHTML = `✏️ Medidas (Ø ${diam})`;
                     } else {
                         const subName = sub === 'double' ? 'Doble' : (sub === 'drainer' ? 'c/ Escurridor' : 'Simple');
                         label = `🚰 Bacha ${subName} (${w}×${h} cm)`;
@@ -7692,7 +7762,8 @@
                                     const bubbleMidYWorld = geom.mid.y + clUyPdf * cotaLabelOffParPdf;
                                     const mx = toPdfX(bubbleMidXWorld);
                                     const my = toPdfY(bubbleMidYWorld);
-                                    const val = el.value || Utils.formatMeasure(geom.dist);
+                                    let val = el.value || Utils.formatMeasure(geom.dist);
+                                    val = String(val).replace(/\s*cm/gi, "").trim();
                                     const fontSizePt = Math.max(5.5, Math.round(8.5 * Math.min(1.8, Math.max(0.4, vs))));
                                     const txtC = el.color || (el.isManual ? '#0284c7' : '#0f172a');
                                     const borderC = el.color || (el.isManual ? '#0284c7' : '#cbd5e1');
@@ -7830,15 +7901,15 @@
                                 doc.line(x, topY, x + w, topY);
                                 doc.line(x, topY - 1, x, topY + 1);
                                 doc.line(x + w, topY - 1, x + w, topY + 1);
-                                doc.text(`${realW} cm`, cx, topY - 0.7, { align: 'center' });
+                                doc.text(`${realW}`, cx, topY - 0.7, { align: 'center' });
 
                                 const leftX = x - 2.5;
                                 doc.line(leftX, y, leftX, y + h);
                                 doc.line(leftX - 1, y, leftX + 1, y);
                                 doc.line(leftX - 1, y + h, leftX + 1, y + h);
-                                doc.text(`${realH} cm`, leftX - 0.7, cy, { align: 'center', angle: 90 });
+                                doc.text(`${realH}`, leftX - 0.7, cy, { align: 'center', angle: 90 });
 
-                                const bText = `${realW}×${realH} cm`;
+                                const bText = `${realW}×${realH}`;
                                 const badgeW = 20, badgeH = 3.8;
                                 doc.setFillColor(255, 255, 255);
                                 doc.setDrawColor(cotaC.r, cotaC.g, cotaC.b);
@@ -7879,13 +7950,13 @@
                                     doc.line(x, topY, x + w, topY);
                                     doc.line(x, topY - 1, x, topY + 1);
                                     doc.line(x + w, topY - 1, x + w, topY + 1);
-                                    doc.text(`Ø ${diam} cm`, cx, topY - 0.7, { align: 'center' });
+                                    doc.text(`Ø ${diam}`, cx, topY - 0.7, { align: 'center' });
 
                                     const r = Math.max(1, (Math.min(w, h) / 2) - 1.5);
                                     doc.circle(cx, cy, r);
                                     doc.circle(cx, cy, Math.max(0.5, r * 0.2));
 
-                                    const bText = `Ø ${diam} cm`;
+                                    const bText = `Ø ${diam}`;
                                     const badgeW = 20, badgeH = 3.8;
                                     doc.setFillColor(255, 255, 255);
                                     doc.setDrawColor(sinkCotaC.r, sinkCotaC.g, sinkCotaC.b);
@@ -7899,13 +7970,13 @@
                                     doc.line(x, topY, x + w, topY);
                                     doc.line(x, topY - 1, x, topY + 1);
                                     doc.line(x + w, topY - 1, x + w, topY + 1);
-                                    doc.text(`${realW} cm`, cx, topY - 0.7, { align: 'center' });
+                                    doc.text(`${realW}`, cx, topY - 0.7, { align: 'center' });
 
                                     const leftX = x - 2.5;
                                     doc.line(leftX, y, leftX, y + h);
                                     doc.line(leftX - 1, y, leftX + 1, y);
                                     doc.line(leftX - 1, y + h, leftX + 1, y + h);
-                                    doc.text(`${realH} cm`, leftX - 0.7, cy, { align: 'center', angle: 90 });
+                                    doc.text(`${realH}`, leftX - 0.7, cy, { align: 'center', angle: 90 });
 
                                     if (subtype === 'double') {
                                         const bw = (w - 4) / 2;
@@ -7932,7 +8003,7 @@
                                         doc.circle(cx, cy, 1.2);
                                     }
 
-                                    const bText = `${realW}×${realH} cm`;
+                                    const bText = `${realW}×${realH}`;
                                     const badgeW = 20, badgeH = 3.8;
                                     doc.setFillColor(255, 255, 255);
                                     doc.setDrawColor(sinkCotaC.r, sinkCotaC.g, sinkCotaC.b);
@@ -9040,8 +9111,8 @@
                         const dCm = (el.radius * 2).toFixed(1).replace('.0', '');
                         CanvasInlineEditor.open(
                             el.center,
-                            `${dCm} cm`,
-                            "Diámetro en cm (ej: 3.5 o 35)",
+                            `${dCm}`,
+                            "Diámetro (ej: 3.5 o 35)",
                             (newVal) => {
                                 if (newVal) {
                                     const num = parseFloat(newVal.replace(',', '.').replace(/[^0-9.]/g, ''));
@@ -9067,8 +9138,8 @@
                         const center = { x: (el.start.x + el.end.x) / 2, y: (el.start.y + el.end.y) / 2 };
                         CanvasInlineEditor.open(
                             center,
-                            `${w} x ${h} cm`,
-                            "Ancho x Largo en cm (ej: 60 x 50)",
+                            `${w} x ${h}`,
+                            "Ancho x Largo (ej: 60 x 50)",
                             (newVal) => {
                                 if (newVal) {
                                     const nums = (newVal.match(/[0-9]+([.,][0-9]+)?/g) || []).map(n => parseFloat(n.replace(',', '.')));
