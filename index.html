@@ -2335,9 +2335,9 @@
                 formStep.style.display = 'block';
                 successStep.style.display = 'none';
 
-                const savedAuthor = localStorage.getItem('marmoleria_author') || (App.data.project && App.data.project.author) || '';
-                const savedClient = localStorage.getItem('marmoleria_client') || (App.data.project && App.data.project.client) || '';
-                const savedSector = localStorage.getItem('marmoleria_sector') || (App.data.project && App.data.project.sector) || 'Cocina';
+                const savedAuthor = (App.data.project && App.data.project.author) || localStorage.getItem('marmoleria_author') || '';
+                const savedClient = (App.data.project && App.data.project.client) || localStorage.getItem('marmoleria_client') || '';
+                const savedSector = (App.data.project && App.data.project.sector) || localStorage.getItem('marmoleria_sector') || 'Cocina';
 
                 authorInput.value = savedAuthor;
                 clientInput.value = savedClient;
@@ -7220,9 +7220,9 @@
                 const errorSpan = document.getElementById('author-error');
                 
                 // Cargar valores previos si existen
-                const savedAuthor = localStorage.getItem('marmoleria_author') || '';
-                const savedClient = localStorage.getItem('marmoleria_client') || '';
-                const savedSector = localStorage.getItem('marmoleria_sector') || 'Cocina';
+                const savedAuthor = (App.data.project && App.data.project.author) || localStorage.getItem('marmoleria_author') || '';
+                const savedClient = (App.data.project && App.data.project.client) || localStorage.getItem('marmoleria_client') || '';
+                const savedSector = (App.data.project && App.data.project.sector) || localStorage.getItem('marmoleria_sector') || 'Cocina';
 
                 authorInput.value = savedAuthor;
                 if (clientInput) clientInput.value = savedClient;

@@ -69,7 +69,7 @@ export async function onRequest(context) {
                 let author = '-';
                 let sector = 'Cocina';
 
-                try { if (meta.projectName) projName = decodeURIComponent(meta.projectName); } catch(e) {}
+                try { if (meta.projectname) projName = decodeURIComponent(meta.projectname); } catch(e) {}
                 try { if (meta.client) client = decodeURIComponent(meta.client); } catch(e) {}
                 try { if (meta.author) author = decodeURIComponent(meta.author); } catch(e) {}
                 try { if (meta.sector) sector = decodeURIComponent(meta.sector); } catch(e) {}
@@ -80,8 +80,8 @@ export async function onRequest(context) {
                     client: client,
                     author: author,
                     sector: sector,
-                    elementCount: parseInt(meta.elementCount || '0', 10),
-                    updatedAt: meta.updatedAt || obj.uploaded.toISOString(),
+                    elementCount: parseInt(meta.elementcount || '0', 10),
+                    updatedAt: meta.updatedat || obj.uploaded.toISOString(),
                     sizeBytes: obj.size
                 };
             });
@@ -128,12 +128,12 @@ export async function onRequest(context) {
                 },
                 customMetadata: {
                     id: planId,
-                    projectName: encodeURIComponent(projectName),
+                    projectname: encodeURIComponent(projectName),
                     author: encodeURIComponent(author),
                     client: encodeURIComponent(client),
                     sector: encodeURIComponent(sector),
-                    elementCount: String(count),
-                    updatedAt: now
+                    elementcount: String(count),
+                    updatedat: now
                 }
             });
 
