@@ -7512,7 +7512,7 @@
                     doc.text(`Marmolería Benjamín • Documento emitido para fabricación • ${proj} • Cliente: ${client} • Sector: ${sector} • Responsable: ${auth}`, margin, footerY);
 
                     // Helper técnico para dibujar textos rotados con fondo tipo pastilla/cota sin desfases espaciales
-                    const drawRotatedPillText = (text, cx, cy, svgAngleDeg, fontSizePt, textColor, bgColor, borderColor, borderWidth = 0.25, vs = 1.0) => {
+                    const drawRotatedPillText = (text, cx, cy, svgAngleDeg, fontSizePt, textColor, bgColor, borderColor, borderWidth = 0.25, vs = 1.0, offsetY = 0) => {
                         if (text === undefined || text === null || text === '') return;
                         const strText = String(text);
                         let normAngle = svgAngleDeg || 0;
@@ -7559,7 +7559,7 @@
                         const tc = textColor ? Utils.parseColor(textColor, { r: 15, g: 23, b: 42 }) : { r: 15, g: 23, b: 42 };
                         doc.setTextColor(tc.r, tc.g, tc.b);
                         const localStartX = -textW / 2;
-                        const localStartY = fontMm * 0.35;
+                        const localStartY = fontMm * 0.35 + offsetY;
                         const textStartPt = rotPt(localStartX, localStartY);
                         doc.text(strText, textStartPt.x, textStartPt.y, { angle: -normAngle });
                     };
@@ -7739,7 +7739,7 @@
                                 const isManual = !!el.isManual;
                                 const txtC = el.color || (isManual ? '#0284c7' : '#0f172a');
                                 const borderC = el.color || (isManual ? '#0284c7' : '#cbd5e1');
-                                drawRotatedPillText(val, cx, cy, rotAngle, 8.5, txtC, '#ffffff', borderC, 0.25);
+                                drawRotatedPillText(val, cx, cy, rotAngle, 8.5, txtC, '#ffffff', null, 0);
                             }
                             if (el.type === 'cota' && el.start && el.end) {
                                 const geom = Renderer.getCotaGeometry(el);
@@ -7792,7 +7792,7 @@
                                     const fontSizePt = Math.max(5.5, Math.round(8.5 * Math.min(1.8, Math.max(0.4, vs))));
                                     const txtC = el.color || (el.isManual ? '#0284c7' : '#0f172a');
                                     const borderC = el.color || (el.isManual ? '#0284c7' : '#cbd5e1');
-                                    drawRotatedPillText(val, mx, my, geom.rot, fontSizePt, txtC, '#ffffff', borderC, Math.max(0.2, 0.35 * vs), vs);
+                                    drawRotatedPillText(val, mx, my, geom.rot, fontSizePt, txtC, '#ffffff', null, 0, vs);
                                 }
                             }
                             if ((el.type === 'polyline' || el.type === 'pencil') && Array.isArray(el.points) && el.points.length > 1) {
