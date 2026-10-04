@@ -7523,8 +7523,8 @@
                         doc.setFont(undefined, 'bold');
                         const textW = doc.getTextWidth(strText);
                         const fontMm = fontSizePt * 0.3528;
-                        const pillW = textW + Math.max(2.5, 4.0 * Math.min(1.5, vs));
-                        const pillH = Math.max(3.6, fontMm + 1.8);
+                        const pillW = textW + (borderColor ? Math.max(2.5, 4.0 * Math.min(1.5, vs)) : 0.6);
+                        const pillH = borderColor ? Math.max(3.6, fontMm + 1.8) : (fontMm + 0.6);
 
                         const rad = (normAngle * Math.PI) / 180;
                         const cos = Math.cos(rad);
